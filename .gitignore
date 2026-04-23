@@ -9,6 +9,7 @@ build/tsconfig.tsbuildinfo
 
 # Local caches
 build/.npm-cache/
+.codex-publish/
 .tmp-chrome/
 .tmp-edge/
 .pytest_cache/

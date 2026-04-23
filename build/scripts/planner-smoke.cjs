@@ -36,8 +36,11 @@ try {
     ...planner.INITIAL_FORM_STATE,
     departureCountry: "JP",
     destinationCountries: ["FR", "GB", "DE"],
-    outboundDate: "2026-10-10",
-    stayLength: "10",
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-07", "2026-08", "2026-09"],
+    stayLengthMin: "26",
+    stayLengthMax: "36",
     passengerCount: "2",
     cabinClass: "economy",
     preferDirect: false,
@@ -52,6 +55,10 @@ try {
   assert(result.bestInbound.totalPriceRange.high >= result.bestInbound.totalPrice, "Expected return range.");
   assert(result.bestOutbound.confidenceLabel.startsWith("信頼度:"), "Expected outbound confidence label.");
   assert(result.bestInbound.estimateBasis.includes("km"), "Expected return estimate basis.");
+  assert(result.comparedOutboundDateCount >= 90, "Expected flexible outbound month comparison.");
+  assert(result.comparedReturnDateCount === 11, "Expected 26-36 day return window.");
+  assert(result.stayLengthRangeLabel === "26〜36日", "Expected flexible stay range label.");
+  assert(result.flexibilitySummary.includes("2026年7月"), "Expected month labels in flexibility summary.");
   assert(result.openJawGap.note.includes("移動費") || result.openJawGap.note.includes("国際線の入口と出口"), "Expected explicit internal-travel exclusion note.");
   assert(result.multiCityUrl.includes("skyscanner"), "Expected Skyscanner multi-city handoff.");
 

@@ -14,7 +14,8 @@
     "The MVP intentionally excludes the route between the inbound arrival airport and the return departure airport inside the destination region.",
     "The default language is Japanese and the default displayed currency is JPY.",
     "The experience should feel premium and quiet, with generous whitespace and a luxury editorial rhythm.",
-    "The app should remain usable in one browser session without login."
+    "The app should remain usable in one browser session without login.",
+    "Travelers often know a target season such as July through September before they know exact dates."
   ],
   "out_of_scope": [
     "Booking, payment, or reservation management.",
@@ -80,13 +81,26 @@
       "description": "The editorial landing page still needs a practical interface for the overseas open-jaw planning flow.",
       "must_have": [
         "Departure country selector.",
-        "Outbound date input.",
-        "Stay length selector that infers a return date.",
+        "Exact date input for users who already know the outbound day.",
+        "Flexible month selection for users who want to compare multiple target months such as July, August, and September.",
+        "Flexible stay-length range selection that can search approximate trip lengths such as 26 to 36 days.",
         "Passenger count selector.",
         "Cabin class selector.",
         "A multi-select destination country picker.",
         "A direct-first toggle.",
         "A primary action to compare routes."
+      ]
+    },
+    {
+      "id": "flexible-travel-window",
+      "name": "Flexible Travel Window",
+      "description": "The app should support approximate seasonal planning by comparing many possible outbound dates and a flexible return window instead of requiring one exact date.",
+      "must_have": [
+        "A mode that compares multiple selected outbound months.",
+        "A stay-length range with separate minimum and maximum day selections.",
+        "The planner chooses the cheapest outbound date first, then searches return dates from that outbound date plus the selected stay range.",
+        "Results show how many outbound and return dates were compared.",
+        "The result explains the outbound month window, return window, and stay range used for the recommendation."
       ]
     },
     {
@@ -144,8 +158,10 @@
     "An alternating story section explains the open-jaw flow in multiple content blocks.",
     "A lineup section presents at least three refined cards with visual areas, short descriptions, and plan names.",
     "A restrained CTA section appears before a dark footer, and both sections remain visually consistent with the luxury palette.",
-    "The user cannot compare routes until departure country, outbound date, stay length, and at least one destination country are set.",
+    "The user cannot compare routes until departure country, valid date mode inputs, stay length or stay range, and at least one destination country are set.",
     "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound leg, a cheapest return leg, and a combined estimated total.",
+    "For flexible planning, the user can choose multiple target months such as July, August, and September, choose a stay range such as 26 to 36 days, and receive a best outbound date plus a best return date from the derived return window.",
+    "The flexible result states the compared outbound window, return window, stay range, and compared date counts.",
     "Estimated fares are shown with ranges and confidence labels so deterministic reference prices are not mistaken for final live inventory.",
     "The result explicitly states that the arrival airport and return airport may differ and that the internal route is not included.",
     "The results area contains links for outbound, return, and combined Skyscanner search handoff.",
@@ -159,8 +175,9 @@
     "Scroll through the alternating story section and confirm that the open-jaw value proposition is explained in clear editorial beats.",
     "Review the lineup cards and confirm that at least three premium card treatments are shown.",
     "Use the planner area to choose Japan as the departure country plus France, United Kingdom, and Germany as destination countries.",
-    "Pick an outbound date and stay length, then run the comparison.",
-    "Confirm that the app shows the cheapest outbound entry leg and cheapest return exit leg separately, with a combined estimate.",
+    "Leave the planner in flexible mode with July, August, and September selected, choose a 26 to 36 day stay range, then run the comparison.",
+    "Confirm that the app shows the cheapest outbound entry leg date, then finds the cheapest return exit leg within the derived return window, with a combined estimate.",
+    "Confirm that compared outbound/return date counts and the stay range are visible in the result.",
     "Confirm that the result explains the open-jaw assumption and excludes internal travel.",
     "Open the Skyscanner open-jaw handoff and verify that the suggested entry and exit routes are carried into the live search."
   ],
@@ -213,6 +230,24 @@
     },
     {
       "sprint": 4,
+      "name": "Flexible Travel Window",
+      "goal": "Let travelers compare approximate month ranges and flexible trip lengths before committing to exact dates.",
+      "scope": [
+        "Add a flexible date mode for multiple target outbound months.",
+        "Add a stay-length range for approximate trip lengths.",
+        "Search the cheapest outbound date first, then evaluate return dates from the selected stay range.",
+        "Surface the compared windows and date counts in the result UI.",
+        "Keep exact-date mode available for users with fixed dates."
+      ],
+      "acceptance_criteria": [
+        "The default planner can compare July, August, and September as target outbound months.",
+        "A 26 to 36 day stay range produces a return search window from the selected best outbound date.",
+        "The result shows the outbound window, return window, stay range, and compared date counts.",
+        "Exact-date mode still works for users with fixed dates."
+      ]
+    },
+    {
+      "sprint": 5,
       "name": "Live Fare Enrichment",
       "goal": "Introduce a real fare source or provider-backed enrichment without losing the calm premium experience.",
       "scope": [

@@ -1,0 +1,57 @@
+{
+  "sprint": 4,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "Spec JSON validation",
+      "Python harness static compile check",
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build"
+    ],
+    "notes": "Browser automation was not available in this session. The smoke test verified that the app renders key Maison Passage text through a local Next.js server. Production build was run separately from smoke after clearing .next to avoid cache contention."
+  },
+  "checks": [
+    {
+      "name": "Source-of-truth documents describe flexible travel windows",
+      "result": "PASS",
+      "evidence": "specs/spec.json and 設計書.md now define flexible month selection, stay-length ranges, outbound-first search, return-window search, and Sprint 4 acceptance criteria."
+    },
+    {
+      "name": "Flexible planner logic is deterministic and testable",
+      "result": "PASS",
+      "evidence": "npm run test:planner validates July/August/September comparison, a 26-36 day stay range, return date count, range labels, confidence labels, gap notes, and Skyscanner handoff."
+    },
+    {
+      "name": "Exact-date mode remains available",
+      "result": "PASS",
+      "evidence": "The form keeps an exact-date mode with the original outbound date and fixed stay-length controls, while flexible mode is the default."
+    },
+    {
+      "name": "App renders through local smoke validation",
+      "result": "PASS",
+      "evidence": "npm run smoke started the local Next.js server at http://127.0.0.1:3100, confirmed key Maison Passage text, and stopped the server."
+    },
+    {
+      "name": "Production build completes",
+      "result": "PASS",
+      "evidence": "npm run build completed successfully after clearing .next and running without a concurrent smoke server."
+    },
+    {
+      "name": "Responsive behavior at about 390px and 1280px",
+      "result": "UNVERIFIED",
+      "evidence": "CSS includes responsive single-column breakpoints for the new mode and month grids, but no browser viewport screenshots were captured because browser automation was unavailable."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Run an interactive browser pass when Playwright or agent-browser is available, including flexible July/August/September submission and exact-date fallback submission.",
+    "Capture mobile and desktop screenshots to verify the month grid, stay-range controls, and result summary maintain the premium editorial layout without horizontal overflow.",
+    "For Sprint 5, evaluate a live fare provider or API-backed enrichment while keeping deterministic flexible estimates as the fallback."
+  ]
+}

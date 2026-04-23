@@ -420,8 +420,8 @@ export default function HomePage() {
             <p className={styles.sectionEyebrow}>Search brief</p>
             <h2>検索は、数手で十分。</h2>
             <p>
-              出発国と候補国を選び、日付と滞在日数を入れるだけ。内部では代表空港を広げて比較し、
-              往路の入口と復路の出口を別々に探します。
+              出発国と候補国を選び、7月・8月・9月のような月の束と滞在日数の幅を入れるだけ。
+              内部では代表空港と候補日を広げて比較し、往路の入口と復路の出口を別々に探します。
             </p>
           </div>
 
@@ -452,30 +452,114 @@ export default function HomePage() {
                     </select>
                   </label>
 
-                  <label className={styles.field}>
-                    <span className={styles.fieldLabel}>往路の出発日</span>
-                    <input
-                      className={styles.input}
-                      type="date"
-                      value={formState.outboundDate}
-                      onChange={(event) => updateFormState("outboundDate", event.target.value)}
-                    />
-                  </label>
+                  <fieldset className={`${styles.fieldWide} ${styles.optionField}`}>
+                    <legend className={styles.fieldLabel}>日程の探し方</legend>
+                    <div className={styles.modeGrid}>
+                      <button
+                        type="button"
+                        className={`${styles.optionButton} ${formState.dateSearchMode === "flexible" ? styles.buttonActive : ""}`}
+                        onClick={() => updateFormState("dateSearchMode", "flexible")}
+                      >
+                        <strong>月で広く探す</strong>
+                        <span>7月・8月・9月のように複数月をまとめて比較</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.optionButton} ${formState.dateSearchMode === "exact" ? styles.buttonActive : ""}`}
+                        onClick={() => updateFormState("dateSearchMode", "exact")}
+                      >
+                        <strong>日付を指定する</strong>
+                        <span>既に決まっている出発日と滞在日数で比較</span>
+                      </button>
+                    </div>
+                  </fieldset>
 
-                  <label className={styles.field}>
-                    <span className={styles.fieldLabel}>滞在日数</span>
-                    <select
-                      className={styles.select}
-                      value={formState.stayLength}
-                      onChange={(event) => updateFormState("stayLength", event.target.value as PlannerFormState["stayLength"])}
-                    >
-                      {STAY_LENGTH_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  {formState.dateSearchMode === "exact" ? (
+                    <>
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>往路の出発日</span>
+                        <input
+                          className={styles.input}
+                          type="date"
+                          value={formState.outboundDate}
+                          onChange={(event) => updateFormState("outboundDate", event.target.value)}
+                        />
+                      </label>
+
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>滞在日数</span>
+                        <select
+                          className={styles.select}
+                          value={formState.stayLength}
+                          onChange={(event) => updateFormState("stayLength", event.target.value as PlannerFormState["stayLength"])}
+                        >
+                          {STAY_LENGTH_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <fieldset className={`${styles.fieldWide} ${styles.optionField}`}>
+                        <legend className={styles.fieldLabel}>比較したい出発月</legend>
+                        <p className={styles.fieldHint}>
+                          最大4か月まで選べます。最安の往路日を見つけたあと、その日から滞在レンジ内で復路を探します。
+                        </p>
+                        <div className={styles.monthGrid}>
+                          {FLEXIBLE_MONTH_OPTIONS.map((option) => {
+                            const active = formState.targetMonths.includes(option.value);
+                            const disabled = !active && formState.targetMonths.length >= 4;
+
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                className={`${styles.countryChip} ${active ? styles.buttonActive : ""} ${disabled ? styles.buttonDisabled : ""}`}
+                                onClick={() => toggleTargetMonth(option.value)}
+                                disabled={disabled}
+                              >
+                                <strong>{option.label}</strong>
+                                <span>{option.hint}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>最短滞在</span>
+                        <select
+                          className={styles.select}
+                          value={formState.stayLengthMin}
+                          onChange={(event) => updateFormState("stayLengthMin", event.target.value as FlexibleStayDayKey)}
+                        >
+                          {FLEXIBLE_STAY_DAY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>最長滞在</span>
+                        <select
+                          className={styles.select}
+                          value={formState.stayLengthMax}
+                          onChange={(event) => updateFormState("stayLengthMax", event.target.value as FlexibleStayDayKey)}
+                        >
+                          {FLEXIBLE_STAY_DAY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </>
+                  )}
 
                   <label className={styles.field}>
                     <span className={styles.fieldLabel}>人数</span>
@@ -546,7 +630,12 @@ export default function HomePage() {
                 </label>
 
                 <div className={styles.helperRow}>
-                  <p className={styles.helperText}>想定復路: {returnDate ? formatDateLabel(returnDate) : "未設定"}</p>
+                  <p className={styles.helperText}>日程: {dateSearchSummary}</p>
+                  <p className={styles.helperText}>
+                    {formState.dateSearchMode === "exact"
+                      ? `想定復路: ${returnDate ? formatDateLabel(returnDate) : "未設定"}`
+                      : `復路探索: 約${returnWindowPreview} / 滞在${stayRangeLabel}`}
+                  </p>
                   <p className={styles.helperText}>出発空港候補: {departureAirportCount}</p>
                   <p className={styles.helperText}>候補空港: {destinationAirportCount}</p>
                 </div>
@@ -607,7 +696,7 @@ export default function HomePage() {
           {!loading && !hasGenerated ? (
             <div className={styles.emptyState}>
               <h3>検索ブリーフを入れると、ここに提案が表示されます。</h3>
-              <p>出発国、往路日、滞在日数、候補国を選ぶと、海外 open jaw の入口と出口を比較できます。</p>
+              <p>出発国、出発月または往路日、滞在レンジ、候補国を選ぶと、海外 open jaw の入口と出口を比較できます。</p>
             </div>
           ) : null}
 
@@ -629,6 +718,7 @@ export default function HomePage() {
                   <p className={styles.resultEyebrow}>Recommended open-jaw combination</p>
                   <h3 className={styles.resultHeadline}>{result.planHeadline}</h3>
                   <p className={styles.resultLead}>{result.openJawNote}</p>
+                  <p className={styles.resultMeta}>{result.flexibilitySummary}</p>
                 </div>
 
                 <div className={styles.priceCard}>
@@ -637,6 +727,9 @@ export default function HomePage() {
                   <span>目安レンジ {formatCurrencyRange(result.totalPriceRange)}</span>
                   <span>1名あたり {formatCurrency(result.totalPricePerPerson)}</span>
                   <span>1名レンジ {formatCurrencyRange(result.totalPriceRangePerPerson)}</span>
+                  <span>
+                    比較日程 往路{result.comparedOutboundDateCount}日 / 復路{result.comparedReturnDateCount}日
+                  </span>
                 </div>
               </div>
 
@@ -661,6 +754,10 @@ export default function HomePage() {
                 <p className={styles.sectionEyebrow}>Planning note</p>
                 <h3>この提案の読み方</h3>
                 <p>{result.planningNote}</p>
+                <p>
+                  往路探索: {result.outboundDateWindow} / 復路探索: {result.returnDateWindow} / 滞在幅:{" "}
+                  {result.stayLengthRangeLabel}
+                </p>
               </div>
 
               <div className={styles.gapCard} data-testid="open-jaw-gap">
@@ -687,7 +784,7 @@ export default function HomePage() {
                   </div>
                   <div className={styles.altList}>
                     {result.outboundAlternatives.map((quote, index) => (
-                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}`} className={styles.altCard}>
+                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard}>
                         <div className={styles.altTop}>
                           <strong>{routeLabel(quote)}</strong>
                           <span>{formatCurrency(quote.totalPrice)}</span>
@@ -709,7 +806,7 @@ export default function HomePage() {
                   </div>
                   <div className={styles.altList}>
                     {result.inboundAlternatives.map((quote, index) => (
-                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}`} className={styles.altCard}>
+                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard}>
                         <div className={styles.altTop}>
                           <strong>{routeLabel(quote)}</strong>
                           <span>{formatCurrency(quote.totalPrice)}</span>

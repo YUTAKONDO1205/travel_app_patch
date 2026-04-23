@@ -1,0 +1,50 @@
+{
+  "sprint": 4,
+  "implemented": [
+    "Updated specs/spec.json and 設計書.md so Sprint 4 is Flexible Travel Window, with live fare enrichment moved to Sprint 5.",
+    "Added flexible date search mode with default July, August, and September outbound month selection.",
+    "Added flexible stay-length range controls, including the one-month style 26 to 36 day range.",
+    "Updated the planner logic to compare outbound dates across selected months, choose the cheapest outbound date first, then search return dates from the chosen outbound date plus the selected stay range.",
+    "Added date-level deterministic pricing variation so flexible month comparison can produce meaningful best dates.",
+    "Updated the results UI to show the flexible search summary, outbound window, return window, stay range, and compared outbound/return date counts.",
+    "Kept exact-date mode available for users with fixed outbound dates and fixed stay lengths.",
+    "Created the repository root README.md with product, run, validation, and harness instructions.",
+    "Expanded npm run test:planner to validate flexible month comparison and the 26 to 36 day return window."
+  ],
+  "known_issues": [
+    "Displayed fares remain deterministic reference estimates and are not live API-backed inventory.",
+    "Flexible search currently compares curated month options from July 2026 through June 2027 rather than an infinite calendar picker.",
+    "The flexible algorithm intentionally chooses the cheapest outbound date first, then searches the return window; it does not globally optimize every outbound-return pair combination.",
+    "Interactive viewport verification still requires Playwright or browser automation, which is not available in this session."
+  ],
+  "run_instructions": {
+    "install": "npm install",
+    "dev": "npm run dev"
+  },
+  "validation": [
+    {
+      "command": "python -m json.tool specs/spec.json",
+      "result": "passed"
+    },
+    {
+      "command": "python -m py_compile agents/orchestrator_codex.py agents/codex_runner.py",
+      "result": "passed"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:planner",
+      "result": "passed"
+    },
+    {
+      "command": "npm run smoke",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed after clearing .next and running build separately from smoke"
+    }
+  ]
+}

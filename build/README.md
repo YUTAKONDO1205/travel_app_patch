@@ -7,6 +7,7 @@
 - Purpose: help a traveler compare the cheapest inbound entry leg and cheapest return exit leg for a multi-country overseas trip before moving to live search.
 - Core truth: prices in the app may be deterministic reference estimates unless a future live provider is added.
 - Estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
+- Flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.
 - Design direction: warm off-white backgrounds, gold and bronze accents, dark brown and near-black contrast, and a calm premium rhythm instead of a dense utility dashboard.
 - Required page shell: fixed transparent header, full-screen hero, concept intro, value collage, alternating story section, lineup cards, restrained CTA, and dark footer.
 
@@ -46,6 +47,7 @@ npm run smoke
 ```
 
 `npm run test:planner` validates the deterministic open-jaw planner logic, including price ranges, confidence labels, the open-jaw gap note, and Skyscanner handoff generation.
+It also verifies flexible month comparison, the 26 to 36 day return window, and the visible stay-range summary.
 
 `npm run smoke` starts the Next.js app on `127.0.0.1:3100`, fetches the rendered page, confirms key Maison Passage text is present, stops the temporary server, and exits.
 

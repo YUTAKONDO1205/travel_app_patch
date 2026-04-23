@@ -12,7 +12,8 @@ The current approved roadmap is:
 
 - `Sprint 5`: Grand Tour Ledger Redesign
 - `Sprint 6`: Gateway Pair Ticketing
-- `Sprint 7`: Live Fare Enrichment
+- `Sprint 7`: Bauhaus Motion Refresh
+- `Sprint 8`: Live Fare Enrichment
 
 ## Repository Layout
 
@@ -53,3 +54,7 @@ python agents/orchestrator_codex.py autodev "Advance Maison Passage toward gatew
 ```
 
 The harness treats `specs/spec.json` as the product truth, updates `build/`, writes `sprints/sprint_N_eval.json`, and writes `evaluations/sprint_N_report.json`.
+
+## Current Design Direction
+
+The current UI direction is a Bauhaus-leaning neo-brutalist travel atelier. The app uses `Noto Sans JP` with visible weight contrast for Japanese hierarchy, `Oswald` for numeric callouts and route codes, a warm off-white field with red, blue, yellow, and near-black accents, soft `0.3s` lift hover motion, and staggered spring-like scroll reveals.

@@ -1,19 +1,19 @@
-import { Cormorant_Garamond, Noto_Sans_JP } from "next/font/google";
+import { Noto_Sans_JP, Oswald } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-const displayFont = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-display-family",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
 const bodyFont = Noto_Sans_JP({
   subsets: ["latin"],
   variable: "--font-body-family",
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "700", "900"],
+  display: "swap",
+});
+
+const numericFont = Oswald({
+  subsets: ["latin"],
+  variable: "--font-numeric-family",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${displayFont.variable} ${bodyFont.variable}`}>{children}</body>
+      <body className={`${bodyFont.variable} ${numericFont.variable}`}>{children}</body>
     </html>
   );
 }

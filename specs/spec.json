@@ -1,8 +1,8 @@
 {
   "brand_name": "Maison Passage",
   "product_name": "Maison Passage Gateway Pair Explorer",
-  "summary": "Maison Passage Gateway Pair Explorer is a browser-demoable overseas travel-planning app that helps travelers choose one departure country, compare multiple destination countries, widen the search to nearby gateway airports, and identify the cheapest pair of one-way tickets through a bold Grand Tour Ledger premium dossier experience before handing off to live search.",
-  "vision": "Turn a complex multi-country overseas trip into a collectible Grand Tour Ledger dossier where the traveler can confidently choose how to enter and leave a region with two one-way tickets before worrying about internal routing.",
+  "summary": "Maison Passage Gateway Pair Explorer is a browser-demoable overseas travel-planning app that helps travelers choose one departure country, compare multiple destination countries, widen the search to nearby gateway airports, and identify the cheapest pair of one-way tickets through a bold Bauhaus-leaning neo-brutalist travel atelier before handing off to live search.",
+  "vision": "Turn a complex multi-country overseas trip into a striking travel atelier where the traveler can confidently choose how to enter and leave a region with two one-way tickets before worrying about internal routing.",
   "target_users": [
     "Japanese-speaking travelers planning premium overseas trips across multiple countries.",
     "Travelers who want to compare two one-way entry and exit combinations before booking anything.",
@@ -27,20 +27,21 @@
   ],
   "design_direction": {
     "tone": [
-      "Grand Tour Ledger should feel archival, cinematic, worldly, and assured rather than politely minimal.",
-      "Base surfaces should evoke parchment, binding cloth, inked paper, and premium dossier inserts instead of generic luxury website cards.",
-      "Use parchment, oxblood, espresso, brass, and near-black as the dominant palette, with any atlas green or stamp red used sparingly.",
-      "Typography and labeling should feel like a curated folio with captions, ledger marks, proof stamps, and editorial side notes."
+      "Maison Passage should feel editorial, geometric, composed, and confident rather than politely minimal.",
+      "Base surfaces should stay warm and paper-like, but the visual system should be rebuilt around Bauhaus geometry and neo-brutalist contrast rather than parchment nostalgia alone.",
+      "Use warm off-white as the primary field color, then build accents with red, blue, yellow, near-black, and restrained bronze-brown support tones.",
+      "Typography should use Noto Sans JP with visible weight contrast for Japanese copy and Oswald for numeric or metric moments."
     ],
     "layout_principles": [
-      "The page should read like a deliberate dossier journey, with each section behaving like a spread, insert, or annotated rail.",
+      "The page should read like a deliberate travel atelier sequence with strong blocks, geometric accents, and clearly staged editorial beats.",
       "The planner atelier and result folio are the operational centerpieces and should feel integrated into the narrative order rather than bolted onto the page.",
       "Evidence cues such as proof strips, annotations, dividers, and method notes should build trust without turning the page into a dashboard.",
-      "The section sequence should be explicit and linear rather than interchangeable."
+      "Cards, controls, and surfaces should use bold borders and deliberate shadows so the interface feels confidently constructed rather than softly ornamental."
     ],
     "motion": [
-      "Keep animation restrained and tactile, such as measured reveals, subtle parallax, or folio-like transitions.",
-      "Avoid flashy motion, rapid counters, or high-frequency hover effects that break the premium dossier mood."
+      "Hover motion should feel physical and restrained, with around 0.3 second lift behavior driven by scale and shadow rather than abrupt color flips.",
+      "Scroll reveals should emerge from below with stagger and spring-like easing.",
+      "Avoid flashy motion, rapid counters, or high-frequency hover effects that break the composed atelier mood."
     ],
     "section_order": [
       "Header",
@@ -181,7 +182,7 @@
     "Estimated fares are shown with ranges and confidence labels so deterministic reference prices are not mistaken for final live inventory.",
     "The result explicitly states that the arrival airport and return airport may differ, that nearby gateway airports may win, and that the internal route is not included.",
     "The results area contains primary links for outbound and return Skyscanner handoff plus an optional combined reference handoff.",
-    "The visual language uses parchment, oxblood, espresso, brass, and near-black cues rather than generic warm-off-white minimalism.",
+    "The visual language uses warm off-white fields, geometric Bauhaus accents, bold neo-brutalist borders, Noto Sans JP weight contrast, and Oswald for numeric moments rather than generic warm-off-white minimalism.",
     "The page works at approximately 390px mobile width and 1280px desktop width without obvious horizontal overflow."
   ],
   "demo_script": [
@@ -299,12 +300,29 @@
     },
     {
       "sprint": 7,
+      "name": "Bauhaus Motion Refresh",
+      "goal": "Rebuild the visual system around Bauhaus geometry, neo-brutalist surfaces, stronger type hierarchy, and tactile motion without regressing the planning flow.",
+      "scope": [
+        "Shift the primary palette from dossier-only tones toward warm off-white plus red, blue, yellow, and near-black accents.",
+        "Use Noto Sans JP weight changes for Japanese hierarchy and Oswald for numeric or metric callouts.",
+        "Update buttons, cards, and controls to use stronger borders, harder shadows, and more geometric structure.",
+        "Add staggered spring-like reveal motion and a 0.3 second lift-hover treatment."
+      ],
+      "acceptance_criteria": [
+        "The shell feels materially more geometric and confident than the prior Grand Tour Ledger dossier treatment.",
+        "Numeric callouts and route codes visibly use Oswald while Japanese editorial copy uses weighted Noto Sans JP.",
+        "Buttons hover with a soft lift and stronger shadow instead of abrupt color swaps.",
+        "Major sections reveal from below with staggered spring-like motion without harming usability."
+      ]
+    },
+    {
+      "sprint": 8,
       "name": "Live Fare Enrichment",
-      "goal": "Introduce a real fare source or provider-backed enrichment after the Grand Tour Ledger redesign and gateway-pair framing land.",
+      "goal": "Introduce a real fare source or provider-backed enrichment after the gateway-pair framing and Bauhaus motion refresh land.",
       "scope": [
         "Introduce a live price provider or search integration.",
         "Distinguish clearly between cached estimates and live prices.",
-        "Handle provider errors without breaking the planning flow or premium dossier presentation."
+        "Handle provider errors without breaking the planning flow or premium atelier presentation."
       ],
       "acceptance_criteria": [
         "The app can show at least one live or near-live fare source for the suggested entry and exit routes.",

@@ -1,0 +1,50 @@
+{
+  "sprint": 7,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build"
+    ],
+    "notes": "Interactive browser automation was not available in this session. Validation focused on build integrity, deterministic planner behavior, and successful rendered smoke output."
+  },
+  "checks": [
+    {
+      "name": "Typography contract matches the new design direction",
+      "result": "PASS",
+      "evidence": "layout.tsx now loads Noto Sans JP and Oswald together, globals.css exposes the numeric font variable, and page.module.css applies Oswald to fare, route, and metric callouts while keeping Japanese hierarchy on Noto Sans JP."
+    },
+    {
+      "name": "Bauhaus plus neo-brutalist styling replaced the older parchment-only shell",
+      "result": "PASS",
+      "evidence": "page.module.css now uses warm off-white surfaces, red/blue/yellow accent geometry, stronger black borders, harder shadows, and tighter card radii across the planner, result folio, and supporting sections."
+    },
+    {
+      "name": "Interactive motion matches the new hover and reveal requirements",
+      "result": "PASS",
+      "evidence": "Buttons and tiles now use a 0.3 second lift-hover treatment, and page.tsx plus page.module.css add staggered spring-like reveal behavior for major sections with a reduced-motion fallback."
+    },
+    {
+      "name": "Gateway-pair planner behavior remains intact",
+      "result": "PASS",
+      "evidence": "npm run test:planner passed without changes to the planning logic, confirming that flexible months, stay windows, gateway expansion, and two-ticket outputs still work."
+    },
+    {
+      "name": "App still renders and builds after the design refresh",
+      "result": "PASS",
+      "evidence": "npm run smoke and npm run build both passed after the Bauhaus Motion Refresh changes. build was run separately from smoke to avoid the known .next concurrency conflict."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Add live fare enrichment in Sprint 8 without breaking the current numeric typography and result-card hierarchy.",
+    "Perform a true browser-based visual QA pass when automation is available so spacing, animation timing, and mobile composition can be verified beyond smoke rendering.",
+    "Consider expanding the new geometric accent system into the outbound and inbound alternative cards with richer state feedback once live data work begins."
+  ]
+}

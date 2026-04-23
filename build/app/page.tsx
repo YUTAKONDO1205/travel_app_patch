@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState, type CSSProperties } from "react";
 import styles from "./page.module.css";
 import {
   CABIN_CLASS_OPTIONS,
@@ -98,6 +98,10 @@ function routeLabel(quote: FlightLegQuote) {
   return `${quote.origin.code} → ${quote.destination.code}`;
 }
 
+function revealStyle(step: number): CSSProperties {
+  return { ["--reveal-delay" as never]: `${step * 110}ms` } as CSSProperties;
+}
+
 function getAlternativeBadge(quote: FlightLegQuote, index: number, bestQuote: FlightLegQuote) {
   if (index === 0) {
     return "最安";
@@ -118,9 +122,9 @@ function getAlternativeBadge(quote: FlightLegQuote, index: number, bestQuote: Fl
   return "価格寄り";
 }
 
-function renderTicketCard(quote: FlightLegQuote, title: string) {
+function renderTicketCard(quote: FlightLegQuote, title: string, revealStep?: number) {
   return (
-    <article className={styles.ticketCard}>
+    <article className={styles.ticketCard} data-reveal={revealStep !== undefined || undefined} style={revealStep !== undefined ? revealStyle(revealStep) : undefined}>
       <div className={styles.ticketHead}>
         <span className={styles.ticketTag}>{title}</span>
         <strong className={styles.ticketPrice}>{formatCurrency(quote.totalPrice)}</strong>
@@ -296,6 +300,46 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    const revealNodes = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+
+    if (!revealNodes.length) {
+      return;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      revealNodes.forEach((node) => node.dataset.revealVisible = "true");
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+
+          entry.target.setAttribute("data-reveal-visible", "true");
+          observer.unobserve(entry.target);
+        });
+      },
+      {
+        threshold: 0.16,
+        rootMargin: "0px 0px -10% 0px",
+      },
+    );
+
+    revealNodes.forEach((node) => {
+      if (node.dataset.revealVisible === "true") {
+        return;
+      }
+
+      observer.observe(node);
+    });
+
+    return () => observer.disconnect();
+  }, [hasGenerated, loading, result]);
+
   return (
     <main className={styles.page}>
       <header className={`${styles.header} ${isScrolled ? styles.headerSolid : ""}`}>
@@ -324,7 +368,7 @@ export default function HomePage() {
         <div className={styles.coverBackdrop} />
         <div className={styles.shell}>
           <div className={styles.coverLayout}>
-            <div className={styles.coverCopy}>
+            <div className={styles.coverCopy} data-reveal style={revealStyle(0)}>
               <p className={styles.overline}>Grand Tour Ledger</p>
               <h1 className={styles.coverTitle}>往復ではなく、二枚の片道券として整える。</h1>
               <p className={styles.coverLead}>
@@ -347,7 +391,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className={styles.coverPreview}>
+            <div className={styles.coverPreview} data-reveal style={revealStyle(1)}>
               <div className={styles.previewSheet}>
                 <p className={styles.previewLabel}>Specimen route</p>
                 <div className={styles.previewCodes}>
@@ -391,8 +435,8 @@ export default function HomePage() {
       <section className={styles.proofStrip}>
         <div className={styles.shell}>
           <div className={styles.proofGrid}>
-            {proofPoints.map((item) => (
-              <article key={item.label} className={styles.proofCard}>
+            {proofPoints.map((item, index) => (
+              <article key={item.label} className={styles.proofCard} data-reveal style={revealStyle(index)}>
                 <span>{item.label}</span>
                 <strong>{item.value}</strong>
                 <p>{item.text}</p>
@@ -404,7 +448,7 @@ export default function HomePage() {
 
       <section className={styles.plannerStage} id="atelier">
         <div className={styles.shell}>
-          <div className={styles.sectionIntro}>
+          <div className={styles.sectionIntro} data-reveal style={revealStyle(0)}>
             <p className={styles.sectionLabel}>Planner atelier</p>
             <h2>条件を埋めるのではなく、旅の素描をつくる。</h2>
             <p>
@@ -413,7 +457,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className={styles.briefRibbon}>
+          <div className={styles.briefRibbon} data-reveal style={revealStyle(1)}>
             <div>
               <span>Current brief</span>
               <strong>{buildSearchSummary(formState)}</strong>
@@ -432,7 +476,7 @@ export default function HomePage() {
 
           <div className={styles.atelierLayout}>
             <aside className={styles.atelierAside}>
-              <div className={styles.atelierCard}>
+              <div className={styles.atelierCard} data-reveal style={revealStyle(2)}>
                 <p className={styles.sectionLabel}>House note</p>
                 <h3>最初に旅程全体を完成させない。</h3>
                 <p>
@@ -441,7 +485,7 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <div className={styles.atelierCard}>
+              <div className={styles.atelierCard} data-reveal style={revealStyle(3)}>
                 <p className={styles.sectionLabel}>Suggested frame</p>
                 <ul className={styles.memoList}>
                   <li>7月から9月をまとめて比較する。</li>
@@ -453,7 +497,7 @@ export default function HomePage() {
 
             <section className={styles.atelierSurface}>
               <form onSubmit={handleSearch} data-testid="trip-brief-form" className={styles.atelierForm}>
-                <article className={styles.sheet}>
+                <article className={styles.sheet} data-reveal style={revealStyle(4)}>
                   <div className={styles.sheetHead}>
                     <span>01</span>
                     <div>
@@ -480,7 +524,7 @@ export default function HomePage() {
                   </div>
                 </article>
 
-                <article className={styles.sheet}>
+                <article className={styles.sheet} data-reveal style={revealStyle(5)}>
                   <div className={styles.sheetHead}>
                     <span>02</span>
                     <div>
@@ -592,7 +636,7 @@ export default function HomePage() {
                   )}
                 </article>
 
-                <article className={styles.sheet}>
+                <article className={styles.sheet} data-reveal style={revealStyle(6)}>
                   <div className={styles.sheetHead}>
                     <span>03</span>
                     <div>
@@ -642,7 +686,7 @@ export default function HomePage() {
                   </label>
                 </article>
 
-                <article className={styles.sheet}>
+                <article className={styles.sheet} data-reveal style={revealStyle(7)}>
                   <div className={styles.sheetHead}>
                     <span>04</span>
                     <div>
@@ -676,7 +720,7 @@ export default function HomePage() {
                   </div>
                 </article>
 
-                <div className={styles.compareBar}>
+                <div className={styles.compareBar} data-reveal style={revealStyle(8)}>
                   <div className={styles.compareMeta}>
                     <span>現在の探索</span>
                     <strong>{dateSearchSummary}</strong>
@@ -717,7 +761,7 @@ export default function HomePage() {
 
       <section className={styles.resultSection} id="folio">
         <div className={styles.shell}>
-          <div className={styles.sectionIntro}>
+          <div className={styles.sectionIntro} data-reveal style={revealStyle(0)}>
             <p className={styles.sectionLabel}>Result folio</p>
             <h2>往路と復路を、左右のページに分けて読む。</h2>
             <p>
@@ -727,7 +771,7 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className={styles.loadingBoard}>
+            <div className={styles.loadingBoard} data-reveal style={revealStyle(1)}>
               <div className={styles.loadingRoute}>
                 <span>TYO</span>
                 <div className={styles.loadingLine} />
@@ -739,14 +783,14 @@ export default function HomePage() {
           ) : null}
 
           {!loading && !hasGenerated ? (
-            <div className={styles.emptyBoard}>
+            <div className={styles.emptyBoard} data-reveal style={revealStyle(1)}>
               <h3>brief を入力すると、ここに旅の folio が現れます。</h3>
               <p>複数月でも、固定日程でも、最安の入口と出口を左右に分けて表示します。</p>
             </div>
           ) : null}
 
           {!loading && hasGenerated && !result ? (
-            <div className={styles.emptyBoard}>
+            <div className={styles.emptyBoard} data-reveal style={revealStyle(1)}>
               <h3>この条件では十分なルート候補が見つかりませんでした。</h3>
               <ul className={styles.guidanceList}>
                 {noRouteGuidance.map((tip) => (
@@ -758,7 +802,7 @@ export default function HomePage() {
 
           {!loading && result ? (
             <>
-              <div className={styles.resultDock} data-testid="result-summary">
+              <div className={styles.resultDock} data-testid="result-summary" data-reveal style={revealStyle(1)}>
                 <div>
                   <span>Recommended two-ticket pairing</span>
                   <h3>{result.planHeadline}</h3>
@@ -774,9 +818,9 @@ export default function HomePage() {
               </div>
 
               <div className={styles.resultSpread}>
-                {renderTicketCard(result.bestOutbound, "片道1枚目 / 往路")}
+                {renderTicketCard(result.bestOutbound, "片道1枚目 / 往路", 2)}
 
-                <div className={styles.gapBand} data-testid="between-tickets-gap">
+                <div className={styles.gapBand} data-testid="between-tickets-gap" data-reveal style={revealStyle(3)}>
                   <p className={styles.sectionLabel}>Between tickets</p>
                   <h3>滞在先と gateway は、あえて同じにしなくていい。</h3>
                   <p>{result.betweenTicketsGap.summary}</p>
@@ -794,10 +838,10 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {renderTicketCard(result.bestInbound, "片道2枚目 / 復路")}
+                {renderTicketCard(result.bestInbound, "片道2枚目 / 復路", 4)}
               </div>
 
-              <div className={styles.resultLedger}>
+              <div className={styles.resultLedger} data-reveal style={revealStyle(4)}>
                 <div>
                   <span>探索ウィンドウ</span>
                   <strong>往路 {result.outboundDateWindow}</strong>
@@ -820,7 +864,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className={styles.ctaStrip}>
+              <div className={styles.ctaStrip} data-reveal style={revealStyle(5)}>
                 <a className={styles.primaryLink} href={result.bestOutbound.skyscannerUrl} target="_blank" rel="noreferrer">
                   往路の片道を Skyscanner で開く
                 </a>
@@ -833,7 +877,7 @@ export default function HomePage() {
               </div>
 
               <div className={styles.ticketRack}>
-                <section className={styles.rackSection}>
+                <section className={styles.rackSection} data-reveal style={revealStyle(6)}>
                   <div className={styles.rackHead}>
                     <h3>往路の代替入口</h3>
                     <span>{result.outboundAlternatives.length}案</span>
@@ -853,7 +897,7 @@ export default function HomePage() {
                   </div>
                 </section>
 
-                <section className={styles.rackSection}>
+                <section className={styles.rackSection} data-reveal style={revealStyle(7)}>
                   <div className={styles.rackHead}>
                     <h3>復路の代替出口</h3>
                     <span>{result.inboundAlternatives.length}案</span>
@@ -874,14 +918,14 @@ export default function HomePage() {
                 </section>
               </div>
 
-              <section className={styles.coverageSection}>
+              <section className={styles.coverageSection} data-reveal style={revealStyle(8)}>
                 <div className={styles.rackHead}>
                   <h3>候補国ごとのカバレッジ</h3>
                   <span>{result.destinationCountries.length}か国</span>
                 </div>
                 <div className={styles.coverageList}>
-                  {result.coverage.map((entry) => (
-                    <article key={entry.country.code} className={styles.coverageRow}>
+                  {result.coverage.map((entry, index) => (
+                    <article key={entry.country.code} className={styles.coverageRow} data-reveal style={revealStyle(index)}>
                       <div>
                         <span>{entry.country.region}</span>
                         <strong>{entry.country.name}</strong>
@@ -904,7 +948,7 @@ export default function HomePage() {
       <section className={styles.methodSection} id="method">
         <div className={styles.shell}>
           <div className={styles.methodLayout}>
-            <div className={styles.methodIntro}>
+            <div className={styles.methodIntro} data-reveal style={revealStyle(0)}>
               <p className={styles.sectionLabel}>Method rail</p>
               <h2>複雑な旅を、判断の順番だけで軽くする。</h2>
               <p>
@@ -914,8 +958,8 @@ export default function HomePage() {
             </div>
 
             <div className={styles.methodRail}>
-              {methodMoments.map((item) => (
-                <article key={item.title} className={styles.methodCard}>
+              {methodMoments.map((item, index) => (
+                <article key={item.title} className={styles.methodCard} data-reveal style={revealStyle(index + 1)}>
                   <span>{item.label}</span>
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
@@ -928,7 +972,7 @@ export default function HomePage() {
 
       <section className={styles.archetypeSection}>
         <div className={styles.shell}>
-          <div className={styles.sectionIntro}>
+          <div className={styles.sectionIntro} data-reveal style={revealStyle(0)}>
             <p className={styles.sectionLabel}>Trip archetypes</p>
             <h2>旅の型を先に選ぶと、ルートは自然に細くなる。</h2>
             <p>目的地がまだ揺れていても、旅の型が見えていれば入口と出口の選び方は変わります。</p>
@@ -936,7 +980,7 @@ export default function HomePage() {
 
           <div className={styles.archetypeGrid}>
             {archetypes.map((item, index) => (
-              <article key={item.title} className={styles.archetypeCard}>
+              <article key={item.title} className={styles.archetypeCard} data-reveal style={revealStyle(index + 1)}>
                 <div className={styles.archetypeVisual}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
                 </div>
@@ -952,7 +996,7 @@ export default function HomePage() {
       </section>
 
       <section className={styles.conciergeSection}>
-        <div className={styles.conciergeInner}>
+        <div className={styles.conciergeInner} data-reveal style={revealStyle(0)}>
           <p className={styles.sectionLabel}>Concierge brief</p>
           <h2>次の海外旅行は、日付ではなく季節から始めてもいい。</h2>
           <p>

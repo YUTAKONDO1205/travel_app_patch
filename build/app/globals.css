@@ -1,16 +1,17 @@
 :root {
-  --bg: #f3ece1;
-  --bg-deep: #e9dccb;
-  --surface: rgba(255, 250, 244, 0.78);
-  --surface-strong: rgba(255, 251, 246, 0.92);
-  --ink: #241811;
-  --muted: #6b5648;
-  --accent: #bf9666;
-  --accent-strong: #8f683e;
-  --line: rgba(78, 54, 38, 0.12);
-  --shadow: 0 24px 60px rgba(33, 23, 17, 0.08);
-  --font-display: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
-  --font-body: "Aptos", "Segoe UI Variable", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+  --bg: #efe4d3;
+  --bg-deep: #dbc7ac;
+  --surface: rgba(247, 238, 224, 0.94);
+  --surface-strong: rgba(255, 251, 246, 0.98);
+  --ink: #201713;
+  --muted: #655143;
+  --accent: #c29a68;
+  --accent-strong: #9b7141;
+  --accent-soft: #5c655a;
+  --line: rgba(89, 66, 45, 0.12);
+  --shadow: 0 24px 80px rgba(16, 11, 9, 0.12);
+  --font-display: var(--font-display-family);
+  --font-body: var(--font-body-family);
 }
 
 * {
@@ -26,10 +27,10 @@ body {
   min-width: 320px;
   color: var(--ink);
   background:
-    radial-gradient(circle at top left, rgba(191, 150, 102, 0.16), transparent 26%),
-    radial-gradient(circle at 85% 12%, rgba(70, 49, 35, 0.08), transparent 22%),
-    linear-gradient(180deg, #f7f2e9 0%, var(--bg) 46%, var(--bg-deep) 100%);
-  font-family: var(--font-body);
+    radial-gradient(circle at top left, rgba(194, 154, 104, 0.18), transparent 24%),
+    radial-gradient(circle at 82% 10%, rgba(92, 101, 90, 0.08), transparent 18%),
+    linear-gradient(180deg, #f5ebdd 0%, var(--bg) 46%, var(--bg-deep) 100%);
+  font-family: var(--font-body), sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -50,5 +51,5 @@ img {
 }
 
 ::selection {
-  background: rgba(191, 150, 102, 0.24);
+  background: rgba(194, 154, 104, 0.28);
 }

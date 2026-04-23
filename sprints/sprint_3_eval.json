@@ -1,8 +1,8 @@
 {
   "sprint": 3,
   "implemented": [
-    "Updated specs/spec.json and 設計書.md so Sprint 3 is Fare Estimate Integrity, with live fare enrichment moved to Sprint 4.",
-    "Added fare estimate ranges to each generated flight leg and to the combined total/per-person result.",
+    "Updated specs/spec.json and 設計書.md so Sprint 3 is Fare Estimate Integrity.",
+    "Added fare estimate ranges to each generated flight leg and to the combined total per-person result.",
     "Added confidence labels and estimate-basis strings for recommended legs, including season, stop assumption, and distance.",
     "Updated the results UI so the premium presentation shows the main estimate, the range, per-person range, confidence label, and estimate basis without pretending deterministic fares are live inventory.",
     "Added npm run test:planner, a deterministic planner smoke test that validates range bounds, confidence labels, open-jaw gap notes, and Skyscanner handoff generation.",
@@ -13,7 +13,7 @@
     "Displayed fares are still deterministic reference estimates and are not live API-backed inventory.",
     "The price range is a local uncertainty band, not a statistically validated market confidence interval.",
     "Interactive viewport verification still requires Playwright or browser automation, which is not available in this session.",
-    "Live fare provider integration remains planned for Sprint 4 after provider and API credentials are selected."
+    "Live fare provider integration remains deferred until after the approved Sprint 5 Grand Tour Ledger redesign and is now planned for Sprint 6 after provider and API credentials are selected."
   ],
   "run_instructions": {
     "install": "npm install",

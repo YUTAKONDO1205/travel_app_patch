@@ -1,0 +1,56 @@
+{
+  "sprint": 5,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "Python harness static compile check",
+      "TypeScript compile check in build/",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build",
+      "Headless Edge screenshot spot-check of the redesigned cover spread"
+    ],
+    "notes": "Browser automation CLI was not available in this session. The redesign was checked through local smoke validation, production build, and a headless Edge screenshot of the rendered page."
+  },
+  "checks": [
+    {
+      "name": "Grand Tour Ledger redesign is implemented",
+      "result": "PASS",
+      "evidence": "build/app/page.tsx now uses a cover spread, proof strip, planner atelier, result folio, method rail, trip archetypes, concierge CTA, and footer instead of the previous generic card stack."
+    },
+    {
+      "name": "Material and typography system changed substantially",
+      "result": "PASS",
+      "evidence": "build/app/globals.css and build/app/layout.tsx now define a parchment, walnut, and brass palette plus Cormorant Garamond and Noto Sans JP via next/font/google."
+    },
+    {
+      "name": "Planner and result behavior are preserved",
+      "result": "PASS",
+      "evidence": "The redesigned page still uses the existing planner state, flexible month and stay-range controls, generated route results, open-jaw gap explanation, and Skyscanner handoff links."
+    },
+    {
+      "name": "Target app renders through local smoke validation",
+      "result": "PASS",
+      "evidence": "npm run smoke returned PASS for http://127.0.0.1:3100 after the redesign."
+    },
+    {
+      "name": "Production build completes",
+      "result": "PASS",
+      "evidence": "npm run build completed successfully after clearing .next and running build separately from smoke."
+    },
+    {
+      "name": "Responsive behavior at about 390px and 1280px",
+      "result": "UNVERIFIED",
+      "evidence": "Responsive rules exist for the new cover, planner, and result layouts, but no full interactive mobile and desktop browser pass was available in this session."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Run an interactive browser pass when Playwright or agent-browser is available, especially for the planner atelier, result folio, and mobile layout.",
+    "Capture desktop and mobile screenshots of the redesigned planner and result sections after actual form submission, not only the cover spread.",
+    "Proceed to Sprint 6 live fare enrichment without undoing the new Grand Tour Ledger visual direction."
+  ]
+}

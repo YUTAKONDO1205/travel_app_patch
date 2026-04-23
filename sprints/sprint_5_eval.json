@@ -1,0 +1,39 @@
+{
+  "sprint": 5,
+  "implemented": [
+    "Rebuilt the Maison Passage homepage around a new Grand Tour Ledger direction instead of the previous frosted-card editorial shell.",
+    "Replaced the old hero with a dark cover spread, specimen route folio, and quieter premium copy that frames the product as a route dossier.",
+    "Replaced the previous planner panel with a planner atelier made of numbered brief sheets, a sticky brief ribbon, a compare bar, and more intentional control groupings.",
+    "Rebuilt the results area into a result folio with an opening dock, left and right ticket cards for outbound and return, and a central open-jaw gap band.",
+    "Reworked lower-page storytelling into a proof strip, method rail, trip archetypes, concierge CTA, and a darker footer so the whole page reads as one visual system.",
+    "Updated global typography and color treatment with a sharper display/body pairing and a parchment, walnut, and brass material system.",
+    "Preserved the existing overseas open-jaw planning logic, flexible month comparison, stay-window behavior, estimate transparency, and Skyscanner handoff flow while changing the presentation substantially."
+  ],
+  "known_issues": [
+    "Displayed fares are still deterministic reference estimates and are not live API-backed inventory.",
+    "Headless screenshot review was used as a visual gut-check, but full interactive browser automation is still unavailable in this session.",
+    "The new typography uses next/font/google, so production builds depend on Google font fetch during build time."
+  ],
+  "run_instructions": {
+    "install": "npm install",
+    "dev": "npm run dev"
+  },
+  "validation": [
+    {
+      "command": "python -m py_compile agents/orchestrator_codex.py agents/codex_runner.py",
+      "result": "passed"
+    },
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run smoke",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed when run separately after clearing .next"
+    }
+  ]
+}

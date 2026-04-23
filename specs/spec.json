@@ -1,8 +1,8 @@
 {
   "brand_name": "Maison Passage",
   "product_name": "Maison Passage Open Jaw Explorer",
-  "summary": "Maison Passage Open Jaw Explorer is a browser-demoable overseas open-jaw planning app that helps travelers choose one departure country, compare multiple destination countries, and identify the cheapest inbound entry leg and cheapest return exit leg before handing off to live search.",
-  "vision": "Turn a complex multi-country overseas trip into a calm, luxury editorial decision flow where the traveler can confidently choose how to enter and leave a region before worrying about internal routing.",
+  "summary": "Maison Passage Open Jaw Explorer is a browser-demoable overseas open-jaw planning app that helps travelers choose one departure country, compare multiple destination countries, and identify the cheapest inbound entry leg and cheapest return exit leg through a bold Grand Tour Ledger premium dossier experience before handing off to live search.",
+  "vision": "Turn a complex multi-country overseas trip into a collectible Grand Tour Ledger dossier where the traveler can confidently choose how to enter and leave a region before worrying about internal routing.",
   "target_users": [
     "Japanese-speaking travelers planning premium overseas trips across multiple countries.",
     "Travelers who want to compare open-jaw entry and exit combinations before booking anything.",
@@ -13,7 +13,8 @@
     "Displayed fares must be framed honestly as estimates until the user opens a live provider such as Skyscanner.",
     "The MVP intentionally excludes the route between the inbound arrival airport and the return departure airport inside the destination region.",
     "The default language is Japanese and the default displayed currency is JPY.",
-    "The experience should feel premium and quiet, with generous whitespace and a luxury editorial rhythm.",
+    "The next design sprint should materially upgrade the presentation while preserving the existing overseas open-jaw planner logic, flexible outbound month comparison, and stay-window behavior.",
+    "The experience should feel like a premium travel dossier rather than a generic luxury landing page or dashboard.",
     "The app should remain usable in one browser session without login.",
     "Travelers often know a target season such as July through September before they know exact dates."
   ],
@@ -26,59 +27,71 @@
   ],
   "design_direction": {
     "tone": [
-      "High-end, warm, spacious, trustworthy, and calm.",
-      "Warm off-white should be the primary background instead of stark white.",
-      "Use gold, bronze, dark brown, and near-black as the dominant accent palette.",
-      "Avoid bright blue-first utility styling and avoid information-dense dashboard composition."
+      "Grand Tour Ledger should feel archival, cinematic, worldly, and assured rather than politely minimal.",
+      "Base surfaces should evoke parchment, binding cloth, inked paper, and premium dossier inserts instead of generic luxury website cards.",
+      "Use parchment, oxblood, espresso, brass, and near-black as the dominant palette, with any atlas green or stamp red used sparingly.",
+      "Typography and labeling should feel like a curated folio with captions, ledger marks, proof stamps, and editorial side notes."
     ],
     "layout_principles": [
-      "The page should read like a luxury travel editorial landing page first and a planning tool second.",
-      "Whitespace should be treated as a primary design material.",
-      "Each major section should have a distinct visual rhythm while remaining cohesive.",
-      "CTA moments should be restrained and intentional rather than repeated aggressively."
+      "The page should read like a deliberate dossier journey, with each section behaving like a spread, insert, or annotated rail.",
+      "The planner atelier and result folio are the operational centerpieces and should feel integrated into the narrative order rather than bolted onto the page.",
+      "Evidence cues such as proof strips, annotations, dividers, and method notes should build trust without turning the page into a dashboard.",
+      "The section sequence should be explicit and linear rather than interchangeable."
     ],
     "motion": [
-      "Keep animation subtle and slow enough to feel premium.",
-      "Prefer fade, reveal, and light vertical slide treatments over flashy movement."
+      "Keep animation restrained and tactile, such as measured reveals, subtle parallax, or folio-like transitions.",
+      "Avoid flashy motion, rapid counters, or high-frequency hover effects that break the premium dossier mood."
+    ],
+    "section_order": [
+      "Header",
+      "Cover Spread",
+      "Proof Strip",
+      "Planner Atelier",
+      "Result Folio",
+      "Story/Method Rail",
+      "Archetypes",
+      "Concierge CTA",
+      "Footer"
     ],
     "required_sections": [
-      "A fixed transparent header with minimal navigation that becomes more readable on scroll.",
-      "A full-screen hero with a warm dark overlay, short catch copy, and strong brand presentation.",
-      "A centered concept-introduction section using minimal copy and generous spacing.",
-      "A value collage section with one dominant visual block and smaller supporting blocks.",
-      "An alternating story section that explains the open-jaw decision flow in editorial beats.",
-      "A lineup card section with refined plan cards and thin divider details.",
-      "A restrained CTA section.",
-      "A dark footer with premium brand tone."
+      "A fixed refined header that begins light and transparent, then gains a readable archival surface on scroll.",
+      "A first-viewport cover spread with bold brand framing, concise copy, and a premium dossier mood instead of a generic hero.",
+      "A proof strip immediately below the cover spread that surfaces trust cues such as estimate honesty, airport coverage scale, or method notes.",
+      "A planner atelier section that contains the full overseas open-jaw planning interface, including exact-date and flexible-window modes.",
+      "A result folio section that frames the recommended outbound and return legs, combined estimate, and supporting alternatives as a premium results spread.",
+      "A story/method rail that explains the open-jaw logic and the flexible month plus stay-window approach in annotated editorial beats.",
+      "An archetypes section with at least three refined travel profiles or planning styles.",
+      "A restrained concierge CTA section that feels bespoke rather than sales-heavy.",
+      "A footer that closes the dossier with a dark premium tone."
     ]
   },
   "features": [
     {
       "id": "luxury-brand-shell",
-      "name": "Luxury Brand Shell",
-      "description": "The home page should establish Maison Passage as a luxury overseas travel planning brand before presenting the interactive planning tool.",
+      "name": "Grand Tour Ledger Shell",
+      "description": "The home page should establish Maison Passage as a bold premium dossier brand before presenting the interactive planning tool.",
       "must_have": [
-        "A fixed transparent header that gains a soft surface or blur after scroll.",
-        "A full-screen hero with warm off-white and dark overlay contrast, concise premium copy, and a clear primary CTA.",
-        "A centered concept introduction that explains the service in a restrained editorial voice.",
-        "A restrained CTA section and dark footer that maintain the premium tone."
+        "A fixed refined header that gains a subtle archival surface or blur after scroll.",
+        "A first-viewport cover spread with strong brand presentation, concise premium copy, and a clear primary CTA.",
+        "A proof strip that communicates trust cues such as estimate honesty, airport coverage, or method details.",
+        "A restrained concierge CTA section and dark footer that maintain the dossier tone."
       ]
     },
     {
       "id": "editorial-storytelling",
-      "name": "Editorial Storytelling Experience",
-      "description": "The page should communicate value through visual storytelling rather than dashboard density.",
+      "name": "Grand Tour Ledger Narrative Flow",
+      "description": "The page should communicate value through a bold dossier sequence rather than a generic landing-page pattern.",
       "must_have": [
-        "A value collage section with asymmetrical composition and layered content blocks.",
-        "An alternating story section with text and visual blocks that explain the planning flow.",
-        "A lineup section with at least three refined cards showing different planning styles or trip profiles.",
-        "Typography, spacing, and dividers that feel premium and consistent from hero to footer."
+        "The primary section order is header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, and footer.",
+        "The planner atelier and result folio feel like the operational heart of the page, not detached utility modules.",
+        "The story/method rail explains the open-jaw decision flow and the flexible travel-window method in annotated editorial beats.",
+        "Typography, spacing, dividers, captions, and accents feel premium and consistent from cover spread to footer."
       ]
     },
     {
       "id": "trip-brief-form",
-      "name": "Trip Brief Form",
-      "description": "The editorial landing page still needs a practical interface for the overseas open-jaw planning flow.",
+      "name": "Planner Atelier",
+      "description": "The dossier experience still needs a practical interface for the overseas open-jaw planning flow.",
       "must_have": [
         "Departure country selector.",
         "Exact date input for users who already know the outbound day.",
@@ -116,7 +129,7 @@
     },
     {
       "id": "open-jaw-results",
-      "name": "Open Jaw Comparison Results",
+      "name": "Result Folio",
       "description": "The core result surfaces the cheapest entry leg and cheapest exit leg separately for an overseas open-jaw itinerary.",
       "must_have": [
         "A clearly labeled cheapest outbound entry leg.",
@@ -150,36 +163,38 @@
     }
   ],
   "acceptance_criteria": [
-    "The home screen shows a fixed transparent header with the Maison Passage brand on the left and minimal navigation on the right.",
-    "After scrolling, the header gains a subtle readable background without breaking the premium visual tone.",
-    "The first viewport is a full-height hero with a warm dark overlay, concise luxury copy, and a clear brand-led CTA.",
-    "A centered concept-introduction section appears below the hero and uses restrained copy with generous whitespace.",
-    "A value collage section appears before or around the core planner experience and feels editorial rather than dashboard-like.",
-    "An alternating story section explains the open-jaw flow in multiple content blocks.",
-    "A lineup section presents at least three refined cards with visual areas, short descriptions, and plan names.",
-    "A restrained CTA section appears before a dark footer, and both sections remain visually consistent with the luxury palette.",
+    "The home screen follows the Grand Tour Ledger section order: fixed header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, and footer.",
+    "The fixed header remains readable after scroll without losing the premium archival tone.",
+    "The first viewport is a true cover spread with bold brand framing, concise copy, and dossier-like presentation rather than a generic hero.",
+    "A proof strip appears immediately below the cover spread and surfaces trust cues such as estimate honesty, airport coverage scale, or method framing.",
+    "The planner atelier contains the full overseas open-jaw input set, including exact-date mode, flexible month mode, and stay-length range controls.",
+    "The result folio appears as the next major spread after planning interaction and frames the recommended entry leg, exit leg, total estimate, range, and confidence metadata.",
+    "The story/method rail explains the open-jaw flow and the flexible month plus stay-window method in multiple editorial beats.",
+    "The archetypes section presents at least three refined travel profiles or planning styles.",
+    "The concierge CTA appears before the footer and feels premium and restrained rather than repetitive.",
     "The user cannot compare routes until departure country, valid date mode inputs, stay length or stay range, and at least one destination country are set.",
     "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound leg, a cheapest return leg, and a combined estimated total.",
     "For flexible planning, the user can choose multiple target months such as July, August, and September, choose a stay range such as 26 to 36 days, and receive a best outbound date plus a best return date from the derived return window.",
+    "Exact-date mode remains available for users with fixed outbound dates and fixed stay lengths.",
     "The flexible result states the compared outbound window, return window, stay range, and compared date counts.",
     "Estimated fares are shown with ranges and confidence labels so deterministic reference prices are not mistaken for final live inventory.",
     "The result explicitly states that the arrival airport and return airport may differ and that the internal route is not included.",
     "The results area contains links for outbound, return, and combined Skyscanner search handoff.",
-    "The palette is based on warm off-white, gold, bronze, dark brown, and near-black rather than bright utility colors.",
+    "The visual language uses parchment, oxblood, espresso, brass, and near-black cues rather than generic warm-off-white minimalism.",
     "The page works at approximately 390px mobile width and 1280px desktop width without obvious horizontal overflow."
   ],
   "demo_script": [
-    "Open the app and confirm that the first impression is a luxury travel landing page rather than a dense utility dashboard.",
-    "Observe the fixed transparent header, then scroll and confirm that it becomes more readable with a subtle background treatment.",
-    "Review the hero, concept section, and value collage to confirm the warm off-white, gold, bronze, dark brown, and near-black visual direction.",
-    "Scroll through the alternating story section and confirm that the open-jaw value proposition is explained in clear editorial beats.",
-    "Review the lineup cards and confirm that at least three premium card treatments are shown.",
-    "Use the planner area to choose Japan as the departure country plus France, United Kingdom, and Germany as destination countries.",
+    "Open the app and confirm that the first impression is a Grand Tour Ledger dossier rather than a generic luxury landing page or dense utility dashboard.",
+    "Observe the fixed header, then scroll and confirm that it becomes more readable with a subtle archival surface treatment.",
+    "Review the cover spread and confirm that the first viewport feels bolder, more cinematic, and more dossier-like than the previous generic premium shell.",
+    "Confirm that a proof strip appears directly after the cover spread and communicates trust cues such as estimate honesty, methodology, or airport coverage.",
+    "Use the planner atelier to choose Japan as the departure country plus France, United Kingdom, and Germany as destination countries.",
     "Leave the planner in flexible mode with July, August, and September selected, choose a 26 to 36 day stay range, then run the comparison.",
-    "Confirm that the app shows the cheapest outbound entry leg date, then finds the cheapest return exit leg within the derived return window, with a combined estimate.",
-    "Confirm that compared outbound/return date counts and the stay range are visible in the result.",
-    "Confirm that the result explains the open-jaw assumption and excludes internal travel.",
-    "Open the Skyscanner open-jaw handoff and verify that the suggested entry and exit routes are carried into the live search."
+    "Confirm that the result folio shows the cheapest outbound entry leg date, then finds the cheapest return exit leg within the derived return window, with a combined estimate.",
+    "Confirm that compared outbound and return date counts, the outbound window, the return window, the stay range, fare ranges, and confidence labels are visible in the result folio.",
+    "Review the story/method rail and confirm that the open-jaw value proposition and flexible travel-window logic are explained in annotated editorial beats.",
+    "Review the archetypes section and confirm that at least three premium travel profiles or planning styles are shown.",
+    "Confirm that the result explains the open-jaw assumption, excludes internal travel, and retains outbound, return, and combined Skyscanner handoff links."
   ],
   "sprints": [
     {
@@ -248,12 +263,29 @@
     },
     {
       "sprint": 5,
+      "name": "Grand Tour Ledger Redesign",
+      "goal": "Recast the current Maison Passage experience as a bold Grand Tour Ledger premium dossier without changing the underlying overseas open-jaw planner behavior.",
+      "scope": [
+        "Replace the current generic premium shell with the new section order: header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, and footer.",
+        "Upgrade the visual language to a bolder dossier system using parchment, oxblood, espresso, brass, and near-black cues.",
+        "Preserve the existing planner behavior, including exact-date mode, flexible month comparison, stay-window search, estimate transparency, alternatives, airport coverage, and Skyscanner handoff links.",
+        "Reframe the copy and information hierarchy so the planner atelier and result folio feel like the operational centerpieces of the page."
+      ],
+      "acceptance_criteria": [
+        "The page follows the full Grand Tour Ledger section order with clear, intentional pacing.",
+        "The redesign feels materially bolder and less generic than the prior luxury editorial shell.",
+        "The overseas open-jaw planner, flexible months, stay-window behavior, range labels, confidence labels, and handoff links remain intact after the redesign.",
+        "The planner atelier and result folio are visually prominent without regressing mobile or desktop usability."
+      ]
+    },
+    {
+      "sprint": 6,
       "name": "Live Fare Enrichment",
-      "goal": "Introduce a real fare source or provider-backed enrichment without losing the calm premium experience.",
+      "goal": "Introduce a real fare source or provider-backed enrichment after the Grand Tour Ledger redesign lands.",
       "scope": [
         "Introduce a live price provider or search integration.",
         "Distinguish clearly between cached estimates and live prices.",
-        "Handle provider errors without breaking the planning flow or premium presentation."
+        "Handle provider errors without breaking the planning flow or premium dossier presentation."
       ],
       "acceptance_criteria": [
         "The app can show at least one live or near-live fare source for the suggested entry and exit routes.",

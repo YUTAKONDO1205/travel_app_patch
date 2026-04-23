@@ -19,98 +19,82 @@ import {
 import {
   INITIAL_FORM_STATE,
   buildNoRouteGuidance,
-  getDateSearchSummary,
   buildSearchSummary,
   formatCurrency,
   formatCurrencyRange,
   formatDateLabel,
   formatDuration,
   generateFlightSearchResult,
+  getDateSearchSummary,
   getFormValidationMessage,
+  getReturnDate,
   getReturnWindowLabel,
   getStayRangeLabel,
-  getReturnDate,
   isFormValid,
   type FlightLegQuote,
   type FlightSearchResult,
   type PlannerFormState,
 } from "../lib/travel-planner";
 
-const storyMoments = [
+const proofPoints = [
   {
-    eyebrow: "Quiet planning",
-    title: "複数国の旅を、静かな判断に戻す。",
-    text:
-      "まず決めるのは、出発国、候補国、日付、そして空の上での過ごし方だけ。細かな現地移動に入る前に、旅全体の入口と出口を落ち着いて整えます。",
+    label: "編集視点",
+    value: "入口と出口を分ける",
+    text: "最初に決めるのは、旅程全体ではなく国際線の輪郭だけ。",
   },
   {
-    eyebrow: "Open jaw logic",
-    title: "到着地と帰国地を分けて、旅の余白を残す。",
-    text:
-      "往路の最安入口と復路の最安出口を独立して比較します。成田からフランクフルトへ入り、パリから羽田へ戻るような open jaw の考え方を自然に扱えます。",
+    label: "探索単位",
+    value: "複数月 + 滞在幅",
+    text: "7月から9月、26日から36日といった曖昧な条件で比較できます。",
   },
   {
-    eyebrow: "Live handoff",
-    title: "候補が決まったら、実検索へすぐ進む。",
-    text:
-      "表示価格は参考見積りです。ルートの形が見えたら、Skyscanner の片道・multi-city 検索へ移り、最終的な在庫と価格を確認できます。",
+    label: "最終確認",
+    value: "Skyscanner handoff",
+    text: "ここでは決めすぎず、候補が見えた段階で実検索へ渡します。",
   },
 ];
 
-const lineupCards = [
+const methodMoments = [
   {
-    label: "Grand tour",
-    title: "欧州3か国を横断する旅",
-    text: "フランス、イギリス、ドイツのように国をまたぐ旅で、入口と出口を別々に最適化します。",
+    label: "Chapter 01",
+    title: "出発国から、代表空港を静かに広げる。",
+    text:
+      "日本を選んだら、羽田・成田・関西といった主要な出発空港に展開します。最初からひとつの空港に閉じないことで、open jaw の入口候補を広く拾います。",
   },
   {
-    label: "Twin gateway",
-    title: "到着都市と帰国都市を変える旅",
-    text: "最初の都市に縛られず、最後に滞在する都市から帰国できる選択肢を広げます。",
+    label: "Chapter 02",
+    title: "往路の最安日を先に決め、その後で復路を探す。",
+    text:
+      "フレックス探索では、選んだ月全体を対象に往路の最安入口を先に見つけます。そこから滞在レンジだけ時間をずらして、復路の最安出口を探します。",
   },
   {
-    label: "Long stay",
-    title: "長めの滞在を上品に整える旅",
-    text: "滞在日数と客室クラスを変えながら、費用と移動負担のバランスを比較します。",
+    label: "Chapter 03",
+    title: "都市間移動は、次の判断として残す。",
+    text:
+      "フランクフルトに入り、パリから戻る。その間の列車や短距離便はまだ決めません。入口と出口だけを分けて整えることで、旅全体の自由度が上がります。",
+  },
+];
+
+const archetypes = [
+  {
+    label: "Grand Tour",
+    title: "欧州三都の横断",
+    text: "フランス、イギリス、ドイツのように複数国をまたぎ、入口と出口を別々に構成する旅。",
+  },
+  {
+    label: "Long Stay",
+    title: "一か月前後の余白",
+    text: "7月出発から8月帰国のように、滞在レンジをゆるく持ちながら価格の落ちる日を見ます。",
+  },
+  {
+    label: "Dual Gateway",
+    title: "到着地と帰国地を変える",
+    text: "最初の到着都市に縛られず、最後に滞在する都市から戻る open jaw を前提に整えます。",
   },
 ];
 
 function routeLabel(quote: FlightLegQuote) {
   return `${quote.origin.code} → ${quote.destination.code}`;
-}
-
-function renderLegCard(quote: FlightLegQuote, title: string) {
-  return (
-    <article className={styles.legCard}>
-      <div className={styles.legHeader}>
-        <span className={styles.legTag}>{title}</span>
-        <span className={styles.legPrice}>{formatCurrency(quote.totalPrice)}</span>
-      </div>
-      <h3 className={styles.routeCodes}>{routeLabel(quote)}</h3>
-      <p className={styles.routeCities}>
-        {quote.origin.city} ({quote.origin.name}) → {quote.destination.city} ({quote.destination.name})
-      </p>
-      <div className={styles.metaRow}>
-        <span>{formatDateLabel(quote.travelDate)}</span>
-        <span>{quote.stopLabel}</span>
-        <span>{formatDuration(quote.durationHours)}</span>
-        <span>{quote.confidenceLabel}</span>
-      </div>
-      <div className={styles.estimateBand}>
-        <span>参考レンジ</span>
-        <strong>{formatCurrencyRange(quote.totalPriceRange)}</strong>
-        <small>{quote.estimateBasis}</small>
-      </div>
-      <ul className={styles.reasonList}>
-        {quote.reasonPoints.map((reason) => (
-          <li key={reason}>{reason}</li>
-        ))}
-      </ul>
-      <a className={styles.linkButton} href={quote.skyscannerUrl} target="_blank" rel="noreferrer">
-        Skyscanner でこの片道を開く
-      </a>
-    </article>
-  );
 }
 
 function getAlternativeBadge(quote: FlightLegQuote, index: number, bestQuote: FlightLegQuote) {
@@ -131,6 +115,50 @@ function getAlternativeBadge(quote: FlightLegQuote, index: number, bestQuote: Fl
   }
 
   return "価格寄り";
+}
+
+function renderTicketCard(quote: FlightLegQuote, title: string) {
+  return (
+    <article className={styles.ticketCard}>
+      <div className={styles.ticketHead}>
+        <span className={styles.ticketTag}>{title}</span>
+        <strong className={styles.ticketPrice}>{formatCurrency(quote.totalPrice)}</strong>
+      </div>
+
+      <div className={styles.ticketRoute}>
+        <span>{quote.origin.code}</span>
+        <div className={styles.ticketLine} />
+        <span>{quote.destination.code}</span>
+      </div>
+
+      <p className={styles.ticketCities}>
+        {quote.origin.city} / {quote.destination.city}
+      </p>
+
+      <div className={styles.ticketMeta}>
+        <span>{formatDateLabel(quote.travelDate)}</span>
+        <span>{quote.stopLabel}</span>
+        <span>{formatDuration(quote.durationHours)}</span>
+      </div>
+
+      <div className={styles.ticketRange}>
+        <span>参考レンジ</span>
+        <strong>{formatCurrencyRange(quote.totalPriceRange)}</strong>
+        <small>{quote.confidenceLabel}</small>
+        <small>{quote.estimateBasis}</small>
+      </div>
+
+      <ul className={styles.reasonList}>
+        {quote.reasonPoints.map((reason) => (
+          <li key={reason}>{reason}</li>
+        ))}
+      </ul>
+
+      <a className={styles.ticketLink} href={quote.skyscannerUrl} target="_blank" rel="noreferrer">
+        この片道を Skyscanner で確認
+      </a>
+    </article>
+  );
 }
 
 export default function HomePage() {
@@ -238,7 +266,7 @@ export default function HomePage() {
         setLoading(false);
       });
       pendingSearchRef.current = null;
-    }, 720);
+    }, 820);
   }
 
   function handleReset() {
@@ -256,7 +284,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 32);
+      setIsScrolled(window.scrollY > 24);
     };
 
     handleScroll();
@@ -283,199 +311,207 @@ export default function HomePage() {
           </a>
 
           <nav className={styles.headerNav} aria-label="ページ内メニュー">
-            <a href="#intro">Concept</a>
-            <a href="#brief">Search</a>
-            <a href="#results">Result</a>
+            <a href="#atelier">Planner</a>
+            <a href="#folio">Result</a>
+            <a href="#method">Method</a>
           </nav>
 
-          <a className={styles.headerCta} href="#brief">
-            旅を整える
+          <a className={styles.headerCta} href="#atelier">
+            旅の台帳を開く
           </a>
         </div>
       </header>
 
-      <section className={styles.hero} id="top" data-testid="hero">
-        <div className={styles.heroBackdrop} />
+      <section className={styles.coverSection} id="top" data-testid="hero">
+        <div className={styles.coverBackdrop} />
         <div className={styles.shell}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>Premium overseas open-jaw planning</p>
-              <h1 className={styles.heroTitle}>旅の入口と出口を、美しく決める。</h1>
-              <p className={styles.heroLead}>
-                複数の国をめぐる海外旅行で、まず必要なのは最初の到着地と最後の帰国地を静かに見極めること。
-                Maison Passage は代表空港を比較し、open jaw の往路と復路を上品に整理します。
+          <div className={styles.coverLayout}>
+            <div className={styles.coverCopy}>
+              <p className={styles.overline}>Grand Tour Ledger</p>
+              <h1 className={styles.coverTitle}>旅の入口と出口を、台帳のように整える。</h1>
+              <p className={styles.coverLead}>
+                目的地を先に決めきらなくてもいい。まずは出発国、候補の国、そして季節の幅だけ。
+                Maison Passage は、複数月の往路と滞在レンジ後の復路を静かに比べ、海外 open jaw の輪郭だけを美しく選び出します。
               </p>
-              <div className={styles.heroActions}>
-                <a className={styles.primaryButton} href="#brief">
-                  検索ブリーフへ
+
+              <div className={styles.coverActions}>
+                <a className={styles.primaryButton} href="#atelier">
+                  旅の条件を綴る
                 </a>
-                <a className={styles.secondaryButton} href="#results">
-                  結果の見方を見る
+                <a className={styles.secondaryButton} href="#folio">
+                  結果の読み方を見る
                 </a>
+              </div>
+
+              <div className={styles.coverNote}>
+                <span>いま決めるのは、国際線の入口と出口だけ。</span>
+                <span>そのあいだの列車や短距離便は、まだ余白として残します。</span>
               </div>
             </div>
 
-            <div className={styles.heroAside}>
-              <div className={styles.metricCard}>
-                <span>Departure coverage</span>
-                <strong>{departureAirportCount || 5} airports</strong>
-                <p>出発国の代表空港を広げ、入口の比較を現実的にします。</p>
+            <div className={styles.coverPreview}>
+              <div className={styles.previewSheet}>
+                <p className={styles.previewLabel}>Specimen route</p>
+                <div className={styles.previewCodes}>
+                  <span>TYO</span>
+                  <span>FRA</span>
+                  <span>PAR</span>
+                  <span>TYO</span>
+                </div>
+                <div className={styles.previewArc} />
+                <div className={styles.previewLegend}>
+                  <div>
+                    <span>Entry</span>
+                    <strong>Frankfurt</strong>
+                  </div>
+                  <div>
+                    <span>Exit</span>
+                    <strong>Paris</strong>
+                  </div>
+                  <div>
+                    <span>Window</span>
+                    <strong>Jul-Sep / 26-36d</strong>
+                  </div>
+                </div>
               </div>
-              <div className={styles.metricCard}>
-                <span>Destination spread</span>
-                <strong>{destinationAirportCount || 9} airports</strong>
-                <p>候補国の空港群から、到着地と帰国地を別々に選べます。</p>
-              </div>
-              <div className={styles.metricCard}>
-                <span>Travel posture</span>
-                <strong>Quiet confidence</strong>
-                <p>必要な入力だけに絞り、判断の余白を残します。</p>
+
+              <div className={styles.previewDock}>
+                <div>
+                  <span>Departure</span>
+                  <strong>{departureAirportCount || 5} airports</strong>
+                </div>
+                <div>
+                  <span>Destinations</span>
+                  <strong>{destinationAirportCount || 9} airports</strong>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className={styles.shell}>
-        <section className={styles.intro} id="intro">
-          <p className={styles.introKicker}>Concept</p>
-          <h2 className={styles.introTitle}>予約サイトに入る前の、静かな編集室。</h2>
-          <p className={styles.introText}>
-            価格比較の前に、旅の輪郭を整える。温かい紙のような背景、ブロンズの細い線、余白を活かした構成で、
-            複雑な航空路の選択を落ち着いた体験に変えます。
-          </p>
-        </section>
-
-        <section className={styles.collageSection} aria-label="価値訴求コラージュ">
-          <div className={styles.collageLead}>
-            <p className={styles.sectionEyebrow}>Value collage</p>
-            <h2>複数国をめぐる旅に、雑誌の見開きのような余白を。</h2>
-            <p>
-              1枚の大きな視覚要素と小さなカードを組み合わせ、ルート比較を「情報の山」ではなく、
-              旅の意図を整えるための編集作業として見せます。
-            </p>
-          </div>
-          <div className={styles.collage}>
-            <article className={`${styles.collageCard} ${styles.collageTall}`}>
-              <span>01</span>
-              <h3>入口と出口を別々に考える</h3>
-              <p>到着都市と帰国都市を分けることで、旅程の自由度と価格の選択肢を広げます。</p>
-            </article>
-            <article className={`${styles.collageCard} ${styles.collageWide}`}>
-              <span>02</span>
-              <h3>検索条件は、短く、上質に</h3>
-              <p>出発国、候補国、日付、滞在日数。必要な判断だけを先に置きます。</p>
-            </article>
-            <article className={styles.collageImage} aria-hidden="true" />
-            <article className={styles.collageCard}>
-              <span>03</span>
-              <h3>候補は、整然と見せる</h3>
-              <p>最安候補、代替案、国別カバレッジを同じ世界観でまとめます。</p>
-            </article>
-          </div>
-        </section>
-
-        <section className={styles.storyGrid}>
-          {storyMoments.map((moment, index) => (
-            <article key={moment.title} className={`${styles.storyCard} ${index % 2 === 1 ? styles.storyCardAlt : ""}`}>
-              <div>
-                <p className={styles.sectionEyebrow}>{moment.eyebrow}</p>
-                <h2>{moment.title}</h2>
-              </div>
-              <p>{moment.text}</p>
-            </article>
-          ))}
-        </section>
-
-        <section className={styles.lineupSection} id="lineup">
-          <div className={styles.lineupHeader}>
-            <div>
-              <p className={styles.sectionEyebrow}>Plan lineup</p>
-              <h2>旅の型を選び、入口と出口を整える。</h2>
-            </div>
-            <p>
-              代表的な海外旅行の組み立て方を、静かなカードとして並べました。目的地を決めきる前でも、
-              どのような open jaw が似合うかを先に眺められます。
-            </p>
-          </div>
-
-          <div className={styles.lineupEditorial}>
-            {lineupCards.map((card, index) => (
-              <article key={card.title} className={styles.lineupEditorialCard}>
-                <div className={styles.lineupImage} aria-hidden="true">
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                </div>
-                <div className={styles.lineupBody}>
-                  <span>{card.label}</span>
-                  <h3>{card.title}</h3>
-                  <p>{card.text}</p>
-                </div>
+      <section className={styles.proofStrip}>
+        <div className={styles.shell}>
+          <div className={styles.proofGrid}>
+            {proofPoints.map((item) => (
+              <article key={item.label} className={styles.proofCard}>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <p>{item.text}</p>
               </article>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={styles.briefSection} id="brief">
-          <div className={styles.briefIntro}>
-            <p className={styles.sectionEyebrow}>Search brief</p>
-            <h2>検索は、数手で十分。</h2>
+      <section className={styles.plannerStage} id="atelier">
+        <div className={styles.shell}>
+          <div className={styles.sectionIntro}>
+            <p className={styles.sectionLabel}>Planner atelier</p>
+            <h2>条件を埋めるのではなく、旅の素描をつくる。</h2>
             <p>
-              出発国と候補国を選び、7月・8月・9月のような月の束と滞在日数の幅を入れるだけ。
-              内部では代表空港と候補日を広げて比較し、往路の入口と復路の出口を別々に探します。
+              この画面はフォームではなく、旅の brief を整えるための台帳です。月単位のフレックス探索も、
+              固定日程の比較も、同じ紙面の中で静かに切り替えられます。
             </p>
           </div>
 
-          <div className={styles.briefLayout}>
-            <section className={styles.searchPanel}>
-              <div className={styles.panelHeader}>
-                <div>
-                  <h3>Trip parameters</h3>
-                  <p>{buildSearchSummary(formState)}</p>
-                </div>
-                <span className={styles.inlinePill}>候補国は最大5か国</span>
+          <div className={styles.briefRibbon}>
+            <div>
+              <span>Current brief</span>
+              <strong>{buildSearchSummary(formState)}</strong>
+            </div>
+            <div>
+              <span>Date window</span>
+              <strong>{dateSearchSummary}</strong>
+            </div>
+            <div>
+              <span>Airport spread</span>
+              <strong>
+                出発 {departureAirportCount} / 候補 {destinationAirportCount}
+              </strong>
+            </div>
+          </div>
+
+          <div className={styles.atelierLayout}>
+            <aside className={styles.atelierAside}>
+              <div className={styles.atelierCard}>
+                <p className={styles.sectionLabel}>House note</p>
+                <h3>最初に旅程全体を完成させない。</h3>
+                <p>
+                  Maison Passage が扱うのは、海外旅行の入口と出口です。最初の到着地と最後の帰国地を整えることで、
+                  そのあとの現地移動に余白が生まれます。
+                </p>
               </div>
 
-              <form onSubmit={handleSearch} data-testid="trip-brief-form">
-                <div className={styles.formGrid}>
-                  <label className={styles.field}>
-                    <span className={styles.fieldLabel}>出発国</span>
-                    <select
-                      className={styles.select}
-                      value={formState.departureCountry}
-                      onChange={(event) => handleDepartureChange(event.target.value as CountryCode)}
-                    >
-                      {COUNTRY_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+              <div className={styles.atelierCard}>
+                <p className={styles.sectionLabel}>Suggested frame</p>
+                <ul className={styles.memoList}>
+                  <li>7月から9月をまとめて比較する。</li>
+                  <li>26日から36日の滞在幅を持たせる。</li>
+                  <li>フランス、イギリス、ドイツを同時に候補にする。</li>
+                </ul>
+              </div>
+            </aside>
 
-                  <fieldset className={`${styles.fieldWide} ${styles.optionField}`}>
-                    <legend className={styles.fieldLabel}>日程の探し方</legend>
-                    <div className={styles.modeGrid}>
-                      <button
-                        type="button"
-                        className={`${styles.optionButton} ${formState.dateSearchMode === "flexible" ? styles.buttonActive : ""}`}
-                        onClick={() => updateFormState("dateSearchMode", "flexible")}
-                      >
-                        <strong>月で広く探す</strong>
-                        <span>7月・8月・9月のように複数月をまとめて比較</span>
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.optionButton} ${formState.dateSearchMode === "exact" ? styles.buttonActive : ""}`}
-                        onClick={() => updateFormState("dateSearchMode", "exact")}
-                      >
-                        <strong>日付を指定する</strong>
-                        <span>既に決まっている出発日と滞在日数で比較</span>
-                      </button>
+            <section className={styles.atelierSurface}>
+              <form onSubmit={handleSearch} data-testid="trip-brief-form" className={styles.atelierForm}>
+                <article className={styles.sheet}>
+                  <div className={styles.sheetHead}>
+                    <span>01</span>
+                    <div>
+                      <h3>Origin</h3>
+                      <p>どこから旅を始めるか。</p>
                     </div>
-                  </fieldset>
+                  </div>
+
+                  <div className={styles.fieldStack}>
+                    <label className={styles.field}>
+                      <span className={styles.fieldLabel}>出発国</span>
+                      <select
+                        className={styles.select}
+                        value={formState.departureCountry}
+                        onChange={(event) => handleDepartureChange(event.target.value as CountryCode)}
+                      >
+                        {COUNTRY_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </article>
+
+                <article className={styles.sheet}>
+                  <div className={styles.sheetHead}>
+                    <span>02</span>
+                    <div>
+                      <h3>Travel window</h3>
+                      <p>日付を一点で決めるか、季節の幅で探すか。</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.modeRail}>
+                    <button
+                      type="button"
+                      className={`${styles.modeButton} ${formState.dateSearchMode === "flexible" ? styles.modeButtonActive : ""}`}
+                      onClick={() => updateFormState("dateSearchMode", "flexible")}
+                    >
+                      <strong>複数月で探す</strong>
+                      <span>季節の幅から最安日を拾う</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.modeButton} ${formState.dateSearchMode === "exact" ? styles.modeButtonActive : ""}`}
+                      onClick={() => updateFormState("dateSearchMode", "exact")}
+                    >
+                      <strong>日付を指定する</strong>
+                      <span>既に決めている日程で比較する</span>
+                    </button>
+                  </div>
 
                   {formState.dateSearchMode === "exact" ? (
-                    <>
+                    <div className={styles.inlineFields}>
                       <label className={styles.field}>
                         <span className={styles.fieldLabel}>往路の出発日</span>
                         <input
@@ -500,209 +536,220 @@ export default function HomePage() {
                           ))}
                         </select>
                       </label>
-                    </>
+                    </div>
                   ) : (
                     <>
-                      <fieldset className={`${styles.fieldWide} ${styles.optionField}`}>
-                        <legend className={styles.fieldLabel}>比較したい出発月</legend>
-                        <p className={styles.fieldHint}>
-                          最大4か月まで選べます。最安の往路日を見つけたあと、その日から滞在レンジ内で復路を探します。
-                        </p>
-                        <div className={styles.monthGrid}>
-                          {FLEXIBLE_MONTH_OPTIONS.map((option) => {
-                            const active = formState.targetMonths.includes(option.value);
-                            const disabled = !active && formState.targetMonths.length >= 4;
+                      <div className={styles.monthRail}>
+                        {FLEXIBLE_MONTH_OPTIONS.map((option) => {
+                          const active = formState.targetMonths.includes(option.value);
+                          const disabled = !active && formState.targetMonths.length >= 4;
 
-                            return (
-                              <button
-                                key={option.value}
-                                type="button"
-                                className={`${styles.countryChip} ${active ? styles.buttonActive : ""} ${disabled ? styles.buttonDisabled : ""}`}
-                                onClick={() => toggleTargetMonth(option.value)}
-                                disabled={disabled}
-                              >
-                                <strong>{option.label}</strong>
-                                <span>{option.hint}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </fieldset>
+                          return (
+                            <button
+                              key={option.value}
+                              type="button"
+                              className={`${styles.monthTile} ${active ? styles.monthTileActive : ""} ${disabled ? styles.monthTileDisabled : ""}`}
+                              onClick={() => toggleTargetMonth(option.value)}
+                              disabled={disabled}
+                            >
+                              <strong>{option.label}</strong>
+                              <span>{option.hint}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                      <label className={styles.field}>
-                        <span className={styles.fieldLabel}>最短滞在</span>
-                        <select
-                          className={styles.select}
-                          value={formState.stayLengthMin}
-                          onChange={(event) => updateFormState("stayLengthMin", event.target.value as FlexibleStayDayKey)}
-                        >
-                          {FLEXIBLE_STAY_DAY_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                      <div className={styles.inlineFields}>
+                        <label className={styles.field}>
+                          <span className={styles.fieldLabel}>最短滞在</span>
+                          <select
+                            className={styles.select}
+                            value={formState.stayLengthMin}
+                            onChange={(event) => updateFormState("stayLengthMin", event.target.value as FlexibleStayDayKey)}
+                          >
+                            {FLEXIBLE_STAY_DAY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
 
-                      <label className={styles.field}>
-                        <span className={styles.fieldLabel}>最長滞在</span>
-                        <select
-                          className={styles.select}
-                          value={formState.stayLengthMax}
-                          onChange={(event) => updateFormState("stayLengthMax", event.target.value as FlexibleStayDayKey)}
-                        >
-                          {FLEXIBLE_STAY_DAY_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                        <label className={styles.field}>
+                          <span className={styles.fieldLabel}>最長滞在</span>
+                          <select
+                            className={styles.select}
+                            value={formState.stayLengthMax}
+                            onChange={(event) => updateFormState("stayLengthMax", event.target.value as FlexibleStayDayKey)}
+                          >
+                            {FLEXIBLE_STAY_DAY_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
                     </>
                   )}
+                </article>
 
-                  <label className={styles.field}>
-                    <span className={styles.fieldLabel}>人数</span>
-                    <select
-                      className={styles.select}
-                      value={formState.passengerCount}
-                      onChange={(event) => updateFormState("passengerCount", event.target.value as PassengerCountKey)}
-                    >
-                      {PASSENGER_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                <article className={styles.sheet}>
+                  <div className={styles.sheetHead}>
+                    <span>03</span>
+                    <div>
+                      <h3>Cabin and travelers</h3>
+                      <p>移動の姿勢と人数を整える。</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.inlineFields}>
+                    <label className={styles.field}>
+                      <span className={styles.fieldLabel}>人数</span>
+                      <select
+                        className={styles.select}
+                        value={formState.passengerCount}
+                        onChange={(event) => updateFormState("passengerCount", event.target.value as PassengerCountKey)}
+                      >
+                        {PASSENGER_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className={styles.optionRail}>
+                    {CABIN_CLASS_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`${styles.optionCard} ${formState.cabinClass === option.value ? styles.optionCardActive : ""}`}
+                        onClick={() => updateFormState("cabinClass", option.value as CabinClassKey)}
+                      >
+                        <strong>{option.label}</strong>
+                        <span>{option.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <label className={styles.switchRow}>
+                    <input
+                      type="checkbox"
+                      checked={formState.preferDirect}
+                      onChange={(event) => updateFormState("preferDirect", event.target.checked)}
+                    />
+                    <span>直行を優先する。外すと 1 回乗継も含め、価格重視で候補を拾います。</span>
                   </label>
+                </article>
 
-                  <fieldset className={`${styles.fieldWide} ${styles.optionField}`}>
-                    <legend className={styles.fieldLabel}>客室クラス</legend>
-                    <div className={styles.optionRow}>
-                      {CABIN_CLASS_OPTIONS.map((option) => (
+                <article className={styles.sheet}>
+                  <div className={styles.sheetHead}>
+                    <span>04</span>
+                    <div>
+                      <h3>Destinations</h3>
+                      <p>入口と出口の候補になる国を選ぶ。</p>
+                    </div>
+                  </div>
+
+                  <p className={styles.sheetHint}>
+                    最大5か国まで。出発国と同じ国は選べません。候補国の代表空港から、往路の入口と復路の出口を別々に探します。
+                  </p>
+
+                  <div className={styles.destinationGrid}>
+                    {COUNTRY_OPTIONS.filter((option) => option.value !== formState.departureCountry).map((option) => {
+                      const active = formState.destinationCountries.includes(option.value as CountryCode);
+                      const disabled = !active && formState.destinationCountries.length >= 5;
+
+                      return (
                         <button
                           key={option.value}
                           type="button"
-                          className={`${styles.optionButton} ${formState.cabinClass === option.value ? styles.buttonActive : ""}`}
-                          onClick={() => updateFormState("cabinClass", option.value as CabinClassKey)}
+                          className={`${styles.destinationChip} ${active ? styles.destinationChipActive : ""} ${disabled ? styles.destinationChipDisabled : ""}`}
+                          onClick={() => toggleDestinationCountry(option.value as CountryCode)}
+                          disabled={disabled}
                         >
                           <strong>{option.label}</strong>
                           <span>{option.hint}</span>
                         </button>
-                      ))}
-                    </div>
-                  </fieldset>
+                      );
+                    })}
+                  </div>
+                </article>
 
-                  <fieldset className={`${styles.fieldWide} ${styles.optionField}`}>
-                    <legend className={styles.fieldLabel}>候補の渡航国</legend>
-                    <p className={styles.fieldHint}>
-                      到着地と帰国地を、この国群の中で別々に最安化します。出発国と同じ国は選べません。
-                    </p>
-                    <div className={styles.countryGrid}>
-                      {COUNTRY_OPTIONS.filter((option) => option.value !== formState.departureCountry).map((option) => {
-                        const active = formState.destinationCountries.includes(option.value as CountryCode);
-                        const disabled = !active && formState.destinationCountries.length >= 5;
-
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            className={`${styles.countryChip} ${active ? styles.buttonActive : ""} ${disabled ? styles.buttonDisabled : ""}`}
-                            onClick={() => toggleDestinationCountry(option.value as CountryCode)}
-                            disabled={disabled}
-                          >
-                            <strong>{option.label}</strong>
-                            <span>{option.hint}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </fieldset>
-                </div>
-
-                <label className={styles.switchRow}>
-                  <input
-                    type="checkbox"
-                    checked={formState.preferDirect}
-                    onChange={(event) => updateFormState("preferDirect", event.target.checked)}
-                  />
-                  <span>直行優先で探す。外すと 1 回乗継も許容して、価格重視の候補を拾います。</span>
-                </label>
-
-                <div className={styles.helperRow}>
-                  <p className={styles.helperText}>日程: {dateSearchSummary}</p>
-                  <p className={styles.helperText}>
-                    {formState.dateSearchMode === "exact"
-                      ? `想定復路: ${returnDate ? formatDateLabel(returnDate) : "未設定"}`
-                      : `復路探索: 約${returnWindowPreview} / 滞在${stayRangeLabel}`}
-                  </p>
-                  <p className={styles.helperText}>出発空港候補: {departureAirportCount}</p>
-                  <p className={styles.helperText}>候補空港: {destinationAirportCount}</p>
+                <div className={styles.compareBar}>
+                  <div className={styles.compareMeta}>
+                    <span>現在の探索</span>
+                    <strong>{dateSearchSummary}</strong>
+                  </div>
+                  <div className={styles.compareMeta}>
+                    <span>復路の目安</span>
+                    <strong>
+                      {formState.dateSearchMode === "exact"
+                        ? returnDate
+                          ? formatDateLabel(returnDate)
+                          : "未設定"
+                        : `${returnWindowPreview} / ${stayRangeLabel}`}
+                    </strong>
+                  </div>
+                  <div className={styles.compareMeta}>
+                    <span>空港の広がり</span>
+                    <strong>
+                      出発 {departureAirportCount} / 候補 {destinationAirportCount}
+                    </strong>
+                  </div>
                 </div>
 
                 {validationMessage ? <p className={styles.validationText}>{validationMessage}</p> : null}
 
                 <div className={styles.actionRow}>
                   <button className={styles.primaryButton} type="submit" disabled={!canSearch || loading}>
-                    {loading ? "ルートを整えています..." : "最安ルートを提案する"}
+                    {loading ? "route brief を整えています..." : "最安の入口と出口を提案する"}
                   </button>
                   <button className={styles.secondaryButton} type="button" onClick={handleReset}>
-                    リセット
+                    初期状態に戻す
                   </button>
                 </div>
               </form>
             </section>
-
-            <aside className={styles.briefAside}>
-              <div className={styles.asideCard}>
-                <p className={styles.sectionEyebrow}>Preserved logic</p>
-                <h3>検索ロジックはそのまま、見せ方を上質に。</h3>
-                <ul className={styles.sideList}>
-                  <li>国を代表空港へ展開し、現実的な比較対象を作ります。</li>
-                  <li>往路と復路を独立して比較し、open jaw の余地を残します。</li>
-                  <li>最後は Skyscanner の実検索へ進めます。</li>
-                </ul>
-              </div>
-
-              <div className={styles.asideCard}>
-                <p className={styles.sectionEyebrow}>Not included</p>
-                <h3>現地移動は、あえて余白として残す。</h3>
-                <p className={styles.asideText}>
-                  フランクフルトに入り、パリから戻るような旅でも、都市間移動はこの比較に含めません。
-                  まず航空券の入口と出口だけを静かに決め、列車や短距離便は次の判断に分けます。
-                </p>
-              </div>
-            </aside>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={styles.resultsSection} id="results">
-          <div className={styles.resultsIntro}>
-            <p className={styles.sectionEyebrow}>Results flow</p>
-            <h2>結果も、同じ静けさの中で。</h2>
+      <section className={styles.resultSection} id="folio">
+        <div className={styles.shell}>
+          <div className={styles.sectionIntro}>
+            <p className={styles.sectionLabel}>Result folio</p>
+            <h2>往路と復路を、左右のページに分けて読む。</h2>
             <p>
-              最安の入口と出口、代替案、国別カバレッジを、予約前の判断材料として整然と並べます。
+              結果は一枚の価格カードではなく、往路の入口、復路の出口、そのあいだの余白で構成します。
+              まずは推定最安の形をつかみ、その後に実検索へ進みます。
             </p>
           </div>
 
           {loading ? (
-            <div className={styles.loadingState}>
-              <div className={styles.loadingPulse} />
-              <h3>代表空港を広げて比較しています。</h3>
-              <p>候補国の空港をまとめて開き、往路と復路を別々に最安化しています。</p>
+            <div className={styles.loadingBoard}>
+              <div className={styles.loadingRoute}>
+                <span>TYO</span>
+                <div className={styles.loadingLine} />
+                <span>EU</span>
+              </div>
+              <h3>複数月と代表空港から、route brief を組み上げています。</h3>
+              <p>往路の最安入口を見つけ、その日から滞在レンジぶんだけ復路を探しています。</p>
             </div>
           ) : null}
 
           {!loading && !hasGenerated ? (
-            <div className={styles.emptyState}>
-              <h3>検索ブリーフを入れると、ここに提案が表示されます。</h3>
-              <p>出発国、出発月または往路日、滞在レンジ、候補国を選ぶと、海外 open jaw の入口と出口を比較できます。</p>
+            <div className={styles.emptyBoard}>
+              <h3>brief を入力すると、ここに旅の folio が現れます。</h3>
+              <p>複数月でも、固定日程でも、最安の入口と出口を左右に分けて表示します。</p>
             </div>
           ) : null}
 
           {!loading && hasGenerated && !result ? (
-            <div className={styles.emptyState}>
-              <h3>この条件では、十分な比較ルートを作れませんでした。</h3>
+            <div className={styles.emptyBoard}>
+              <h3>この条件では十分なルート候補が見つかりませんでした。</h3>
               <ul className={styles.guidanceList}>
                 {noRouteGuidance.map((tip) => (
                   <li key={tip}>{tip}</li>
@@ -713,29 +760,60 @@ export default function HomePage() {
 
           {!loading && result ? (
             <>
-              <div className={styles.resultHero} data-testid="result-summary">
-                <div className={styles.resultCopy}>
-                  <p className={styles.resultEyebrow}>Recommended open-jaw combination</p>
-                  <h3 className={styles.resultHeadline}>{result.planHeadline}</h3>
-                  <p className={styles.resultLead}>{result.openJawNote}</p>
-                  <p className={styles.resultMeta}>{result.flexibilitySummary}</p>
+              <div className={styles.resultDock} data-testid="result-summary">
+                <div>
+                  <span>Recommended open jaw</span>
+                  <h3>{result.planHeadline}</h3>
+                  <p>{result.flexibilitySummary}</p>
                 </div>
-
-                <div className={styles.priceCard}>
-                  <span className={styles.priceLabel}>推定合計</span>
+                <div className={styles.resultDockPrice}>
+                  <span>推定合計</span>
                   <strong>{formatCurrency(result.totalPrice)}</strong>
-                  <span>目安レンジ {formatCurrencyRange(result.totalPriceRange)}</span>
-                  <span>1名あたり {formatCurrency(result.totalPricePerPerson)}</span>
-                  <span>1名レンジ {formatCurrencyRange(result.totalPriceRangePerPerson)}</span>
-                  <span>
-                    比較日程 往路{result.comparedOutboundDateCount}日 / 復路{result.comparedReturnDateCount}日
-                  </span>
+                  <small>{formatCurrencyRange(result.totalPriceRange)}</small>
+                  <small>1名あたり {formatCurrencyRange(result.totalPriceRangePerPerson)}</small>
                 </div>
               </div>
 
-              <div className={styles.legGrid}>
-                {renderLegCard(result.bestOutbound, "往路の最安入口")}
-                {renderLegCard(result.bestInbound, "復路の最安出口")}
+              <div className={styles.resultSpread}>
+                {renderTicketCard(result.bestOutbound, "往路の最安入口")}
+
+                <div className={styles.gapBand} data-testid="open-jaw-gap">
+                  <p className={styles.sectionLabel}>Open-jaw gap</p>
+                  <h3>入口と出口のあいだは、あえて未完成のまま残す。</h3>
+                  <p>{result.openJawGap.summary}</p>
+                  <p>{result.openJawGap.note}</p>
+
+                  <div className={styles.gapMeta}>
+                    <div>
+                      <span>Arrival</span>
+                      <strong>{result.openJawGap.arrivalLabel}</strong>
+                    </div>
+                    <div>
+                      <span>Return from</span>
+                      <strong>{result.openJawGap.departureLabel}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {renderTicketCard(result.bestInbound, "復路の最安出口")}
+              </div>
+
+              <div className={styles.resultLedger}>
+                <div>
+                  <span>探索ウィンドウ</span>
+                  <strong>往路 {result.outboundDateWindow}</strong>
+                  <small>復路 {result.returnDateWindow}</small>
+                </div>
+                <div>
+                  <span>滞在の幅</span>
+                  <strong>{result.stayLengthRangeLabel}</strong>
+                  <small>往路 {result.comparedOutboundDateCount}日 / 復路 {result.comparedReturnDateCount}日を比較</small>
+                </div>
+                <div>
+                  <span>Planning note</span>
+                  <strong>{result.openJawNote}</strong>
+                  <small>{result.planningNote}</small>
+                </div>
               </div>
 
               <div className={styles.ctaStrip}>
@@ -750,72 +828,42 @@ export default function HomePage() {
                 </a>
               </div>
 
-              <div className={styles.noteCard}>
-                <p className={styles.sectionEyebrow}>Planning note</p>
-                <h3>この提案の読み方</h3>
-                <p>{result.planningNote}</p>
-                <p>
-                  往路探索: {result.outboundDateWindow} / 復路探索: {result.returnDateWindow} / 滞在幅:{" "}
-                  {result.stayLengthRangeLabel}
-                </p>
-              </div>
-
-              <div className={styles.gapCard} data-testid="open-jaw-gap">
-                <div>
-                  <p className={styles.sectionEyebrow}>Open-jaw gap</p>
-                  <h3>入口と出口のあいだにある余白</h3>
-                  <p>{result.openJawGap.summary}</p>
-                  <p>{result.openJawGap.note}</p>
-                </div>
-                <div className={styles.gapRoute}>
-                  <span>Arrival</span>
-                  <strong>{result.openJawGap.arrivalLabel}</strong>
-                  <em>現地移動は別手配</em>
-                  <span>Return from</span>
-                  <strong>{result.openJawGap.departureLabel}</strong>
-                </div>
-              </div>
-
-              <div className={styles.altGrid}>
-                <section className={styles.altSection}>
-                  <div className={styles.altHeader}>
+              <div className={styles.ticketRack}>
+                <section className={styles.rackSection}>
+                  <div className={styles.rackHead}>
                     <h3>往路の代替入口</h3>
-                    <span className={styles.inlinePill}>{result.outboundAlternatives.length}案</span>
+                    <span>{result.outboundAlternatives.length}案</span>
                   </div>
-                  <div className={styles.altList}>
+                  <div className={styles.rackScroller}>
                     {result.outboundAlternatives.map((quote, index) => (
-                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard}>
-                        <div className={styles.altTop}>
-                          <strong>{routeLabel(quote)}</strong>
-                          <span>{formatCurrency(quote.totalPrice)}</span>
+                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.rackCard}>
+                        <div className={styles.rackTop}>
+                          <span>{getAlternativeBadge(quote, index, result.bestOutbound)}</span>
+                          <strong>{formatCurrency(quote.totalPrice)}</strong>
                         </div>
-                        <span className={styles.altBadge}>{getAlternativeBadge(quote, index, result.bestOutbound)}</span>
-                        <p className={styles.altMeta}>
-                          {formatDateLabel(quote.travelDate)} / {quote.stopLabel} / {formatDuration(quote.durationHours)}
-                        </p>
-                        <p className={styles.altNote}>{quote.reasonPoints[1]}</p>
+                        <h4>{routeLabel(quote)}</h4>
+                        <p>{formatDateLabel(quote.travelDate)}</p>
+                        <p>{quote.reasonPoints[1]}</p>
                       </article>
                     ))}
                   </div>
                 </section>
 
-                <section className={styles.altSection}>
-                  <div className={styles.altHeader}>
+                <section className={styles.rackSection}>
+                  <div className={styles.rackHead}>
                     <h3>復路の代替出口</h3>
-                    <span className={styles.inlinePill}>{result.inboundAlternatives.length}案</span>
+                    <span>{result.inboundAlternatives.length}案</span>
                   </div>
-                  <div className={styles.altList}>
+                  <div className={styles.rackScroller}>
                     {result.inboundAlternatives.map((quote, index) => (
-                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard}>
-                        <div className={styles.altTop}>
-                          <strong>{routeLabel(quote)}</strong>
-                          <span>{formatCurrency(quote.totalPrice)}</span>
+                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.rackCard}>
+                        <div className={styles.rackTop}>
+                          <span>{getAlternativeBadge(quote, index, result.bestInbound)}</span>
+                          <strong>{formatCurrency(quote.totalPrice)}</strong>
                         </div>
-                        <span className={styles.altBadge}>{getAlternativeBadge(quote, index, result.bestInbound)}</span>
-                        <p className={styles.altMeta}>
-                          {formatDateLabel(quote.travelDate)} / {quote.stopLabel} / {formatDuration(quote.durationHours)}
-                        </p>
-                        <p className={styles.altNote}>{quote.reasonPoints[1]}</p>
+                        <h4>{routeLabel(quote)}</h4>
+                        <p>{formatDateLabel(quote.travelDate)}</p>
+                        <p>{quote.reasonPoints[1]}</p>
                       </article>
                     ))}
                   </div>
@@ -823,34 +871,22 @@ export default function HomePage() {
               </div>
 
               <section className={styles.coverageSection}>
-                <div className={styles.altHeader}>
-                  <h3>候補国ごとの空港カバレッジ</h3>
-                  <span className={styles.inlinePill}>{result.destinationCountries.length}か国</span>
+                <div className={styles.rackHead}>
+                  <h3>候補国ごとのカバレッジ</h3>
+                  <span>{result.destinationCountries.length}か国</span>
                 </div>
-                <div className={styles.coverageGrid}>
+                <div className={styles.coverageList}>
                   {result.coverage.map((entry) => (
-                    <article key={entry.country.code} className={styles.coverageCard}>
-                      <div className={styles.coverageHeader}>
-                        <h4>{entry.country.name}</h4>
+                    <article key={entry.country.code} className={styles.coverageRow}>
+                      <div>
                         <span>{entry.country.region}</span>
+                        <strong>{entry.country.name}</strong>
                       </div>
-                      <p className={styles.coverageText}>{entry.country.summary}</p>
-                      <p className={styles.coverageAirports}>代表空港: {entry.airports.map((airport) => airport.code).join(" / ")}</p>
-                      <div className={styles.coverageRoute}>
-                        <strong>入口候補</strong>
-                        <span>
-                          {entry.bestOutbound
-                            ? `${routeLabel(entry.bestOutbound)} / ${formatCurrency(entry.bestOutbound.totalPrice)}`
-                            : "該当なし"}
-                        </span>
-                      </div>
-                      <div className={styles.coverageRoute}>
-                        <strong>出口候補</strong>
-                        <span>
-                          {entry.bestInbound
-                            ? `${routeLabel(entry.bestInbound)} / ${formatCurrency(entry.bestInbound.totalPrice)}`
-                            : "該当なし"}
-                        </span>
+                      <p>{entry.country.summary}</p>
+                      <p>{entry.airports.map((airport) => airport.code).join(" / ")}</p>
+                      <div>
+                        <small>入口 {entry.bestOutbound ? `${routeLabel(entry.bestOutbound)} / ${formatCurrency(entry.bestOutbound.totalPrice)}` : "該当なし"}</small>
+                        <small>出口 {entry.bestInbound ? `${routeLabel(entry.bestInbound)} / ${formatCurrency(entry.bestInbound.totalPrice)}` : "該当なし"}</small>
                       </div>
                     </article>
                   ))}
@@ -858,19 +894,69 @@ export default function HomePage() {
               </section>
             </>
           ) : null}
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <section className={styles.finalCta}>
-        <div className={styles.finalCtaInner}>
-          <p className={styles.sectionEyebrow}>Private brief</p>
-          <h2>次の海外旅行を、入口と出口から上質に組み立てる。</h2>
+      <section className={styles.methodSection} id="method">
+        <div className={styles.shell}>
+          <div className={styles.methodLayout}>
+            <div className={styles.methodIntro}>
+              <p className={styles.sectionLabel}>Method rail</p>
+              <h2>複雑な旅を、判断の順番だけで軽くする。</h2>
+              <p>
+                海外旅行の open jaw は、最初から全体を最適化しようとすると急に重くなります。
+                Maison Passage は、入口と出口を先に決めることで、残りの旅をあとから自由にできます。
+              </p>
+            </div>
+
+            <div className={styles.methodRail}>
+              {methodMoments.map((item) => (
+                <article key={item.title} className={styles.methodCard}>
+                  <span>{item.label}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.archetypeSection}>
+        <div className={styles.shell}>
+          <div className={styles.sectionIntro}>
+            <p className={styles.sectionLabel}>Trip archetypes</p>
+            <h2>旅の型を先に選ぶと、ルートは自然に細くなる。</h2>
+            <p>目的地がまだ揺れていても、旅の型が見えていれば入口と出口の選び方は変わります。</p>
+          </div>
+
+          <div className={styles.archetypeGrid}>
+            {archetypes.map((item, index) => (
+              <article key={item.title} className={styles.archetypeCard}>
+                <div className={styles.archetypeVisual}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                </div>
+                <div className={styles.archetypeBody}>
+                  <p>{item.label}</p>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.conciergeSection}>
+        <div className={styles.conciergeInner}>
+          <p className={styles.sectionLabel}>Concierge brief</p>
+          <h2>次の海外旅行は、日付ではなく季節から始めてもいい。</h2>
           <p>
-            候補国を選び、代表空港の組み合わせを比べ、最後は Skyscanner の実検索へ。
-            Maison Passage は予約前の迷いを、余白のある判断へ変えます。
+            複数月と滞在レンジを選び、往路の入口と復路の出口を整え、最後に実検索へ渡す。
+            Maison Passage は、その最初の判断だけを上質に引き受けます。
           </p>
-          <a className={styles.finalCtaButton} href="#brief">
-            旅の条件を入力する
+          <a className={styles.conciergeButton} href="#atelier">
+            旅の台帳を開く
           </a>
         </div>
       </section>
@@ -879,12 +965,10 @@ export default function HomePage() {
         <div className={styles.footerInner}>
           <div>
             <p className={styles.footerMark}>Maison Passage</p>
-            <p className={styles.footerText}>
-              予約前の判断を静かに整える、海外 open jaw 旅行のための探索アトリエ。
-            </p>
+            <p className={styles.footerText}>海外 open jaw 旅行の入口と出口を整えるための、静かな route atelier。</p>
           </div>
-          <a className={styles.footerLink} href="#brief">
-            検索ブリーフへ戻る
+          <a className={styles.footerLink} href="#atelier">
+            Planner atelier へ戻る
           </a>
         </div>
       </footer>

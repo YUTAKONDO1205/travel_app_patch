@@ -1,15 +1,16 @@
 # Maison Passage Open Jaw Explorer
 
-`build/` contains the runnable Next.js app for the latest Maison Passage product direction: an overseas open-jaw planner wrapped in a luxury editorial landing experience.
+`build/` contains the runnable Next.js app for the current Maison Passage overseas open-jaw planner. The latest approved source-of-truth docs keep the existing planner behavior and flexible travel-window logic, and position Sprint 5 as a Grand Tour Ledger premium dossier redesign.
 
 ## Product Snapshot
 
-- Purpose: help a traveler compare the cheapest inbound entry leg and cheapest return exit leg for a multi-country overseas trip before moving to live search.
-- Core truth: prices in the app may be deterministic reference estimates unless a future live provider is added.
-- Estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
-- Flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.
-- Design direction: warm off-white backgrounds, gold and bronze accents, dark brown and near-black contrast, and a calm premium rhythm instead of a dense utility dashboard.
-- Required page shell: fixed transparent header, full-screen hero, concept intro, value collage, alternating story section, lineup cards, restrained CTA, and dark footer.
+- Current purpose: help a traveler compare the cheapest inbound entry leg and cheapest return exit leg for a multi-country overseas trip before moving to live search.
+- Current pricing model: fares in the app may be deterministic reference estimates unless a future live provider is added.
+- Current estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
+- Current flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.
+- Current shell: the app already wraps the planner in a premium editorial experience rather than a dense utility dashboard.
+- Approved next redesign: Sprint 5 moves the shell to a much bolder Grand Tour Ledger dossier aesthetic with this target order: header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, footer.
+- Roadmap note: live fare enrichment now follows the redesign in Sprint 6.
 
 ## Run Locally
 

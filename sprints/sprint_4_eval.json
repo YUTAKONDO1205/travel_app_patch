@@ -1,7 +1,7 @@
 {
   "sprint": 4,
   "implemented": [
-    "Updated specs/spec.json and 設計書.md so Sprint 4 is Flexible Travel Window, with live fare enrichment moved to Sprint 5.",
+    "Updated specs/spec.json and 設計書.md so Sprint 4 is Flexible Travel Window.",
     "Added flexible date search mode with default July, August, and September outbound month selection.",
     "Added flexible stay-length range controls, including the one-month style 26 to 36 day range.",
     "Updated the planner logic to compare outbound dates across selected months, choose the cheapest outbound date first, then search return dates from the chosen outbound date plus the selected stay range.",
@@ -9,7 +9,8 @@
     "Updated the results UI to show the flexible search summary, outbound window, return window, stay range, and compared outbound/return date counts.",
     "Kept exact-date mode available for users with fixed outbound dates and fixed stay lengths.",
     "Created the repository root README.md with product, run, validation, and harness instructions.",
-    "Expanded npm run test:planner to validate flexible month comparison and the 26 to 36 day return window."
+    "Expanded npm run test:planner to validate flexible month comparison and the 26 to 36 day return window.",
+    "Refreshed the current source-of-truth docs so the next approved sprint after flexible travel windows is Sprint 5 Grand Tour Ledger Redesign, with live fare enrichment deferred to Sprint 6."
   ],
   "known_issues": [
     "Displayed fares remain deterministic reference estimates and are not live API-backed inventory.",

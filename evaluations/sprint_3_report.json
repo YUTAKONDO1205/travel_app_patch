@@ -50,7 +50,7 @@
   "bugs": [],
   "next_actions": [
     "Run browser automation when available to submit the Japan plus France, United Kingdom, and Germany flow and confirm the estimate range UI after interaction.",
-    "Select a live fare provider and API contract before Sprint 4, then add provider-backed fare enrichment with deterministic fallback.",
+    "Treat Sprint 5 as the Grand Tour Ledger redesign and keep live fare provider selection scoped to Sprint 6 so the dossier refresh lands first.",
     "Consider adding a saved comparison or export/share affordance once live pricing behavior is established."
   ]
 }

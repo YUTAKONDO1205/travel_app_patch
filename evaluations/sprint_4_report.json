@@ -18,9 +18,9 @@
   },
   "checks": [
     {
-      "name": "Source-of-truth documents describe flexible travel windows",
+      "name": "Source-of-truth documents preserve flexible travel windows and define the next redesign sprint",
       "result": "PASS",
-      "evidence": "specs/spec.json and 設計書.md now define flexible month selection, stay-length ranges, outbound-first search, return-window search, and Sprint 4 acceptance criteria."
+      "evidence": "specs/spec.json and 設計書.md preserve flexible month selection, stay-length ranges, outbound-first search, return-window search, and now position Grand Tour Ledger Redesign as the next sprint after Flexible Travel Window."
     },
     {
       "name": "Flexible planner logic is deterministic and testable",
@@ -52,6 +52,6 @@
   "next_actions": [
     "Run an interactive browser pass when Playwright or agent-browser is available, including flexible July/August/September submission and exact-date fallback submission.",
     "Capture mobile and desktop screenshots to verify the month grid, stay-range controls, and result summary maintain the premium editorial layout without horizontal overflow.",
-    "For Sprint 5, evaluate a live fare provider or API-backed enrichment while keeping deterministic flexible estimates as the fallback."
+    "For Sprint 5, pursue the Grand Tour Ledger redesign while keeping the open-jaw planner, flexible travel windows, and estimate-transparency behavior intact; live fare enrichment now follows in Sprint 6."
   ]
 }

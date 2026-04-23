@@ -19,6 +19,22 @@ export type PassengerCountKey = "1" | "2" | "3" | "4";
 
 export type StayLengthKey = "5" | "7" | "10" | "14" | "21";
 
+export type FlexibleStayDayKey = "5" | "7" | "10" | "14" | "21" | "26" | "30" | "36" | "45";
+
+export type TravelMonthKey =
+  | "2026-07"
+  | "2026-08"
+  | "2026-09"
+  | "2026-10"
+  | "2026-11"
+  | "2026-12"
+  | "2027-01"
+  | "2027-02"
+  | "2027-03"
+  | "2027-04"
+  | "2027-05"
+  | "2027-06";
+
 export type Airport = {
   code: string;
   city: string;
@@ -57,6 +73,33 @@ export const STAY_LENGTH_OPTIONS: Array<{ value: StayLengthKey; label: string; d
   { value: "10", label: "10日", days: 10 },
   { value: "14", label: "14日", days: 14 },
   { value: "21", label: "21日", days: 21 },
+];
+
+export const FLEXIBLE_STAY_DAY_OPTIONS: Array<{ value: FlexibleStayDayKey; label: string; days: number }> = [
+  { value: "5", label: "5日", days: 5 },
+  { value: "7", label: "7日", days: 7 },
+  { value: "10", label: "10日", days: 10 },
+  { value: "14", label: "14日", days: 14 },
+  { value: "21", label: "21日", days: 21 },
+  { value: "26", label: "26日", days: 26 },
+  { value: "30", label: "30日", days: 30 },
+  { value: "36", label: "36日", days: 36 },
+  { value: "45", label: "45日", days: 45 },
+];
+
+export const FLEXIBLE_MONTH_OPTIONS: Array<{ value: TravelMonthKey; label: string; hint: string }> = [
+  { value: "2026-07", label: "2026年7月", hint: "夏の入口を広く見る" },
+  { value: "2026-08", label: "2026年8月", hint: "お盆前後も比較" },
+  { value: "2026-09", label: "2026年9月", hint: "夏終盤の余白" },
+  { value: "2026-10", label: "2026年10月", hint: "秋の肩シーズン" },
+  { value: "2026-11", label: "2026年11月", hint: "落ち着いた欧州旅行" },
+  { value: "2026-12", label: "2026年12月", hint: "年末前後の確認" },
+  { value: "2027-01", label: "2027年1月", hint: "新年の出発候補" },
+  { value: "2027-02", label: "2027年2月", hint: "冬の価格を比較" },
+  { value: "2027-03", label: "2027年3月", hint: "春休み前後" },
+  { value: "2027-04", label: "2027年4月", hint: "春の肩シーズン" },
+  { value: "2027-05", label: "2027年5月", hint: "初夏前の候補" },
+  { value: "2027-06", label: "2027年6月", hint: "夏前の余裕" },
 ];
 
 export const COUNTRY_PROFILES: CountryProfile[] = [

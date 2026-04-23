@@ -122,6 +122,17 @@
         "Links for outbound, return, and combined Skyscanner search handoff.",
         "Honest explanation that live search is the source of truth for final fares."
       ]
+    },
+    {
+      "id": "estimate-transparency",
+      "name": "Estimate Transparency",
+      "description": "Because the MVP uses deterministic reference pricing, the UI should show uncertainty and evidence rather than presenting one number as a final fare.",
+      "must_have": [
+        "Estimated fares are accompanied by a low-to-high reference range.",
+        "Each recommended leg shows a confidence label.",
+        "Each recommended leg shows the estimate basis, including season, stop assumption, and distance.",
+        "A deterministic smoke test verifies price ranges, confidence labels, open-jaw gap notes, and Skyscanner handoff generation."
+      ]
     }
   ],
   "acceptance_criteria": [
@@ -135,6 +146,7 @@
     "A restrained CTA section appears before a dark footer, and both sections remain visually consistent with the luxury palette.",
     "The user cannot compare routes until departure country, outbound date, stay length, and at least one destination country are set.",
     "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound leg, a cheapest return leg, and a combined estimated total.",
+    "Estimated fares are shown with ranges and confidence labels so deterministic reference prices are not mistaken for final live inventory.",
     "The result explicitly states that the arrival airport and return airport may differ and that the internal route is not included.",
     "The results area contains links for outbound, return, and combined Skyscanner search handoff.",
     "The palette is based on warm off-white, gold, bronze, dark brown, and near-black rather than bright utility colors.",
@@ -185,6 +197,22 @@
     },
     {
       "sprint": 3,
+      "name": "Fare Estimate Integrity",
+      "goal": "Make deterministic reference fares more transparent and evaluation-ready before adding a live provider.",
+      "scope": [
+        "Add price ranges and confidence labels to route estimates.",
+        "Explain the estimate basis for each recommended flight leg.",
+        "Add deterministic planner smoke validation for estimate fields, open-jaw gap notes, and Skyscanner handoff links.",
+        "Keep live provider integration out of scope until an API key and provider contract are selected."
+      ],
+      "acceptance_criteria": [
+        "The app shows fare ranges and confidence labels for the total and recommended flight legs.",
+        "The planner smoke test validates deterministic estimates and handoff links without browser automation.",
+        "The Next.js production build works in the local Codex environment."
+      ]
+    },
+    {
+      "sprint": 4,
       "name": "Live Fare Enrichment",
       "goal": "Introduce a real fare source or provider-backed enrichment without losing the calm premium experience.",
       "scope": [

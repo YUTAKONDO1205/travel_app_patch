@@ -5,22 +5,30 @@ import styles from "./page.module.css";
 import {
   CABIN_CLASS_OPTIONS,
   COUNTRY_OPTIONS,
+  FLEXIBLE_MONTH_OPTIONS,
+  FLEXIBLE_STAY_DAY_OPTIONS,
   PASSENGER_OPTIONS,
   STAY_LENGTH_OPTIONS,
   getAirportsForCountry,
   type CabinClassKey,
   type CountryCode,
+  type FlexibleStayDayKey,
   type PassengerCountKey,
+  type TravelMonthKey,
 } from "../lib/travel-data";
 import {
   INITIAL_FORM_STATE,
   buildNoRouteGuidance,
+  getDateSearchSummary,
   buildSearchSummary,
   formatCurrency,
+  formatCurrencyRange,
   formatDateLabel,
   formatDuration,
   generateFlightSearchResult,
   getFormValidationMessage,
+  getReturnWindowLabel,
+  getStayRangeLabel,
   getReturnDate,
   isFormValid,
   type FlightLegQuote,
@@ -86,6 +94,12 @@ function renderLegCard(quote: FlightLegQuote, title: string) {
         <span>{formatDateLabel(quote.travelDate)}</span>
         <span>{quote.stopLabel}</span>
         <span>{formatDuration(quote.durationHours)}</span>
+        <span>{quote.confidenceLabel}</span>
+      </div>
+      <div className={styles.estimateBand}>
+        <span>参考レンジ</span>
+        <strong>{formatCurrencyRange(quote.totalPriceRange)}</strong>
+        <small>{quote.estimateBasis}</small>
       </div>
       <ul className={styles.reasonList}>
         {quote.reasonPoints.map((reason) => (
@@ -131,6 +145,10 @@ export default function HomePage() {
   const validationMessage = submitted ? getFormValidationMessage(formState) : null;
   const canSearch = isFormValid(formState);
   const returnDate = getReturnDate(formState);
+  const dateSearchSummary = getDateSearchSummary(formState);
+  const stayRangeLabel = getStayRangeLabel(formState);
+  const previewOutboundDate = `${formState.targetMonths[0] ?? "2026-07"}-15`;
+  const returnWindowPreview = formState.dateSearchMode === "exact" ? returnDate : getReturnWindowLabel(previewOutboundDate, formState);
   const departureAirportCount = formState.departureCountry ? getAirportsForCountry(formState.departureCountry).length : 0;
   const destinationAirportCount = formState.destinationCountries.reduce(
     (count, countryCode) => count + getAirportsForCountry(countryCode).length,
@@ -173,6 +191,26 @@ export default function HomePage() {
       return {
         ...current,
         destinationCountries: [...current.destinationCountries, countryCode],
+      };
+    });
+  }
+
+  function toggleTargetMonth(monthKey: TravelMonthKey) {
+    setFormState((current) => {
+      if (current.targetMonths.includes(monthKey)) {
+        return {
+          ...current,
+          targetMonths: current.targetMonths.filter((item) => item !== monthKey),
+        };
+      }
+
+      if (current.targetMonths.length >= 4) {
+        return current;
+      }
+
+      return {
+        ...current,
+        targetMonths: [...current.targetMonths, monthKey].sort(),
       };
     });
   }
@@ -594,9 +632,11 @@ export default function HomePage() {
                 </div>
 
                 <div className={styles.priceCard}>
-                  <span className={styles.priceLabel}>概算合計</span>
+                  <span className={styles.priceLabel}>推定合計</span>
                   <strong>{formatCurrency(result.totalPrice)}</strong>
+                  <span>目安レンジ {formatCurrencyRange(result.totalPriceRange)}</span>
                   <span>1名あたり {formatCurrency(result.totalPricePerPerson)}</span>
+                  <span>1名レンジ {formatCurrencyRange(result.totalPriceRangePerPerson)}</span>
                 </div>
               </div>
 

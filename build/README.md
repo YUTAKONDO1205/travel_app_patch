@@ -6,6 +6,7 @@
 
 - Purpose: help a traveler compare the cheapest inbound entry leg and cheapest return exit leg for a multi-country overseas trip before moving to live search.
 - Core truth: prices in the app may be deterministic reference estimates unless a future live provider is added.
+- Estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
 - Design direction: warm off-white backgrounds, gold and bronze accents, dark brown and near-black contrast, and a calm premium rhythm instead of a dense utility dashboard.
 - Required page shell: fixed transparent header, full-screen hero, concept intro, value collage, alternating story section, lineup cards, restrained CTA, and dark footer.
 
@@ -31,16 +32,24 @@ On Windows, that script checks for an existing listener on port `3000` and attem
 After installing dependencies:
 
 ```bash
+npm run typecheck
+npm run test:planner
+npm run smoke
 npm run build
 ```
 
 For this Codex desktop sandbox, where `node:child_process` may be blocked, use the same-process dev smoke instead:
 
 ```bash
+npm run test:planner
 npm run smoke
 ```
 
-The smoke command starts the Next.js app on `127.0.0.1:3100`, fetches the rendered page, confirms key Maison Passage text is present, stops the temporary server, and exits.
+`npm run test:planner` validates the deterministic open-jaw planner logic, including price ranges, confidence labels, the open-jaw gap note, and Skyscanner handoff generation.
+
+`npm run smoke` starts the Next.js app on `127.0.0.1:3100`, fetches the rendered page, confirms key Maison Passage text is present, stops the temporary server, and exits.
+
+`next.config.mjs` keeps local production builds stable in restricted Codex environments by using worker threads and disabling the webpack build worker child-process path.
 
 ## Harness Notes
 

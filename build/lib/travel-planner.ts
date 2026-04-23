@@ -1,5 +1,7 @@
 import {
   COUNTRY_LABELS,
+  FLEXIBLE_MONTH_OPTIONS,
+  FLEXIBLE_STAY_DAY_OPTIONS,
   STAY_LENGTH_OPTIONS,
   getAirportsForCountry,
   getCountryProfile,
@@ -7,15 +9,23 @@ import {
   type CabinClassKey,
   type CountryCode,
   type CountryProfile,
+  type FlexibleStayDayKey,
   type PassengerCountKey,
   type StayLengthKey,
+  type TravelMonthKey,
 } from "./travel-data";
+
+export type DateSearchMode = "exact" | "flexible";
 
 export type PlannerFormState = {
   departureCountry: CountryCode | "";
   destinationCountries: CountryCode[];
+  dateSearchMode: DateSearchMode;
   outboundDate: string;
+  targetMonths: TravelMonthKey[];
   stayLength: StayLengthKey | "";
+  stayLengthMin: FlexibleStayDayKey;
+  stayLengthMax: FlexibleStayDayKey;
   passengerCount: PassengerCountKey;
   cabinClass: CabinClassKey;
   preferDirect: boolean;
@@ -28,12 +38,21 @@ export type FlightLegQuote = {
   travelDate: string;
   pricePerPerson: number;
   totalPrice: number;
+  priceRangePerPerson: PriceRange;
+  totalPriceRange: PriceRange;
+  confidenceLabel: string;
+  estimateBasis: string;
   durationHours: number;
   stopCount: number;
   stopLabel: string;
   distanceKm: number;
   reasonPoints: string[];
   skyscannerUrl: string;
+};
+
+export type PriceRange = {
+  low: number;
+  high: number;
 };
 
 export type CountryCoverage = {
@@ -58,6 +77,12 @@ export type FlightSearchResult = {
   destinationAirports: Airport[];
   outboundDate: string;
   returnDate: string;
+  outboundDateWindow: string;
+  returnDateWindow: string;
+  stayLengthRangeLabel: string;
+  flexibilitySummary: string;
+  comparedOutboundDateCount: number;
+  comparedReturnDateCount: number;
   bestOutbound: FlightLegQuote;
   bestInbound: FlightLegQuote;
   outboundAlternatives: FlightLegQuote[];
@@ -65,6 +90,8 @@ export type FlightSearchResult = {
   coverage: CountryCoverage[];
   totalPricePerPerson: number;
   totalPrice: number;
+  totalPriceRangePerPerson: PriceRange;
+  totalPriceRange: PriceRange;
   planHeadline: string;
   openJawNote: string;
   openJawGap: OpenJawGap;
@@ -75,8 +102,12 @@ export type FlightSearchResult = {
 export const INITIAL_FORM_STATE: PlannerFormState = {
   departureCountry: "JP",
   destinationCountries: ["FR", "GB", "DE"],
+  dateSearchMode: "flexible",
   outboundDate: "",
+  targetMonths: ["2026-07", "2026-08", "2026-09"],
   stayLength: "7",
+  stayLengthMin: "26",
+  stayLengthMax: "36",
   passengerCount: "1",
   cabinClass: "economy",
   preferDirect: false,
@@ -117,6 +148,61 @@ function addDays(dateString: string, days: number): string {
 
   date.setUTCDate(date.getUTCDate() + days);
   return formatIsoDate(date);
+}
+
+function compareIsoDates(left: string, right: string): number {
+  return left.localeCompare(right);
+}
+
+function getMonthDateRange(monthKey: TravelMonthKey): string[] {
+  const [yearString, monthString] = monthKey.split("-");
+  const year = Number.parseInt(yearString ?? "", 10);
+  const month = Number.parseInt(monthString ?? "", 10);
+
+  if (!year || !month) {
+    return [];
+  }
+
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+  return Array.from({ length: lastDay }, (_, index) => formatIsoDate(new Date(Date.UTC(year, month - 1, index + 1))));
+}
+
+function getFlexibleStayDays(stayLength: FlexibleStayDayKey): number {
+  return FLEXIBLE_STAY_DAY_OPTIONS.find((option) => option.value === stayLength)?.days ?? 0;
+}
+
+function getStayRange(formState: PlannerFormState): { min: number; max: number } {
+  if (formState.dateSearchMode === "exact") {
+    const days = getStayDays(formState.stayLength);
+    return { min: days, max: days };
+  }
+
+  const min = getFlexibleStayDays(formState.stayLengthMin);
+  const max = getFlexibleStayDays(formState.stayLengthMax);
+
+  return {
+    min: Math.min(min, max),
+    max: Math.max(min, max),
+  };
+}
+
+function getOutboundCandidateDates(formState: PlannerFormState): string[] {
+  if (formState.dateSearchMode === "exact") {
+    return formState.outboundDate ? [formState.outboundDate] : [];
+  }
+
+  return [...new Set(formState.targetMonths.flatMap((monthKey) => getMonthDateRange(monthKey)))].sort(compareIsoDates);
+}
+
+function getReturnCandidateDates(outboundDate: string, formState: PlannerFormState): string[] {
+  const { min, max } = getStayRange(formState);
+
+  if (!outboundDate || min <= 0 || max <= 0) {
+    return [];
+  }
+
+  return Array.from({ length: max - min + 1 }, (_, index) => addDays(outboundDate, min + index)).filter(Boolean);
 }
 
 function haversineDistanceKm(origin: Airport, destination: Airport): number {
@@ -163,6 +249,32 @@ function getSeasonFactor(dateString: string): { factor: number; label: string } 
   return { factor: 0.94, label: "比較的落ち着いた時期" };
 }
 
+function getDateFlexFactor(dateString: string): { factor: number; label: string } {
+  const date = parseIsoDate(dateString);
+
+  if (!date) {
+    return { factor: 1, label: "日付未設定" };
+  }
+
+  const day = date.getUTCDate();
+  const dayOfWeek = date.getUTCDay();
+  const month = date.getUTCMonth() + 1;
+  const deterministicWave = (((month * 37 + day * 17) % 13) - 6) / 100;
+  const weekdayFactor = dayOfWeek === 2 || dayOfWeek === 3 ? -0.035 : dayOfWeek === 5 || dayOfWeek === 6 ? 0.045 : 0;
+  const midMonthFactor = day >= 12 && day <= 18 ? -0.025 : 0;
+  const factor = 1 + deterministicWave + weekdayFactor + midMonthFactor;
+
+  if (factor <= 0.94) {
+    return { factor, label: "月内で割安な日付" };
+  }
+
+  if (factor >= 1.05) {
+    return { factor, label: "週末・需要高めの日付" };
+  }
+
+  return { factor, label: "標準的な日付" };
+}
+
 function supportsDirectRoute(origin: Airport, destination: Airport, distanceKm: number): boolean {
   if (distanceKm <= 4200) {
     return true;
@@ -177,6 +289,37 @@ function supportsDirectRoute(origin: Airport, destination: Airport, distanceKm: 
 
 function roundToNearestHundred(value: number): number {
   return Math.round(value / 100) * 100;
+}
+
+function buildPriceRange(value: number, uncertainty: number): PriceRange {
+  return {
+    low: Math.max(0, roundToNearestHundred(value * (1 - uncertainty))),
+    high: roundToNearestHundred(value * (1 + uncertainty)),
+  };
+}
+
+function getEstimateConfidence({
+  origin,
+  destination,
+  distanceKm,
+  stopCount,
+}: {
+  origin: Airport;
+  destination: Airport;
+  distanceKm: number;
+  stopCount: number;
+}): string {
+  const hubStrength = origin.hubScore + destination.hubScore;
+
+  if (stopCount === 0 && hubStrength >= 9) {
+    return "信頼度: 高";
+  }
+
+  if (hubStrength >= 7 && distanceKm < 10500) {
+    return "信頼度: 中";
+  }
+
+  return "信頼度: 参考";
 }
 
 function buildSkyscannerUrl(
@@ -250,15 +393,26 @@ function buildFlightQuote({
   const stopCount = preferDirect || canDirect ? 0 : 1;
   const stopLabel = stopCount === 0 ? "直行想定" : "1回乗継";
   const season = getSeasonFactor(travelDate);
+  const dateFlex = getDateFlexFactor(travelDate);
   const hubFactor = 1 - Math.max(-0.08, (origin.hubScore + destination.hubScore - 8) * 0.018);
   const cabinMultiplier = getCabinMultiplier(cabinClass);
   const directionFactor = direction === "return" ? 1.03 : 1;
   const directFactor = stopCount === 0 ? 1.08 : 0.94;
   const baseFare = 18000 + distanceKm * 11.4;
-  const pricePerPerson = roundToNearestHundred(baseFare * season.factor * hubFactor * cabinMultiplier * directFactor * directionFactor);
+  const pricePerPerson = roundToNearestHundred(
+    baseFare * season.factor * dateFlex.factor * hubFactor * cabinMultiplier * directFactor * directionFactor,
+  );
   const totalPrice = pricePerPerson * Number.parseInt(passengerCount, 10);
+  const uncertainty = 0.1 + (stopCount === 0 ? 0.03 : 0.06) + (distanceKm > 9500 ? 0.04 : 0);
+  const priceRangePerPerson = buildPriceRange(pricePerPerson, uncertainty);
+  const passengerCountValue = Number.parseInt(passengerCount, 10);
+  const totalPriceRange = {
+    low: priceRangePerPerson.low * passengerCountValue,
+    high: priceRangePerPerson.high * passengerCountValue,
+  };
   const averageSpeed = stopCount === 0 ? 860 : 760;
   const durationHours = Math.round((distanceKm / averageSpeed + (stopCount === 0 ? 1.1 : 4.1)) * 10) / 10;
+  const confidenceLabel = getEstimateConfidence({ origin, destination, distanceKm, stopCount });
 
   return {
     direction,
@@ -267,6 +421,10 @@ function buildFlightQuote({
     travelDate,
     pricePerPerson,
     totalPrice,
+    priceRangePerPerson,
+    totalPriceRange,
+    confidenceLabel,
+    estimateBasis: `${season.label} / ${dateFlex.label} / ${stopLabel} / ${distanceKm.toLocaleString("ja-JP")}km`,
     durationHours,
     stopCount,
     stopLabel,
@@ -303,8 +461,44 @@ function buildCountryCoverage(
 }
 
 export function getReturnDate(formState: PlannerFormState): string {
-  const stayDays = getStayDays(formState.stayLength);
-  return formState.outboundDate && stayDays > 0 ? addDays(formState.outboundDate, stayDays) : "";
+  const { min } = getStayRange(formState);
+  return formState.outboundDate && min > 0 ? addDays(formState.outboundDate, min) : "";
+}
+
+export function formatTargetMonthLabel(monthKey: TravelMonthKey): string {
+  return FLEXIBLE_MONTH_OPTIONS.find((option) => option.value === monthKey)?.label ?? monthKey;
+}
+
+export function getStayRangeLabel(formState: PlannerFormState): string {
+  const { min, max } = getStayRange(formState);
+
+  if (!min || !max) {
+    return "未設定";
+  }
+
+  return min === max ? `${min}日` : `${min}〜${max}日`;
+}
+
+export function getDateSearchSummary(formState: PlannerFormState): string {
+  if (formState.dateSearchMode === "exact") {
+    const returnDate = getReturnDate(formState);
+    return returnDate ? `${formatDateLabel(formState.outboundDate)}出発 / ${formatDateLabel(returnDate)}帰国` : "日付指定";
+  }
+
+  const monthLabels = formState.targetMonths.map((monthKey) => formatTargetMonthLabel(monthKey)).join(" / ");
+  return `${monthLabels || "月未設定"}出発 / 滞在${getStayRangeLabel(formState)}`;
+}
+
+export function getReturnWindowLabel(outboundDate: string, formState: PlannerFormState): string {
+  const returnDates = getReturnCandidateDates(outboundDate, formState);
+
+  if (!returnDates.length) {
+    return "未設定";
+  }
+
+  return returnDates.length === 1
+    ? formatDateLabel(returnDates[0])
+    : `${formatDateLabel(returnDates[0])}〜${formatDateLabel(returnDates[returnDates.length - 1])}`;
 }
 
 export function getFormValidationMessage(formState: PlannerFormState): string | null {
@@ -320,12 +514,31 @@ export function getFormValidationMessage(formState: PlannerFormState): string | 
     return "出発国と同じ国は候補国から外してください。";
   }
 
-  if (!formState.outboundDate) {
-    return "往路の出発日を選んでください。";
+  if (formState.dateSearchMode === "exact") {
+    if (!formState.outboundDate) {
+      return "往路の出発日を選んでください。";
+    }
+
+    if (!formState.stayLength) {
+      return "滞在日数を選んでください。";
+    }
   }
 
-  if (!formState.stayLength) {
-    return "滞在日数を選んでください。";
+  if (formState.dateSearchMode === "flexible") {
+    if (formState.targetMonths.length === 0) {
+      return "比較したい出発月を1つ以上選んでください。";
+    }
+
+    const minStay = getFlexibleStayDays(formState.stayLengthMin);
+    const maxStay = getFlexibleStayDays(formState.stayLengthMax);
+
+    if (!minStay || !maxStay) {
+      return "滞在日数の幅を選んでください。";
+    }
+
+    if (minStay > maxStay) {
+      return "最短滞在日数は最長滞在日数以下にしてください。";
+    }
   }
 
   return null;
@@ -346,7 +559,7 @@ export function buildNoRouteGuidance(formState: PlannerFormState): string[] {
     guidance.push("候補国を2〜3か国に広げると、入口と出口の最適化余地が増えます。");
   }
 
-  guidance.push("出発日を数日前後で動かすと、検索レンジが変わって候補が見つかりやすくなります。");
+  guidance.push("日付指定から月単位のフレックス探索に切り替えると、候補が見つかりやすくなります。");
   guidance.push("代表空港の比較結果なので、最終確認は Skyscanner の実検索に進んでください。");
 
   return guidance.slice(0, 3);
@@ -354,6 +567,10 @@ export function buildNoRouteGuidance(formState: PlannerFormState): string[] {
 
 export function formatCurrency(value: number): string {
   return currencyFormatter.format(value);
+}
+
+export function formatCurrencyRange(range: PriceRange): string {
+  return `${formatCurrency(range.low)} - ${formatCurrency(range.high)}`;
 }
 
 export function formatDuration(durationHours: number): string {
@@ -399,50 +616,79 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const destinationCountries = formState.destinationCountries.map((countryCode) => getCountryProfile(countryCode));
   const departureAirports = getAirportsForCountry(departureCountry.code);
   const destinationAirports = destinationCountries.flatMap((country) => getAirportsForCountry(country.code));
-  const returnDate = getReturnDate(formState);
+  const outboundCandidateDates = getOutboundCandidateDates(formState);
 
   const outboundQuotes = departureAirports
     .flatMap((origin) =>
-      destinationAirports.map((destination) =>
-        buildFlightQuote({
-          origin,
-          destination,
-          travelDate: formState.outboundDate,
-          passengerCount: formState.passengerCount,
-          cabinClass: formState.cabinClass,
-          preferDirect: formState.preferDirect,
-          direction: "outbound",
-        }),
+      destinationAirports.flatMap((destination) =>
+        outboundCandidateDates.map((travelDate) =>
+          buildFlightQuote({
+            origin,
+            destination,
+            travelDate,
+            passengerCount: formState.passengerCount,
+            cabinClass: formState.cabinClass,
+            preferDirect: formState.preferDirect,
+            direction: "outbound",
+          }),
+        ),
       ),
     )
     .filter((quote): quote is FlightLegQuote => quote !== null)
     .sort(compareQuotes);
 
-  const inboundQuotes = destinationAirports
-    .flatMap((origin) =>
-      departureAirports.map((destination) =>
-        buildFlightQuote({
-          origin,
-          destination,
-          travelDate: returnDate,
-          passengerCount: formState.passengerCount,
-          cabinClass: formState.cabinClass,
-          preferDirect: formState.preferDirect,
-          direction: "return",
-        }),
-      ),
-    )
-    .filter((quote): quote is FlightLegQuote => quote !== null)
-    .sort(compareQuotes);
-
-  if (!outboundQuotes.length || !inboundQuotes.length) {
+  if (!outboundQuotes.length) {
     return null;
   }
 
   const bestOutbound = outboundQuotes[0];
+  const returnCandidateDates = getReturnCandidateDates(bestOutbound.travelDate, formState);
+
+  const inboundQuotes = destinationAirports
+    .flatMap((origin) =>
+      departureAirports.flatMap((destination) =>
+        returnCandidateDates.map((travelDate) =>
+          buildFlightQuote({
+            origin,
+            destination,
+            travelDate,
+            passengerCount: formState.passengerCount,
+            cabinClass: formState.cabinClass,
+            preferDirect: formState.preferDirect,
+            direction: "return",
+          }),
+        ),
+      ),
+    )
+    .filter((quote): quote is FlightLegQuote => quote !== null)
+    .sort(compareQuotes);
+
+  if (!inboundQuotes.length) {
+    return null;
+  }
+
   const bestInbound = inboundQuotes[0];
+  const returnDate = bestInbound.travelDate;
+  const outboundDateWindow =
+    outboundCandidateDates.length === 1
+      ? formatDateLabel(outboundCandidateDates[0])
+      : `${formatDateLabel(outboundCandidateDates[0])}〜${formatDateLabel(outboundCandidateDates[outboundCandidateDates.length - 1])}`;
+  const returnDateWindow = getReturnWindowLabel(bestOutbound.travelDate, formState);
+  const stayLengthRangeLabel = getStayRangeLabel(formState);
+  const flexibilitySummary =
+    formState.dateSearchMode === "flexible"
+      ? `${formState.targetMonths.map((monthKey) => formatTargetMonthLabel(monthKey)).join(" / ")}の全日から往路最安日を選び、そこから${stayLengthRangeLabel}後の復路候補を比較しました。`
+      : `${formatDateLabel(bestOutbound.travelDate)}出発、${formatDateLabel(bestInbound.travelDate)}帰国の固定日程で比較しました。`;
   const totalPricePerPerson = bestOutbound.pricePerPerson + bestInbound.pricePerPerson;
   const totalPrice = bestOutbound.totalPrice + bestInbound.totalPrice;
+  const totalPriceRangePerPerson = {
+    low: bestOutbound.priceRangePerPerson.low + bestInbound.priceRangePerPerson.low,
+    high: bestOutbound.priceRangePerPerson.high + bestInbound.priceRangePerPerson.high,
+  };
+  const totalPriceRange = {
+    low: bestOutbound.totalPriceRange.low + bestInbound.totalPriceRange.low,
+    high: bestOutbound.totalPriceRange.high + bestInbound.totalPriceRange.high,
+  };
   const destinationNames = destinationCountries.map((country) => country.name).join(" / ");
   const differentExit =
     bestOutbound.destination.code !== bestInbound.origin.code || bestOutbound.destination.countryCode !== bestInbound.origin.countryCode;
@@ -470,8 +716,14 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     destinationCountries,
     departureAirports,
     destinationAirports,
-    outboundDate: formState.outboundDate,
+    outboundDate: bestOutbound.travelDate,
     returnDate,
+    outboundDateWindow,
+    returnDateWindow,
+    stayLengthRangeLabel,
+    flexibilitySummary,
+    comparedOutboundDateCount: outboundCandidateDates.length,
+    comparedReturnDateCount: returnCandidateDates.length,
     bestOutbound,
     bestInbound,
     outboundAlternatives: outboundQuotes.slice(0, 4),
@@ -479,6 +731,8 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     coverage: buildCountryCoverage(destinationCountries, outboundQuotes, inboundQuotes),
     totalPricePerPerson,
     totalPrice,
+    totalPriceRangePerPerson,
+    totalPriceRange,
     planHeadline: `${departureCountry.name}発で ${destinationNames} を回るなら、往路 ${bestOutbound.origin.code}→${bestOutbound.destination.code} / 復路 ${bestInbound.origin.code}→${bestInbound.destination.code} が推定最安です。`,
     openJawNote: differentExit
       ? `${bestOutbound.destination.city} 着・${bestInbound.origin.city} 発のオープンジョー前提です。現地の移動はこのアプリでは計算に含めません。`
@@ -488,7 +742,7 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
       "表示価格は代表空港と季節係数から作った参考見積りです。ライブ在庫ではないため、ボタンから Skyscanner の実検索に進んで最終確認してください。",
     multiCityUrl: buildSkyscannerUrl("multicity", {
       origin0: bestOutbound.origin.code.toLowerCase(),
-      date0: formState.outboundDate,
+      date0: bestOutbound.travelDate,
       destination0: bestOutbound.destination.code.toLowerCase(),
       origin1: bestInbound.origin.code.toLowerCase(),
       date1: returnDate,

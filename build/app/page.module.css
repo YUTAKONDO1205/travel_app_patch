@@ -903,6 +903,29 @@
   color: var(--muted);
 }
 
+.estimateBand {
+  margin: 14px 0;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(166, 117, 59, 0.16);
+  background: rgba(246, 233, 214, 0.42);
+  display: grid;
+  gap: 6px;
+}
+
+.estimateBand span,
+.estimateBand small {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.estimateBand strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
 .ctaStrip {
   margin: 18px 0;
 }

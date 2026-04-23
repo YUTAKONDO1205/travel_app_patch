@@ -1,0 +1,56 @@
+{
+  "sprint": 3,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "Spec JSON validation",
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build"
+    ],
+    "notes": "The sprint was verified locally without browser automation. npm run smoke starts the Next.js app on port 3100 and confirms key rendered text. npm run test:planner validates the deterministic planner model directly."
+  },
+  "checks": [
+    {
+      "name": "Spec and design docs reflect Sprint 3 estimate integrity",
+      "result": "PASS",
+      "evidence": "specs/spec.json now includes the estimate-transparency feature and Sprint 3 Fare Estimate Integrity, while 設計書.md documents fare ranges, confidence labels, and estimate-basis requirements."
+    },
+    {
+      "name": "TypeScript source compiles",
+      "result": "PASS",
+      "evidence": "npm run typecheck completed successfully in build/."
+    },
+    {
+      "name": "Planner model generates estimate ranges and confidence metadata",
+      "result": "PASS",
+      "evidence": "npm run test:planner passed, validating total and leg range bounds, confidence labels, estimate basis, open-jaw gap notes, and Skyscanner handoff generation."
+    },
+    {
+      "name": "App renders through local smoke server",
+      "result": "PASS",
+      "evidence": "npm run smoke passed at http://127.0.0.1:3100 and confirmed key Maison Passage text."
+    },
+    {
+      "name": "Production build completes",
+      "result": "PASS",
+      "evidence": "npm run build completed successfully with the local Next.js worker configuration."
+    },
+    {
+      "name": "Interactive mobile and desktop viewport verification",
+      "result": "UNVERIFIED",
+      "evidence": "Browser automation was not available in this session, so responsive screenshots and form-click submission were not captured."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Run browser automation when available to submit the Japan plus France, United Kingdom, and Germany flow and confirm the estimate range UI after interaction.",
+    "Select a live fare provider and API contract before Sprint 4, then add provider-backed fare enrichment with deterministic fallback.",
+    "Consider adding a saved comparison or export/share affordance once live pricing behavior is established."
+  ]
+}

@@ -211,6 +211,7 @@
 .altMeta,
 .altNote,
 .noteCard p,
+.gapCard p,
 .footerText {
   margin: 0;
   color: var(--muted);
@@ -238,6 +239,7 @@
 .loadingState,
 .emptyState,
 .noteCard,
+.gapCard,
 .legCard,
 .altSection,
 .coverageCard {
@@ -517,6 +519,7 @@
 .loadingState,
 .emptyState,
 .noteCard,
+.gapCard,
 .altSection {
   padding: 28px;
 }
@@ -904,6 +907,56 @@
   margin: 18px 0;
 }
 
+.gapCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+  gap: 22px;
+  margin: 18px 0;
+}
+
+.gapCard h3 {
+  margin: 8px 0 12px;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.gapCard p + p {
+  margin-top: 8px;
+}
+
+.gapRoute {
+  border-radius: 24px;
+  border: 1px solid rgba(166, 117, 59, 0.22);
+  background: linear-gradient(180deg, rgba(246, 233, 214, 0.72), rgba(255, 251, 245, 0.78));
+  padding: 20px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.gapRoute span,
+.altBadge {
+  color: var(--accent-strong);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.gapRoute strong {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.gapRoute em {
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-style: normal;
+}
+
 .altGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-top: 18px;
@@ -928,6 +981,17 @@
 
 .altTop span {
   color: var(--accent-strong);
+}
+
+.altBadge {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 28px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(191, 150, 102, 0.12);
 }
 
 .coverageSection {
@@ -1099,5 +1163,9 @@
 
   .heroTitle {
     font-size: clamp(2.8rem, 14vw, 4.2rem);
+  }
+
+  .gapCard {
+    grid-template-columns: 1fr;
   }
 }

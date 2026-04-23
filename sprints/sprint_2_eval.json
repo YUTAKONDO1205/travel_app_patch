@@ -4,14 +4,16 @@
     "Updated specs/spec.json and 設計書.md so Maison Passage Open Jaw Explorer is the source-of-truth product: an overseas open-jaw flight planner for comparing cheapest entry and return-exit flight legs across multiple destination countries.",
     "Refined the app into a premium editorial landing experience with a fixed minimal header, full-height dark-overlay hero, centered concept intro, asymmetrical value collage, alternating story section, standalone plan lineup, restrained final CTA, and dark footer.",
     "Preserved the core open-jaw planner flow: departure country, outbound date, stay length, passenger count, cabin class, direct-first preference, multi-country destination selection, representative-airport comparison, separate cheapest outbound and return legs, alternatives, coverage, and Skyscanner handoff links.",
-    "Added a clearer planning-boundary message that internal travel between the arrival airport and return-departure airport is intentionally excluded.",
-    "Updated build/README.md with the current product snapshot, local run commands, harness commands, and scope boundaries."
+    "Added an open-jaw gap insight card that shows the arrival airport, return-departure airport, approximate distance between them, and a clear note that internal travel remains out of scope.",
+    "Added deterministic alternative-route badges such as cheapest, direct, shorter duration, different gateway, and price-oriented to make outbound and return alternatives easier to scan.",
+    "Added stable smoke validation with npm run smoke and type validation with npm run typecheck, plus data-testid anchors for the hero, trip form, result summary, and open-jaw gap.",
+    "Updated build/README.md with the current product snapshot, local run commands, smoke command, harness commands, and scope boundaries."
   ],
   "known_issues": [
     "Displayed fares are deterministic reference estimates from local representative-airport logic, not live API-backed inventory.",
     "The MVP intentionally ignores the internal route between the inbound arrival airport and the return departure airport inside the destination region.",
     "Country and airport coverage is curated rather than exhaustive.",
-    "In this Codex execution sandbox, Node child_process spawning returns EPERM, so Next.js build/dev server startup could not be completed here even though TypeScript validation passes."
+    "The smoke check verifies rendered HTML and key text, but it does not replace a full interactive browser test with form submission and viewport screenshots."
   ],
   "run_instructions": {
     "install": "npm install",
@@ -23,16 +25,20 @@
       "result": "passed"
     },
     {
-      "command": "cmd /c .\\\\node_modules\\\\.bin\\\\tsc.cmd --noEmit",
+      "command": "python -m py_compile agents/orchestrator_codex.py agents/codex_runner.py",
       "result": "passed"
     },
     {
-      "command": "cmd /c npm run build",
-      "result": "failed in this sandbox with Next.js worker spawn EPERM"
+      "command": "npm run typecheck",
+      "result": "passed"
     },
     {
-      "command": "npm run dev followed by HTTP GET http://127.0.0.1:3000",
-      "result": "failed in this sandbox because Next.js dev startup hit spawn EPERM before binding the port"
+      "command": "npm run smoke",
+      "result": "passed; same-process Next.js dev server rendered Maison Passage, Open Jaw Explorer, and Skyscanner text at http://127.0.0.1:3100"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
     }
   ]
 }

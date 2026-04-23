@@ -99,6 +99,26 @@ function renderLegCard(quote: FlightLegQuote, title: string) {
   );
 }
 
+function getAlternativeBadge(quote: FlightLegQuote, index: number, bestQuote: FlightLegQuote) {
+  if (index === 0) {
+    return "最安";
+  }
+
+  if (quote.stopCount === 0) {
+    return "直行";
+  }
+
+  if (quote.durationHours < bestQuote.durationHours) {
+    return "短時間";
+  }
+
+  if (quote.origin.city !== bestQuote.origin.city || quote.destination.city !== bestQuote.destination.city) {
+    return "別ゲート";
+  }
+
+  return "価格寄り";
+}
+
 export default function HomePage() {
   const [formState, setFormState] = useState<PlannerFormState>(INITIAL_FORM_STATE);
   const [submitted, setSubmitted] = useState(false);
@@ -236,7 +256,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section className={styles.hero} id="top">
+      <section className={styles.hero} id="top" data-testid="hero">
         <div className={styles.heroBackdrop} />
         <div className={styles.shell}>
           <div className={styles.heroGrid}>
@@ -377,7 +397,7 @@ export default function HomePage() {
                 <span className={styles.inlinePill}>候補国は最大5か国</span>
               </div>
 
-              <form onSubmit={handleSearch}>
+              <form onSubmit={handleSearch} data-testid="trip-brief-form">
                 <div className={styles.formGrid}>
                   <label className={styles.field}>
                     <span className={styles.fieldLabel}>出発国</span>
@@ -566,7 +586,7 @@ export default function HomePage() {
 
           {!loading && result ? (
             <>
-              <div className={styles.resultHero}>
+              <div className={styles.resultHero} data-testid="result-summary">
                 <div className={styles.resultCopy}>
                   <p className={styles.resultEyebrow}>Recommended open-jaw combination</p>
                   <h3 className={styles.resultHeadline}>{result.planHeadline}</h3>
@@ -603,6 +623,22 @@ export default function HomePage() {
                 <p>{result.planningNote}</p>
               </div>
 
+              <div className={styles.gapCard} data-testid="open-jaw-gap">
+                <div>
+                  <p className={styles.sectionEyebrow}>Open-jaw gap</p>
+                  <h3>入口と出口のあいだにある余白</h3>
+                  <p>{result.openJawGap.summary}</p>
+                  <p>{result.openJawGap.note}</p>
+                </div>
+                <div className={styles.gapRoute}>
+                  <span>Arrival</span>
+                  <strong>{result.openJawGap.arrivalLabel}</strong>
+                  <em>現地移動は別手配</em>
+                  <span>Return from</span>
+                  <strong>{result.openJawGap.departureLabel}</strong>
+                </div>
+              </div>
+
               <div className={styles.altGrid}>
                 <section className={styles.altSection}>
                   <div className={styles.altHeader}>
@@ -610,12 +646,13 @@ export default function HomePage() {
                     <span className={styles.inlinePill}>{result.outboundAlternatives.length}案</span>
                   </div>
                   <div className={styles.altList}>
-                    {result.outboundAlternatives.map((quote) => (
+                    {result.outboundAlternatives.map((quote, index) => (
                       <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}`} className={styles.altCard}>
                         <div className={styles.altTop}>
                           <strong>{routeLabel(quote)}</strong>
                           <span>{formatCurrency(quote.totalPrice)}</span>
                         </div>
+                        <span className={styles.altBadge}>{getAlternativeBadge(quote, index, result.bestOutbound)}</span>
                         <p className={styles.altMeta}>
                           {formatDateLabel(quote.travelDate)} / {quote.stopLabel} / {formatDuration(quote.durationHours)}
                         </p>
@@ -631,12 +668,13 @@ export default function HomePage() {
                     <span className={styles.inlinePill}>{result.inboundAlternatives.length}案</span>
                   </div>
                   <div className={styles.altList}>
-                    {result.inboundAlternatives.map((quote) => (
+                    {result.inboundAlternatives.map((quote, index) => (
                       <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}`} className={styles.altCard}>
                         <div className={styles.altTop}>
                           <strong>{routeLabel(quote)}</strong>
                           <span>{formatCurrency(quote.totalPrice)}</span>
                         </div>
+                        <span className={styles.altBadge}>{getAlternativeBadge(quote, index, result.bestInbound)}</span>
                         <p className={styles.altMeta}>
                           {formatDateLabel(quote.travelDate)} / {quote.stopLabel} / {formatDuration(quote.durationHours)}
                         </p>

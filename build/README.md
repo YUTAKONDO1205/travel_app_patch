@@ -34,6 +34,14 @@ After installing dependencies:
 npm run build
 ```
 
+For this Codex desktop sandbox, where `node:child_process` may be blocked, use the same-process dev smoke instead:
+
+```bash
+npm run smoke
+```
+
+The smoke command starts the Next.js app on `127.0.0.1:3100`, fetches the rendered page, confirms key Maison Passage text is present, stops the temporary server, and exits.
+
 ## Harness Notes
 
 The repository's Codex harness reads `specs/spec.json` as the product source of truth and uses these commands from the repo root:

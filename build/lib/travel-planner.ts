@@ -43,6 +43,14 @@ export type CountryCoverage = {
   bestInbound: FlightLegQuote | null;
 };
 
+export type OpenJawGap = {
+  arrivalLabel: string;
+  departureLabel: string;
+  distanceKm: number;
+  summary: string;
+  note: string;
+};
+
 export type FlightSearchResult = {
   departureCountry: CountryProfile;
   destinationCountries: CountryProfile[];
@@ -59,6 +67,7 @@ export type FlightSearchResult = {
   totalPrice: number;
   planHeadline: string;
   openJawNote: string;
+  openJawGap: OpenJawGap;
   planningNote: string;
   multiCityUrl: string;
 };
@@ -76,6 +85,10 @@ export const INITIAL_FORM_STATE: PlannerFormState = {
 const currencyFormatter = new Intl.NumberFormat("ja-JP", {
   style: "currency",
   currency: "JPY",
+  maximumFractionDigits: 0,
+});
+
+const distanceFormatter = new Intl.NumberFormat("ja-JP", {
   maximumFractionDigits: 0,
 });
 
@@ -433,6 +446,24 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const destinationNames = destinationCountries.map((country) => country.name).join(" / ");
   const differentExit =
     bestOutbound.destination.code !== bestInbound.origin.code || bestOutbound.destination.countryCode !== bestInbound.origin.countryCode;
+  const openJawGapDistanceKm = differentExit ? haversineDistanceKm(bestOutbound.destination, bestInbound.origin) : 0;
+  const openJawGap: OpenJawGap = differentExit
+    ? {
+        arrivalLabel: `${bestOutbound.destination.city} (${bestOutbound.destination.code})`,
+        departureLabel: `${bestInbound.origin.city} (${bestInbound.origin.code})`,
+        distanceKm: openJawGapDistanceKm,
+        summary: `到着地と帰国地の間には約${distanceFormatter.format(openJawGapDistanceKm)}kmの余白があります。`,
+        note:
+          "この区間の列車・短距離便・車移動は見積もりに含めず、国際線の入口と出口だけを比較しています。",
+      }
+    : {
+        arrivalLabel: `${bestOutbound.destination.city} (${bestOutbound.destination.code})`,
+        departureLabel: `${bestInbound.origin.city} (${bestInbound.origin.code})`,
+        distanceKm: 0,
+        summary: "到着地と帰国地は同じ空港です。",
+        note:
+          "この場合も現地滞在中の移動費は含めず、国際線の往路と復路だけを比較しています。",
+      };
 
   return {
     departureCountry,
@@ -452,6 +483,7 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     openJawNote: differentExit
       ? `${bestOutbound.destination.city} 着・${bestInbound.origin.city} 発のオープンジョー前提です。現地の移動はこのアプリでは計算に含めません。`
       : `${bestOutbound.destination.city} を同一都市の入口/出口として使う構成です。現地移動の計算は含めません。`,
+    openJawGap,
     planningNote:
       "表示価格は代表空港と季節係数から作った参考見積りです。ライブ在庫ではないため、ボタンから Skyscanner の実検索に進んで最終確認してください。",
     multiCityUrl: buildSkyscannerUrl("multicity", {

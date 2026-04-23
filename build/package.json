@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "typecheck": "tsc --noEmit",
+    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-dev.ps1",
     "build": "next build",
     "start": "next start"
   },

@@ -1,16 +1,16 @@
-# Maison Passage Open Jaw Explorer
+# Maison Passage Gateway Pair Explorer
 
-`build/` contains the runnable Next.js app for the current Maison Passage overseas open-jaw planner. The latest approved source-of-truth docs keep the existing planner behavior and flexible travel-window logic, and position Sprint 5 as a Grand Tour Ledger premium dossier redesign.
+`build/` contains the runnable Next.js app for the current Maison Passage overseas gateway-pair planner.
 
 ## Product Snapshot
 
-- Current purpose: help a traveler compare the cheapest inbound entry leg and cheapest return exit leg for a multi-country overseas trip before moving to live search.
-- Current pricing model: fares in the app may be deterministic reference estimates unless a future live provider is added.
+- Current purpose: help a traveler compare the cheapest outbound and return one-way tickets for a multi-country overseas trip before moving to live search.
+- Current search model: selected destination countries act as the headline stay countries, while nearby gateway airports may also be searched when that produces a cheaper international entry or exit.
+- Current pricing model: fares in the app are deterministic reference estimates unless a future live provider is added.
 - Current estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
 - Current flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.
-- Current shell: the app already wraps the planner in a premium editorial experience rather than a dense utility dashboard.
-- Approved next redesign: Sprint 5 moves the shell to a much bolder Grand Tour Ledger dossier aesthetic with this target order: header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, footer.
-- Roadmap note: live fare enrichment now follows the redesign in Sprint 6.
+- Current shell: the app wraps the planner in the Grand Tour Ledger premium dossier experience.
+- Roadmap note: live fare enrichment now follows the gateway-pair ticketing sprint in Sprint 7.
 
 ## Run Locally
 
@@ -40,36 +40,12 @@ npm run smoke
 npm run build
 ```
 
-For this Codex desktop sandbox, where `node:child_process` may be blocked, use the same-process dev smoke instead:
-
-```bash
-npm run test:planner
-npm run smoke
-```
-
-`npm run test:planner` validates the deterministic open-jaw planner logic, including price ranges, confidence labels, the open-jaw gap note, and Skyscanner handoff generation.
-It also verifies flexible month comparison, the 26 to 36 day return window, and the visible stay-range summary.
+`npm run test:planner` validates the deterministic gateway-pair planner logic, including price ranges, confidence labels, gateway expansion, the between-ticket note, and Skyscanner handoff generation. It also verifies flexible month comparison and the 26 to 36 day return window.
 
 `npm run smoke` starts the Next.js app on `127.0.0.1:3100`, fetches the rendered page, confirms key Maison Passage text is present, stops the temporary server, and exits.
 
-`next.config.mjs` keeps local production builds stable in restricted Codex environments by using worker threads and disabling the webpack build worker child-process path.
-
-## Harness Notes
-
-The repository's Codex harness reads `specs/spec.json` as the product source of truth and uses these commands from the repo root:
-
-```bash
-python agents/orchestrator_codex.py plan "<description>"
-python agents/orchestrator_codex.py generate <sprint>
-python agents/orchestrator_codex.py evaluate <sprint> http://localhost:3000
-python agents/orchestrator_codex.py autodev "<description>" --sprint N --max-iterations M --url http://localhost:3000
-python agents/orchestrator_codex.py status
-```
-
-`autodev` runs `plan`, then loops through `generate` and `evaluate`. If `build/package.json` exists, it also attempts `npm install`, starts the local dev server, waits for `http://localhost:3000`, and passes evaluator feedback into the next generate attempt when a sprint fails.
-
 ## Scope Boundaries
 
-- The current planning flow focuses on the overseas open-jaw entry and exit decision.
+- The current planning flow focuses on choosing the cheapest two-ticket international shell of the trip.
 - Internal travel between arrival and departure airports is intentionally out of scope for the MVP.
 - Final fare confirmation should happen in the live search handoff, not inside the deterministic reference UI.

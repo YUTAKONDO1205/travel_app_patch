@@ -1,11 +1,11 @@
 {
   "brand_name": "Maison Passage",
-  "product_name": "Maison Passage Open Jaw Explorer",
-  "summary": "Maison Passage Open Jaw Explorer is a browser-demoable overseas open-jaw planning app that helps travelers choose one departure country, compare multiple destination countries, and identify the cheapest inbound entry leg and cheapest return exit leg through a bold Grand Tour Ledger premium dossier experience before handing off to live search.",
-  "vision": "Turn a complex multi-country overseas trip into a collectible Grand Tour Ledger dossier where the traveler can confidently choose how to enter and leave a region before worrying about internal routing.",
+  "product_name": "Maison Passage Gateway Pair Explorer",
+  "summary": "Maison Passage Gateway Pair Explorer is a browser-demoable overseas travel-planning app that helps travelers choose one departure country, compare multiple destination countries, widen the search to nearby gateway airports, and identify the cheapest pair of one-way tickets through a bold Grand Tour Ledger premium dossier experience before handing off to live search.",
+  "vision": "Turn a complex multi-country overseas trip into a collectible Grand Tour Ledger dossier where the traveler can confidently choose how to enter and leave a region with two one-way tickets before worrying about internal routing.",
   "target_users": [
     "Japanese-speaking travelers planning premium overseas trips across multiple countries.",
-    "Travelers who want to compare open-jaw entry and exit combinations before booking anything.",
+    "Travelers who want to compare two one-way entry and exit combinations before booking anything.",
     "Users who prefer a refined, brand-led browsing experience instead of a dense airfare dashboard."
   ],
   "assumptions": [
@@ -13,7 +13,7 @@
     "Displayed fares must be framed honestly as estimates until the user opens a live provider such as Skyscanner.",
     "The MVP intentionally excludes the route between the inbound arrival airport and the return departure airport inside the destination region.",
     "The default language is Japanese and the default displayed currency is JPY.",
-    "The next design sprint should materially upgrade the presentation while preserving the existing overseas open-jaw planner logic, flexible outbound month comparison, and stay-window behavior.",
+    "The app should search as two separate one-way tickets and may widen the search to nearby gateway airports when that produces a cheaper entry or exit.",
     "The experience should feel like a premium travel dossier rather than a generic luxury landing page or dashboard.",
     "The app should remain usable in one browser session without login.",
     "Travelers often know a target season such as July through September before they know exact dates."
@@ -57,9 +57,9 @@
       "A fixed refined header that begins light and transparent, then gains a readable archival surface on scroll.",
       "A first-viewport cover spread with bold brand framing, concise copy, and a premium dossier mood instead of a generic hero.",
       "A proof strip immediately below the cover spread that surfaces trust cues such as estimate honesty, airport coverage scale, or method notes.",
-      "A planner atelier section that contains the full overseas open-jaw planning interface, including exact-date and flexible-window modes.",
+      "A planner atelier section that contains the full overseas gateway-pair planning interface, including exact-date and flexible-window modes.",
       "A result folio section that frames the recommended outbound and return legs, combined estimate, and supporting alternatives as a premium results spread.",
-      "A story/method rail that explains the open-jaw logic and the flexible month plus stay-window approach in annotated editorial beats.",
+      "A story/method rail that explains the two one-way gateway logic and the flexible month plus stay-window approach in annotated editorial beats.",
       "An archetypes section with at least three refined travel profiles or planning styles.",
       "A restrained concierge CTA section that feels bespoke rather than sales-heavy.",
       "A footer that closes the dossier with a dark premium tone."
@@ -84,14 +84,14 @@
       "must_have": [
         "The primary section order is header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, and footer.",
         "The planner atelier and result folio feel like the operational heart of the page, not detached utility modules.",
-        "The story/method rail explains the open-jaw decision flow and the flexible travel-window method in annotated editorial beats.",
+        "The story/method rail explains the two one-way decision flow and the flexible travel-window method in annotated editorial beats.",
         "Typography, spacing, dividers, captions, and accents feel premium and consistent from cover spread to footer."
       ]
     },
     {
       "id": "trip-brief-form",
       "name": "Planner Atelier",
-      "description": "The dossier experience still needs a practical interface for the overseas open-jaw planning flow.",
+      "description": "The dossier experience still needs a practical interface for the overseas gateway-pair planning flow.",
       "must_have": [
         "Departure country selector.",
         "Exact date input for users who already know the outbound day.",
@@ -128,14 +128,15 @@
       ]
     },
     {
-      "id": "open-jaw-results",
+      "id": "gateway-pair-results",
       "name": "Result Folio",
-      "description": "The core result surfaces the cheapest entry leg and cheapest exit leg separately for an overseas open-jaw itinerary.",
+      "description": "The core result surfaces the cheapest pair of one-way tickets for an overseas itinerary, even when the entry or exit uses a nearby gateway airport outside the headline destination country.",
       "must_have": [
-        "A clearly labeled cheapest outbound entry leg.",
-        "A clearly labeled cheapest return exit leg.",
-        "A combined estimated total and per-person estimate.",
-        "Clear explanation that the internal route between arrival and departure airports is excluded."
+        "A clearly labeled cheapest outbound one-way ticket.",
+        "A clearly labeled cheapest return one-way ticket.",
+        "A combined estimated total and per-person estimate based on the two one-way tickets.",
+        "Clear explanation that the internal route between arrival and departure airports is excluded.",
+        "Clear explanation that a nearby gateway airport may win even if the selected stay country is different."
       ]
     },
     {
@@ -146,7 +147,7 @@
         "Alternative outbound entry options.",
         "Alternative return exit options.",
         "A per-country airport coverage section.",
-        "Links for outbound, return, and combined Skyscanner search handoff.",
+        "Primary links for outbound and return one-way Skyscanner handoff, with an optional combined reference handoff.",
         "Honest explanation that live search is the source of truth for final fares."
       ]
     },
@@ -158,7 +159,7 @@
         "Estimated fares are accompanied by a low-to-high reference range.",
         "Each recommended leg shows a confidence label.",
         "Each recommended leg shows the estimate basis, including season, stop assumption, and distance.",
-        "A deterministic smoke test verifies price ranges, confidence labels, open-jaw gap notes, and Skyscanner handoff generation."
+        "A deterministic smoke test verifies price ranges, confidence labels, between-ticket notes, gateway expansion, and Skyscanner handoff generation."
       ]
     }
   ],
@@ -167,19 +168,19 @@
     "The fixed header remains readable after scroll without losing the premium archival tone.",
     "The first viewport is a true cover spread with bold brand framing, concise copy, and dossier-like presentation rather than a generic hero.",
     "A proof strip appears immediately below the cover spread and surfaces trust cues such as estimate honesty, airport coverage scale, or method framing.",
-    "The planner atelier contains the full overseas open-jaw input set, including exact-date mode, flexible month mode, and stay-length range controls.",
-    "The result folio appears as the next major spread after planning interaction and frames the recommended entry leg, exit leg, total estimate, range, and confidence metadata.",
-    "The story/method rail explains the open-jaw flow and the flexible month plus stay-window method in multiple editorial beats.",
+    "The planner atelier contains the full overseas gateway-pair input set, including exact-date mode, flexible month mode, and stay-length range controls.",
+    "The result folio appears as the next major spread after planning interaction and frames the recommended outbound one-way, return one-way, total estimate, range, confidence metadata, and gateway summary.",
+    "The story/method rail explains the two one-way gateway flow and the flexible month plus stay-window method in multiple editorial beats.",
     "The archetypes section presents at least three refined travel profiles or planning styles.",
     "The concierge CTA appears before the footer and feels premium and restrained rather than repetitive.",
     "The user cannot compare routes until departure country, valid date mode inputs, stay length or stay range, and at least one destination country are set.",
-    "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound leg, a cheapest return leg, and a combined estimated total.",
+    "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound one-way, a cheapest return one-way, and a combined estimated total.",
     "For flexible planning, the user can choose multiple target months such as July, August, and September, choose a stay range such as 26 to 36 days, and receive a best outbound date plus a best return date from the derived return window.",
     "Exact-date mode remains available for users with fixed outbound dates and fixed stay lengths.",
     "The flexible result states the compared outbound window, return window, stay range, and compared date counts.",
     "Estimated fares are shown with ranges and confidence labels so deterministic reference prices are not mistaken for final live inventory.",
-    "The result explicitly states that the arrival airport and return airport may differ and that the internal route is not included.",
-    "The results area contains links for outbound, return, and combined Skyscanner search handoff.",
+    "The result explicitly states that the arrival airport and return airport may differ, that nearby gateway airports may win, and that the internal route is not included.",
+    "The results area contains primary links for outbound and return Skyscanner handoff plus an optional combined reference handoff.",
     "The visual language uses parchment, oxblood, espresso, brass, and near-black cues rather than generic warm-off-white minimalism.",
     "The page works at approximately 390px mobile width and 1280px desktop width without obvious horizontal overflow."
   ],
@@ -190,17 +191,17 @@
     "Confirm that a proof strip appears directly after the cover spread and communicates trust cues such as estimate honesty, methodology, or airport coverage.",
     "Use the planner atelier to choose Japan as the departure country plus France, United Kingdom, and Germany as destination countries.",
     "Leave the planner in flexible mode with July, August, and September selected, choose a 26 to 36 day stay range, then run the comparison.",
-    "Confirm that the result folio shows the cheapest outbound entry leg date, then finds the cheapest return exit leg within the derived return window, with a combined estimate.",
+    "Confirm that the result folio shows the cheapest outbound one-way date, then finds the cheapest return one-way within the derived return window, with a combined estimate.",
     "Confirm that compared outbound and return date counts, the outbound window, the return window, the stay range, fare ranges, and confidence labels are visible in the result folio.",
-    "Review the story/method rail and confirm that the open-jaw value proposition and flexible travel-window logic are explained in annotated editorial beats.",
+    "Review the story/method rail and confirm that the two one-way gateway value proposition and flexible travel-window logic are explained in annotated editorial beats.",
     "Review the archetypes section and confirm that at least three premium travel profiles or planning styles are shown.",
-    "Confirm that the result explains the open-jaw assumption, excludes internal travel, and retains outbound, return, and combined Skyscanner handoff links."
+    "Confirm that the result explains the two-ticket assumption, excludes internal travel, and retains outbound, return, and combined Skyscanner handoff links."
   ],
   "sprints": [
     {
       "sprint": 1,
-      "name": "Open Jaw Planning MVP",
-      "goal": "Create the first runnable overseas open-jaw planning app that compares the cheapest inbound and outbound flight legs using local estimation logic.",
+      "name": "Gateway Pair Planning MVP",
+      "goal": "Create the first runnable overseas gateway-pair planning app that compares the cheapest pair of one-way flight legs using local estimation logic.",
       "scope": [
         "Build the single-page planning experience in build/.",
         "Expand countries into representative airport sets.",
@@ -215,11 +216,11 @@
     {
       "sprint": 2,
       "name": "Luxury Editorial Shell",
-      "goal": "Wrap the existing overseas open-jaw planner in a luxury editorial brand experience without breaking the planning flow.",
+      "goal": "Wrap the existing overseas gateway-pair planner in a luxury editorial brand experience without breaking the planning flow.",
       "scope": [
         "Add the fixed transparent header, full-screen hero, concept intro, value collage, alternating story section, lineup cards, restrained CTA, and dark footer.",
         "Adapt the planner and results styling to the warm off-white, gold, bronze, dark brown, and near-black direction.",
-        "Preserve the existing open-jaw comparison flow while improving pacing, tone, and visual cohesion."
+        "Preserve the existing two-ticket comparison flow while improving pacing, tone, and visual cohesion."
       ],
       "acceptance_criteria": [
         "The page feels like a premium travel brand landing experience from top to bottom.",
@@ -234,7 +235,7 @@
       "scope": [
         "Add price ranges and confidence labels to route estimates.",
         "Explain the estimate basis for each recommended flight leg.",
-        "Add deterministic planner smoke validation for estimate fields, open-jaw gap notes, and Skyscanner handoff links.",
+        "Add deterministic planner smoke validation for estimate fields, between-ticket notes, and Skyscanner handoff links.",
         "Keep live provider integration out of scope until an API key and provider contract are selected."
       ],
       "acceptance_criteria": [
@@ -264,7 +265,7 @@
     {
       "sprint": 5,
       "name": "Grand Tour Ledger Redesign",
-      "goal": "Recast the current Maison Passage experience as a bold Grand Tour Ledger premium dossier without changing the underlying overseas open-jaw planner behavior.",
+      "goal": "Recast the current Maison Passage experience as a bold Grand Tour Ledger premium dossier without changing the underlying overseas gateway-pair planner behavior.",
       "scope": [
         "Replace the current generic premium shell with the new section order: header, cover spread, proof strip, planner atelier, result folio, story/method rail, archetypes, concierge CTA, and footer.",
         "Upgrade the visual language to a bolder dossier system using parchment, oxblood, espresso, brass, and near-black cues.",
@@ -274,14 +275,32 @@
       "acceptance_criteria": [
         "The page follows the full Grand Tour Ledger section order with clear, intentional pacing.",
         "The redesign feels materially bolder and less generic than the prior luxury editorial shell.",
-        "The overseas open-jaw planner, flexible months, stay-window behavior, range labels, confidence labels, and handoff links remain intact after the redesign.",
+        "The overseas gateway-pair planner, flexible months, stay-window behavior, range labels, confidence labels, and handoff links remain intact after the redesign.",
         "The planner atelier and result folio are visually prominent without regressing mobile or desktop usability."
       ]
     },
     {
       "sprint": 6,
+      "name": "Gateway Pair Ticketing",
+      "goal": "Make the product explicitly search and present the trip as two one-way tickets with gateway-first entry and exit logic.",
+      "scope": [
+        "Reframe the planner and result copy around two one-way tickets instead of open-jaw wording.",
+        "Expand the destination search pool to nearby gateway airports when a selected destination is in Europe.",
+        "Make the outbound and return one-way handoff links primary in the result folio.",
+        "Surface the gateway search-pool summary and the fact that the entry or exit may fall outside the selected stay country.",
+        "Update deterministic smoke validation for gateway expansion and two-ticket wording."
+      ],
+      "acceptance_criteria": [
+        "The app presents the recommendation as two one-way tickets, not as a roundtrip-first or open-jaw-first booking pattern.",
+        "For a Germany-led search, the result may use a gateway such as Milan when it is cheaper than flying directly into Germany.",
+        "Outbound and return one-way Skyscanner links are the primary handoff actions.",
+        "The result clearly states that internal travel remains excluded."
+      ]
+    },
+    {
+      "sprint": 7,
       "name": "Live Fare Enrichment",
-      "goal": "Introduce a real fare source or provider-backed enrichment after the Grand Tour Ledger redesign lands.",
+      "goal": "Introduce a real fare source or provider-backed enrichment after the Grand Tour Ledger redesign and gateway-pair framing land.",
       "scope": [
         "Introduce a live price provider or search integration.",
         "Distinguish clearly between cached estimates and live prices.",

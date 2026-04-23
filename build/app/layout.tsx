@@ -18,8 +18,8 @@ const bodyFont = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Maison Passage Open Jaw Explorer",
-  description: "海外旅行の入口と出口を静かに比較する、Maison Passage の open jaw 航空路探索アプリ。",
+  title: "Maison Passage Gateway Pair Explorer",
+  description: "海外旅行の片道2枚と gateway 候補を静かに比較する、Maison Passage の航空路探索アプリ。",
 };
 
 export default function RootLayout({

@@ -59,10 +59,43 @@ try {
   assert(result.comparedReturnDateCount === 11, "Expected 26-36 day return window.");
   assert(result.stayLengthRangeLabel === "26〜36日", "Expected flexible stay range label.");
   assert(result.flexibilitySummary.includes("2026年7月"), "Expected month labels in flexibility summary.");
-  assert(result.openJawGap.note.includes("移動費") || result.openJawGap.note.includes("国際線の入口と出口"), "Expected explicit internal-travel exclusion note.");
-  assert(result.multiCityUrl.includes("skyscanner"), "Expected Skyscanner multi-city handoff.");
+  assert(result.gatewayCountries.length > result.destinationCountries.length, "Expected gateway country expansion.");
+  assert(result.gatewayAirports.length > result.destinationAirports.length, "Expected expanded gateway airport pool.");
+  assert(
+    result.ticketingSummary.includes("片道券") || result.ticketingSummary.includes("片道2枚"),
+    "Expected explicit two-ticket summary.",
+  );
+  assert(
+    result.betweenTicketsGap.note.includes("片道2枚") || result.betweenTicketsGap.note.includes("国際線"),
+    "Expected explicit internal-travel exclusion note.",
+  );
+  assert(result.combinedSearchUrl.includes("skyscanner"), "Expected Skyscanner combined handoff.");
 
-  console.log("[planner-smoke] PASS deterministic open-jaw planner result");
+  const gatewayResult = planner.generateFlightSearchResult({
+    ...planner.INITIAL_FORM_STATE,
+    departureCountry: "JP",
+    destinationCountries: ["DE"],
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-08"],
+    stayLengthMin: "30",
+    stayLengthMax: "36",
+    passengerCount: "2",
+    cabinClass: "economy",
+    preferDirect: false,
+  });
+
+  assert(gatewayResult, "Expected a result for Japan to Germany gateway search.");
+  assert(
+    gatewayResult.gatewayCountries.some((country) => country.code === "IT"),
+    "Expected Italy to appear in the gateway search pool for Germany.",
+  );
+  assert(
+    gatewayResult.gatewayAirports.length > gatewayResult.destinationAirports.length,
+    "Expected gateway airport expansion for Germany search.",
+  );
+
+  console.log("[planner-smoke] PASS deterministic gateway-pair planner result");
 } finally {
   fs.rmSync(tempDir, { force: true, recursive: true });
 }

@@ -1,26 +1,18 @@
 # Travel App Patch
 
-This repository contains the Maison Passage Open Jaw Explorer and the local Codex harness that plans, generates, and evaluates it.
+This repository contains the Maison Passage Gateway Pair Explorer and the local Codex harness that plans, generates, and evaluates it.
 
 ## What This Builds
 
-Maison Passage is a premium overseas open-jaw travel planner. It compares representative airports across multiple destination countries, finds a low-cost outbound entry leg, then finds a low-cost return exit leg while intentionally leaving internal travel out of scope.
+Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
 
-The current app already supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
+The current app supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
 
-The next approved sprint is `Sprint 5: Grand Tour Ledger Redesign`. That redesign keeps the existing overseas open-jaw planner, flexible month comparison, and stay-window behavior, but reframes the experience as a much bolder premium dossier with this section order:
+The current approved roadmap is:
 
-- `Header`
-- `Cover Spread`
-- `Proof Strip`
-- `Planner Atelier`
-- `Result Folio`
-- `Story/Method Rail`
-- `Archetypes`
-- `Concierge CTA`
-- `Footer`
-
-Live fare enrichment is now deferred to `Sprint 6` so the dossier redesign lands first.
+- `Sprint 5`: Grand Tour Ledger Redesign
+- `Sprint 6`: Gateway Pair Ticketing
+- `Sprint 7`: Live Fare Enrichment
 
 ## Repository Layout
 
@@ -57,7 +49,7 @@ From the repository root:
 
 ```bash
 python agents/orchestrator_codex.py status
-python agents/orchestrator_codex.py autodev "Advance Maison Passage toward the Grand Tour Ledger dossier redesign" --sprint 5 --max-iterations 3
+python agents/orchestrator_codex.py autodev "Advance Maison Passage toward gateway-first two-ticket travel planning" --sprint 6 --max-iterations 3
 ```
 
 The harness treats `specs/spec.json` as the product truth, updates `build/`, writes `sprints/sprint_N_eval.json`, and writes `evaluations/sprint_N_report.json`.

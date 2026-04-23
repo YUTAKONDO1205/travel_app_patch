@@ -36,7 +36,7 @@ try {
     try {
       $response = Invoke-WebRequest -UseBasicParsing $url -TimeoutSec 10
       $html = [string]$response.Content
-      $requiredText = @("Maison Passage", "Open Jaw Explorer", "Skyscanner")
+      $requiredText = @("Maison Passage", "Gateway Pair Explorer", "Grand Tour Ledger")
       $missingText = $requiredText | Where-Object { -not $html.Contains($_) }
 
       if ($response.StatusCode -ne 200) {

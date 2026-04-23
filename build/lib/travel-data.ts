@@ -597,3 +597,33 @@ export function getCountryProfile(code: CountryCode): CountryProfile {
 export function getAirportsForCountry(code: CountryCode): Airport[] {
   return getCountryProfile(code).airportCodes.map((airportCode) => AIRPORTS[airportCode]);
 }
+
+export function getGatewayCountriesForDestinationCodes(countryCodes: CountryCode[]): CountryProfile[] {
+  const expandedCountryCodes = new Set<CountryCode>(countryCodes);
+  const shouldExpandToEurope = countryCodes.some((countryCode) =>
+    getCountryProfile(countryCode).region.includes("ヨーロッパ"),
+  );
+
+  if (shouldExpandToEurope) {
+    COUNTRY_PROFILES.filter((country) => country.region.includes("ヨーロッパ")).forEach((country) =>
+      expandedCountryCodes.add(country.code),
+    );
+  }
+
+  return COUNTRY_PROFILES.filter((country) => expandedCountryCodes.has(country.code));
+}
+
+export function getGatewayAirportsForDestinationCodes(countryCodes: CountryCode[]): Airport[] {
+  const seenAirportCodes = new Set<string>();
+
+  return getGatewayCountriesForDestinationCodes(countryCodes)
+    .flatMap((country) => getAirportsForCountry(country.code))
+    .filter((airport) => {
+      if (seenAirportCodes.has(airport.code)) {
+        return false;
+      }
+
+      seenAirportCodes.add(airport.code);
+      return true;
+    });
+}

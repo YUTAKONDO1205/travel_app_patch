@@ -4,6 +4,8 @@ import {
   FLEXIBLE_STAY_DAY_OPTIONS,
   STAY_LENGTH_OPTIONS,
   getAirportsForCountry,
+  getGatewayAirportsForDestinationCodes,
+  getGatewayCountriesForDestinationCodes,
   getCountryProfile,
   type Airport,
   type CabinClassKey,
@@ -62,7 +64,7 @@ export type CountryCoverage = {
   bestInbound: FlightLegQuote | null;
 };
 
-export type OpenJawGap = {
+export type BetweenTicketsGap = {
   arrivalLabel: string;
   departureLabel: string;
   distanceKm: number;
@@ -75,6 +77,8 @@ export type FlightSearchResult = {
   destinationCountries: CountryProfile[];
   departureAirports: Airport[];
   destinationAirports: Airport[];
+  gatewayCountries: CountryProfile[];
+  gatewayAirports: Airport[];
   outboundDate: string;
   returnDate: string;
   outboundDateWindow: string;
@@ -93,10 +97,11 @@ export type FlightSearchResult = {
   totalPriceRangePerPerson: PriceRange;
   totalPriceRange: PriceRange;
   planHeadline: string;
-  openJawNote: string;
-  openJawGap: OpenJawGap;
+  gatewaySummary: string;
+  ticketingSummary: string;
+  betweenTicketsGap: BetweenTicketsGap;
   planningNote: string;
-  multiCityUrl: string;
+  combinedSearchUrl: string;
 };
 
 export const INITIAL_FORM_STATE: PlannerFormState = {
@@ -616,11 +621,13 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const destinationCountries = formState.destinationCountries.map((countryCode) => getCountryProfile(countryCode));
   const departureAirports = getAirportsForCountry(departureCountry.code);
   const destinationAirports = destinationCountries.flatMap((country) => getAirportsForCountry(country.code));
+  const gatewayCountries = getGatewayCountriesForDestinationCodes(formState.destinationCountries);
+  const gatewayAirports = getGatewayAirportsForDestinationCodes(formState.destinationCountries);
   const outboundCandidateDates = getOutboundCandidateDates(formState);
 
   const outboundQuotes = departureAirports
     .flatMap((origin) =>
-      destinationAirports.flatMap((destination) =>
+      gatewayAirports.flatMap((destination) =>
         outboundCandidateDates.map((travelDate) =>
           buildFlightQuote({
             origin,
@@ -644,7 +651,7 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const bestOutbound = outboundQuotes[0];
   const returnCandidateDates = getReturnCandidateDates(bestOutbound.travelDate, formState);
 
-  const inboundQuotes = destinationAirports
+  const inboundQuotes = gatewayAirports
     .flatMap((origin) =>
       departureAirports.flatMap((destination) =>
         returnCandidateDates.map((travelDate) =>
@@ -690,32 +697,44 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     high: bestOutbound.totalPriceRange.high + bestInbound.totalPriceRange.high,
   };
   const destinationNames = destinationCountries.map((country) => country.name).join(" / ");
+  const gatewayNames = gatewayCountries.map((country) => country.name).join(" / ");
+  const destinationCountryCodes = new Set(formState.destinationCountries);
   const differentExit =
     bestOutbound.destination.code !== bestInbound.origin.code || bestOutbound.destination.countryCode !== bestInbound.origin.countryCode;
-  const openJawGapDistanceKm = differentExit ? haversineDistanceKm(bestOutbound.destination, bestInbound.origin) : 0;
-  const openJawGap: OpenJawGap = differentExit
+  const usesGatewayEntry = !destinationCountryCodes.has(bestOutbound.destination.countryCode);
+  const usesGatewayExit = !destinationCountryCodes.has(bestInbound.origin.countryCode);
+  const betweenTicketsDistanceKm = differentExit ? haversineDistanceKm(bestOutbound.destination, bestInbound.origin) : 0;
+  const betweenTicketsGap: BetweenTicketsGap = differentExit
     ? {
         arrivalLabel: `${bestOutbound.destination.city} (${bestOutbound.destination.code})`,
         departureLabel: `${bestInbound.origin.city} (${bestInbound.origin.code})`,
-        distanceKm: openJawGapDistanceKm,
-        summary: `到着地と帰国地の間には約${distanceFormatter.format(openJawGapDistanceKm)}kmの余白があります。`,
-        note:
-          "この区間の列車・短距離便・車移動は見積もりに含めず、国際線の入口と出口だけを比較しています。",
+        distanceKm: betweenTicketsDistanceKm,
+        summary: `片道1枚目の到着地と片道2枚目の出発地の間には約${distanceFormatter.format(betweenTicketsDistanceKm)}kmの現地移動があります。`,
+        note: "この区間の列車・短距離便・車移動は見積もりに含めず、国際線の片道2枚だけを比較しています。",
       }
     : {
         arrivalLabel: `${bestOutbound.destination.city} (${bestOutbound.destination.code})`,
         departureLabel: `${bestInbound.origin.city} (${bestInbound.origin.code})`,
         distanceKm: 0,
-        summary: "到着地と帰国地は同じ空港です。",
-        note:
-          "この場合も現地滞在中の移動費は含めず、国際線の往路と復路だけを比較しています。",
+        summary: "片道1枚目の到着地と片道2枚目の出発地は同じ空港です。",
+        note: "この場合も現地移動費用の計算は含めず、国際線の片道2枚だけを比較しています。",
       };
+  const gatewaySummary =
+    gatewayCountries.length > destinationCountries.length
+      ? `${destinationNames} を主目的地にしつつ、検索プールは ${gatewayNames} の ${gatewayAirports.length} 空港まで広げています。`
+      : `${destinationNames} の代表空港 ${destinationAirports.length} 件をそのまま検索プールとして使っています。`;
+  const ticketingSummary =
+    usesGatewayEntry || usesGatewayExit
+      ? `往路と復路は別々の片道券として見積もっています。主目的地が ${destinationNames} でも、入口は ${bestOutbound.destination.city}、出口は ${bestInbound.origin.city} のように周辺 gateway 都市が選ばれることがあります。`
+      : `往路と復路は別々の片道券として見積もっています。今回は ${destinationNames} の代表空港どうしで最安の組み合わせが見つかりました。`;
 
   return {
     departureCountry,
     destinationCountries,
     departureAirports,
     destinationAirports,
+    gatewayCountries,
+    gatewayAirports,
     outboundDate: bestOutbound.travelDate,
     returnDate,
     outboundDateWindow,
@@ -733,14 +752,13 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     totalPrice,
     totalPriceRangePerPerson,
     totalPriceRange,
-    planHeadline: `${departureCountry.name}発で ${destinationNames} を回るなら、往路 ${bestOutbound.origin.code}→${bestOutbound.destination.code} / 復路 ${bestInbound.origin.code}→${bestInbound.destination.code} が推定最安です。`,
-    openJawNote: differentExit
-      ? `${bestOutbound.destination.city} 着・${bestInbound.origin.city} 発のオープンジョー前提です。現地の移動はこのアプリでは計算に含めません。`
-      : `${bestOutbound.destination.city} を同一都市の入口/出口として使う構成です。現地移動の計算は含めません。`,
-    openJawGap,
+    planHeadline: `${departureCountry.name}発で ${destinationNames} を回るなら、片道2枚の組み合わせは ${bestOutbound.origin.code}→${bestOutbound.destination.code} と ${bestInbound.origin.code}→${bestInbound.destination.code} が現時点の推定最安です。`,
+    gatewaySummary,
+    ticketingSummary,
+    betweenTicketsGap,
     planningNote:
-      "表示価格は代表空港と季節係数から作った参考見積りです。ライブ在庫ではないため、ボタンから Skyscanner の実検索に進んで最終確認してください。",
-    multiCityUrl: buildSkyscannerUrl("multicity", {
+      "表示価格は2枚の片道券を別々に見積もった参考値です。ライブ在庫ではないため、往路と復路それぞれの Skyscanner 実検索で最終確認してください。",
+    combinedSearchUrl: buildSkyscannerUrl("multicity", {
       origin0: bestOutbound.origin.code.toLowerCase(),
       date0: bestOutbound.travelDate,
       destination0: bestOutbound.destination.code.toLowerCase(),

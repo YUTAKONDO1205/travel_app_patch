@@ -1,0 +1,51 @@
+{
+  "sprint": 6,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "Python harness static compile check",
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build"
+    ],
+    "notes": "Interactive browser automation was not available in this session. Validation focused on deterministic planner behavior, rendered smoke output, and production build integrity."
+  },
+  "checks": [
+    {
+      "name": "Gateway-pair framing replaced open-jaw-first wording",
+      "result": "PASS",
+      "evidence": "The product name, metadata, page copy, README files, and spec now describe the experience as two one-way tickets plus gateway-first planning."
+    },
+    {
+      "name": "European destination searches expand to gateway airports",
+      "result": "PASS",
+      "evidence": "travel-data and travel-planner now widen Europe searches to a regional gateway pool, and planner smoke confirms Germany-led searches include Italy in the gateway candidates."
+    },
+    {
+      "name": "Result folio emphasizes one-way booking actions",
+      "result": "PASS",
+      "evidence": "The result section now labels the two tickets separately, shows a gateway pool summary, and makes outbound and return one-way Skyscanner links the primary CTAs."
+    },
+    {
+      "name": "Deterministic planner smoke covers new behavior",
+      "result": "PASS",
+      "evidence": "npm run test:planner passed after adding assertions for gateway expansion, between-ticket notes, and the combined reference handoff URL."
+    },
+    {
+      "name": "App renders and builds in the local environment",
+      "result": "PASS",
+      "evidence": "npm run smoke and npm run build both passed after the gateway-pair changes."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Add a more explicit user-facing distinction between selected stay countries and automatically expanded gateway countries in the planner form itself.",
+    "Consider region-specific gateway heuristics beyond Europe so the search-pool expansion is less coarse.",
+    "Proceed to Sprint 7 live fare enrichment while preserving the current two-ticket handoff model."
+  ]
+}

@@ -10,6 +10,7 @@ import {
   PASSENGER_OPTIONS,
   STAY_LENGTH_OPTIONS,
   getAirportsForCountry,
+  getGatewayAirportsForDestinationCodes,
   type CabinClassKey,
   type CountryCode,
   type FlexibleStayDayKey,
@@ -38,28 +39,28 @@ import {
 
 const proofPoints = [
   {
-    label: "編集視点",
-    value: "入口と出口を分ける",
-    text: "最初に決めるのは、旅程全体ではなく国際線の輪郭だけ。",
+    label: "予約戦略",
+    value: "片道2枚で比較",
+    text: "最初に決めるのは往復券ではなく、往路1枚と復路1枚の組み合わせです。",
   },
   {
     label: "探索単位",
-    value: "複数月 + 滞在幅",
-    text: "7月から9月、26日から36日といった曖昧な条件で比較できます。",
+    value: "複数月 + 滞在幅 + gateway",
+    text: "7月から9月、26日から36日、さらに周辺 gateway 都市まで広げて比較します。",
   },
   {
     label: "最終確認",
-    value: "Skyscanner handoff",
-    text: "ここでは決めすぎず、候補が見えた段階で実検索へ渡します。",
+    value: "Two one-way handoff",
+    text: "往路と復路をそれぞれ実検索へ渡し、2枚の片道券として最終確認します。",
   },
 ];
 
 const methodMoments = [
   {
     label: "Chapter 01",
-    title: "出発国から、代表空港を静かに広げる。",
+    title: "滞在したい国から、周辺 gateway まで静かに広げる。",
     text:
-      "日本を選んだら、羽田・成田・関西といった主要な出発空港に展開します。最初からひとつの空港に閉じないことで、open jaw の入口候補を広く拾います。",
+      "日本を選んだら、羽田・成田・関西といった主要な出発空港に展開します。さらにヨーロッパ圏は周辺 gateway 都市まで検索プールを広げるので、ベルリン旅でもミラノ着のような入口が拾えます。",
   },
   {
     label: "Chapter 02",
@@ -69,9 +70,9 @@ const methodMoments = [
   },
   {
     label: "Chapter 03",
-    title: "都市間移動は、次の判断として残す。",
+    title: "都市間移動は、次の判断として後ろに置く。",
     text:
-      "フランクフルトに入り、パリから戻る。その間の列車や短距離便はまだ決めません。入口と出口だけを分けて整えることで、旅全体の自由度が上がります。",
+      "ミラノに入り、ベルリンやパリから戻る。その間の列車や短距離便はまだ決めません。まず片道2枚の輪郭だけ整えることで、旅全体の自由度が上がります。",
   },
 ];
 
@@ -88,8 +89,8 @@ const archetypes = [
   },
   {
     label: "Dual Gateway",
-    title: "到着地と帰国地を変える",
-    text: "最初の到着都市に縛られず、最後に滞在する都市から戻る open jaw を前提に整えます。",
+    title: "主目的地と gateway を分ける",
+    text: "ドイツ旅でも入口はミラノ、帰国はベルリンのように、滞在先と航空券の入口・出口を分けて整えます。",
   },
 ];
 
@@ -178,10 +179,7 @@ export default function HomePage() {
   const previewOutboundDate = `${formState.targetMonths[0] ?? "2026-07"}-15`;
   const returnWindowPreview = formState.dateSearchMode === "exact" ? returnDate : getReturnWindowLabel(previewOutboundDate, formState);
   const departureAirportCount = formState.departureCountry ? getAirportsForCountry(formState.departureCountry).length : 0;
-  const destinationAirportCount = formState.destinationCountries.reduce(
-    (count, countryCode) => count + getAirportsForCountry(countryCode).length,
-    0,
-  );
+  const destinationAirportCount = getGatewayAirportsForDestinationCodes(formState.destinationCountries).length;
   const noRouteGuidance = buildNoRouteGuidance(formState);
 
   function updateFormState<Key extends keyof PlannerFormState>(key: Key, value: PlannerFormState[Key]) {
@@ -306,7 +304,7 @@ export default function HomePage() {
             <span className={styles.brandMark}>MP</span>
             <span className={styles.brandText}>
               <strong>Maison Passage</strong>
-              <span>Open Jaw Explorer</span>
+              <span>Gateway Pair Explorer</span>
             </span>
           </a>
 
@@ -328,10 +326,10 @@ export default function HomePage() {
           <div className={styles.coverLayout}>
             <div className={styles.coverCopy}>
               <p className={styles.overline}>Grand Tour Ledger</p>
-              <h1 className={styles.coverTitle}>旅の入口と出口を、台帳のように整える。</h1>
+              <h1 className={styles.coverTitle}>往復ではなく、二枚の片道券として整える。</h1>
               <p className={styles.coverLead}>
                 目的地を先に決めきらなくてもいい。まずは出発国、候補の国、そして季節の幅だけ。
-                Maison Passage は、複数月の往路と滞在レンジ後の復路を静かに比べ、海外 open jaw の輪郭だけを美しく選び出します。
+                Maison Passage は、複数月の往路と滞在レンジ後の復路を静かに比べ、片道2枚の輪郭だけを美しく選び出します。
               </p>
 
               <div className={styles.coverActions}>
@@ -344,7 +342,7 @@ export default function HomePage() {
               </div>
 
               <div className={styles.coverNote}>
-                <span>いま決めるのは、国際線の入口と出口だけ。</span>
+                <span>いま決めるのは、往復券ではなく往路1枚と復路1枚の組み合わせ。</span>
                 <span>そのあいだの列車や短距離便は、まだ余白として残します。</span>
               </div>
             </div>
@@ -354,19 +352,19 @@ export default function HomePage() {
                 <p className={styles.previewLabel}>Specimen route</p>
                 <div className={styles.previewCodes}>
                   <span>TYO</span>
-                  <span>FRA</span>
-                  <span>PAR</span>
+                  <span>MIL</span>
+                  <span>BER</span>
                   <span>TYO</span>
                 </div>
                 <div className={styles.previewArc} />
                 <div className={styles.previewLegend}>
                   <div>
                     <span>Entry</span>
-                    <strong>Frankfurt</strong>
+                    <strong>Milan</strong>
                   </div>
                   <div>
                     <span>Exit</span>
-                    <strong>Paris</strong>
+                    <strong>Berlin</strong>
                   </div>
                   <div>
                     <span>Window</span>
@@ -381,8 +379,8 @@ export default function HomePage() {
                   <strong>{departureAirportCount || 5} airports</strong>
                 </div>
                 <div>
-                  <span>Destinations</span>
-                  <strong>{destinationAirportCount || 9} airports</strong>
+                  <span>Gateways</span>
+                  <strong>{destinationAirportCount || 9} gateway airports</strong>
                 </div>
               </div>
             </div>
@@ -425,9 +423,9 @@ export default function HomePage() {
               <strong>{dateSearchSummary}</strong>
             </div>
             <div>
-              <span>Airport spread</span>
+              <span>Search pool</span>
               <strong>
-                出発 {departureAirportCount} / 候補 {destinationAirportCount}
+                出発 {departureAirportCount} / gateway候補 {destinationAirportCount}
               </strong>
             </div>
           </div>
@@ -762,12 +760,13 @@ export default function HomePage() {
             <>
               <div className={styles.resultDock} data-testid="result-summary">
                 <div>
-                  <span>Recommended open jaw</span>
+                  <span>Recommended two-ticket pairing</span>
                   <h3>{result.planHeadline}</h3>
                   <p>{result.flexibilitySummary}</p>
+                  <p>{result.gatewaySummary}</p>
                 </div>
                 <div className={styles.resultDockPrice}>
-                  <span>推定合計</span>
+                  <span>2枚合計の推定額</span>
                   <strong>{formatCurrency(result.totalPrice)}</strong>
                   <small>{formatCurrencyRange(result.totalPriceRange)}</small>
                   <small>1名あたり {formatCurrencyRange(result.totalPriceRangePerPerson)}</small>
@@ -775,27 +774,27 @@ export default function HomePage() {
               </div>
 
               <div className={styles.resultSpread}>
-                {renderTicketCard(result.bestOutbound, "往路の最安入口")}
+                {renderTicketCard(result.bestOutbound, "片道1枚目 / 往路")}
 
-                <div className={styles.gapBand} data-testid="open-jaw-gap">
-                  <p className={styles.sectionLabel}>Open-jaw gap</p>
-                  <h3>入口と出口のあいだは、あえて未完成のまま残す。</h3>
-                  <p>{result.openJawGap.summary}</p>
-                  <p>{result.openJawGap.note}</p>
+                <div className={styles.gapBand} data-testid="between-tickets-gap">
+                  <p className={styles.sectionLabel}>Between tickets</p>
+                  <h3>滞在先と gateway は、あえて同じにしなくていい。</h3>
+                  <p>{result.betweenTicketsGap.summary}</p>
+                  <p>{result.betweenTicketsGap.note}</p>
 
                   <div className={styles.gapMeta}>
                     <div>
                       <span>Arrival</span>
-                      <strong>{result.openJawGap.arrivalLabel}</strong>
+                      <strong>{result.betweenTicketsGap.arrivalLabel}</strong>
                     </div>
                     <div>
                       <span>Return from</span>
-                      <strong>{result.openJawGap.departureLabel}</strong>
+                      <strong>{result.betweenTicketsGap.departureLabel}</strong>
                     </div>
                   </div>
                 </div>
 
-                {renderTicketCard(result.bestInbound, "復路の最安出口")}
+                {renderTicketCard(result.bestInbound, "片道2枚目 / 復路")}
               </div>
 
               <div className={styles.resultLedger}>
@@ -810,21 +809,26 @@ export default function HomePage() {
                   <small>往路 {result.comparedOutboundDateCount}日 / 復路 {result.comparedReturnDateCount}日を比較</small>
                 </div>
                 <div>
-                  <span>Planning note</span>
-                  <strong>{result.openJawNote}</strong>
+                  <span>Ticketing note</span>
+                  <strong>{result.ticketingSummary}</strong>
                   <small>{result.planningNote}</small>
+                </div>
+                <div>
+                  <span>Gateway pool</span>
+                  <strong>{result.gatewayCountries.length}カ国 / {result.gatewayAirports.length}空港</strong>
+                  <small>{result.gatewaySummary}</small>
                 </div>
               </div>
 
               <div className={styles.ctaStrip}>
-                <a className={styles.primaryLink} href={result.multiCityUrl} target="_blank" rel="noreferrer">
-                  Skyscanner で open jaw 検索を開く
+                <a className={styles.primaryLink} href={result.bestOutbound.skyscannerUrl} target="_blank" rel="noreferrer">
+                  往路の片道を Skyscanner で開く
                 </a>
-                <a className={styles.secondaryLink} href={result.bestOutbound.skyscannerUrl} target="_blank" rel="noreferrer">
-                  往路だけ確認
+                <a className={styles.primaryLink} href={result.bestInbound.skyscannerUrl} target="_blank" rel="noreferrer">
+                  復路の片道を Skyscanner で開く
                 </a>
-                <a className={styles.secondaryLink} href={result.bestInbound.skyscannerUrl} target="_blank" rel="noreferrer">
-                  復路だけ確認
+                <a className={styles.secondaryLink} href={result.combinedSearchUrl} target="_blank" rel="noreferrer">
+                  参考として複数区間検索も開く
                 </a>
               </div>
 
@@ -904,8 +908,8 @@ export default function HomePage() {
               <p className={styles.sectionLabel}>Method rail</p>
               <h2>複雑な旅を、判断の順番だけで軽くする。</h2>
               <p>
-                海外旅行の open jaw は、最初から全体を最適化しようとすると急に重くなります。
-                Maison Passage は、入口と出口を先に決めることで、残りの旅をあとから自由にできます。
+                海外旅行は、最初から全体を最適化しようとすると急に重くなります。
+                Maison Passage は、片道2枚の入口と出口を先に決めることで、残りの旅をあとから自由にできます。
               </p>
             </div>
 
@@ -965,7 +969,7 @@ export default function HomePage() {
         <div className={styles.footerInner}>
           <div>
             <p className={styles.footerMark}>Maison Passage</p>
-            <p className={styles.footerText}>海外 open jaw 旅行の入口と出口を整えるための、静かな route atelier。</p>
+            <p className={styles.footerText}>海外旅行の片道2枚を整えるための、静かな route atelier。</p>
           </div>
           <a className={styles.footerLink} href="#atelier">
             Planner atelier へ戻る

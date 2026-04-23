@@ -1,0 +1,82 @@
+{
+  "sprint": 2,
+  "target_url": "http://localhost:3000",
+  "status": "FAIL",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "TypeScript compile check in build/",
+      "Spec JSON validation",
+      "Source inspection for required premium editorial sections",
+      "Attempted Next.js production build",
+      "Attempted Next.js dev-server startup followed by HTTP GET"
+    ],
+    "notes": "Browser automation was not available in this session. Next.js build and dev startup both failed before serving the app because Node child_process spawning returns EPERM in this Codex sandbox."
+  },
+  "checks": [
+    {
+      "name": "Spec JSON is valid and current",
+      "result": "PASS",
+      "evidence": "python -m json.tool specs/spec.json completed successfully. The spec names Maison Passage Open Jaw Explorer and includes the overseas open-jaw product, premium tone, required sections, and open-jaw acceptance criteria."
+    },
+    {
+      "name": "Build source type-checks",
+      "result": "PASS",
+      "evidence": "cmd /c .\\\\node_modules\\\\.bin\\\\tsc.cmd --noEmit completed successfully in build/."
+    },
+    {
+      "name": "Premium editorial sections exist in source",
+      "result": "PASS",
+      "evidence": "Source inspection found the fixed header, full-height hero, concept intro, value collage, alternating story cards, standalone lineup section, planner brief, results section, final CTA, and dark footer in build/app/page.tsx."
+    },
+    {
+      "name": "Hero uses warm dark overlay direction",
+      "result": "PASS",
+      "evidence": "build/app/page.module.css defines a dark #1e1510 hero background with layered warm gradients and light hero copy treatment."
+    },
+    {
+      "name": "Open-jaw planner behavior is preserved in source",
+      "result": "PASS",
+      "evidence": "build/app/page.tsx still calls generateFlightSearchResult, renders best outbound and return legs, alternatives, country coverage, and Skyscanner outbound/return/multi-city handoff links."
+    },
+    {
+      "name": "Production build completes",
+      "result": "FAIL",
+      "evidence": "cmd /c npm run build failed with Error: spawn EPERM from Next.js jest-worker creation."
+    },
+    {
+      "name": "Target URL responds",
+      "result": "FAIL",
+      "evidence": "npm run dev failed with Error: spawn EPERM before binding port 3000, so HTTP GET http://127.0.0.1:3000 could not connect."
+    },
+    {
+      "name": "Responsive behavior at about 390px and 1280px",
+      "result": "UNVERIFIED",
+      "evidence": "CSS includes single-column responsive breakpoints for the major grids, but no browser viewport verification was possible because the dev server could not start in this sandbox."
+    }
+  ],
+  "bugs": [
+    {
+      "id": "SPR2-001",
+      "severity": "high",
+      "summary": "Sprint 2 cannot be accepted in this environment because Next.js cannot start or build when Node child_process spawning is blocked.",
+      "impact": "The evaluator cannot verify the target URL, visual rendering, interactions, or responsive behavior from a live browser session.",
+      "evidence": "Both npm run build and npm run dev fail with Error: spawn EPERM before Next.js can complete worker startup."
+    },
+    {
+      "id": "SPR2-002",
+      "severity": "medium",
+      "summary": "Live fare integration is still not implemented.",
+      "impact": "The app can compare deterministic estimates and hand off to Skyscanner, but final fare accuracy still depends on the external search page.",
+      "evidence": "The current implementation uses build/lib/travel-planner.ts local reference pricing and explicitly labels prices as estimates."
+    }
+  ],
+  "next_actions": [
+    "Run npm run dev from a normal local terminal where Node child_process spawning is allowed, then browser-check the hero, planner, result cards, Skyscanner links, and mobile/desktop layouts.",
+    "If spawn EPERM also occurs outside the Codex sandbox, investigate Windows security policy or antivirus restrictions on node.exe child processes before changing app code.",
+    "After URL verification passes, update this report to PASS if the required premium sections, open-jaw planner flow, and responsive layouts render correctly.",
+    "For the next product sprint, add a real fare provider or API-backed enrichment while keeping deterministic estimates as an honest fallback."
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "sprint": 1,
+  "target_url": "http://localhost:3000",
+  "status": "FAIL",
+  "checked_at": "2026-04-23",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "fallback_used": [
+      "Direct HTTP fetch of http://localhost:3000",
+      "TypeScript compile check in build/",
+      "Executable planner-module checks via inline Node/TypeScript runtime",
+      "Source inspection of build/app/page.tsx and build/app/page.module.css"
+    ],
+    "notes": "Playwright MCP was not available in this Codex session. I also attempted local Chrome and Edge headless launches, but both failed with sandbox access denied errors before interactive browser automation could start."
+  },
+  "checks": [
+    {
+      "name": "Target URL responds with the sprint app",
+      "result": "PASS",
+      "evidence": "HTTP GET to http://localhost:3000 returned 200. The rendered HTML title is Travel Candidate Organizer and the landing page includes the product name, value proposition, form labels, and a disabled generate button before required inputs are filled."
+    },
+    {
+      "name": "Build source type-checks",
+      "result": "PASS",
+      "evidence": "cmd /c .\\\\node_modules\\\\.bin\\\\tsc.cmd --noEmit completed successfully in build/."
+    },
+    {
+      "name": "Invalid timing guidance exists",
+      "result": "PASS",
+      "evidence": "Executable planner-module check returned a non-empty inline validation message when the end date was earlier than the start date."
+    },
+    {
+      "name": "Valid conditions generate a readable candidate set",
+      "result": "PASS",
+      "evidence": "Executable planner-module check for departure Tokyo, 2026-10-10 to 2026-10-13, traveler couple, budget comfort, scope either, themes food plus culture returned 6 candidates. Each candidate included destination name, scope, budget range values, recommended stay, travel time label, score, and at least two reasons."
+    },
+    {
+      "name": "Sorting logic changes ordering",
+      "result": "PASS",
+      "evidence": "For the same valid result set, budget sort and travel-time sort both produced a different order from match-score order."
+    },
+    {
+      "name": "No-match guidance path exists",
+      "result": "PASS",
+      "evidence": "Executable planner-module check for a valid restrictive input returned 0 candidates and 3 recovery suggestions."
+    },
+    {
+      "name": "Placeholder or TODO scaffolding in generated app code",
+      "result": "PASS",
+      "evidence": "No TODO, todo, Coming soon, or stub markers were found in build/app, build/lib, or build/README.md."
+    },
+    {
+      "name": "Statuses, notes, comparison, regenerate, and reset are wired in the app source",
+      "result": "UNVERIFIED",
+      "evidence": "Source inspection found state handlers and controls for status changes, notes, comparison selection, loading state, regenerate, and reset, but interactive browser execution could not be completed in this sandbox."
+    },
+    {
+      "name": "Responsive behavior at about 390px and 1280px",
+      "result": "UNVERIFIED",
+      "evidence": "The CSS includes responsive single-column breakpoints and grid changes, but actual overflow and layout behavior were not browser-verified."
+    },
+    {
+      "name": "Filter support referenced by the acceptance criteria",
+      "result": "FAIL",
+      "evidence": "No visible filter control or filter logic was found in the generated app. The implementation exposes sorting, but not filtering."
+    }
+  ],
+  "bugs": [
+    {
+      "id": "SPR1-001",
+      "severity": "medium",
+      "summary": "Missing candidate filtering support referenced by acceptance criteria.",
+      "impact": "The criterion about note persistence after filtering cannot be satisfied because the sprint app implements sorting only.",
+      "evidence": "No filter control or filter state was found in build/app/page.tsx or build/lib/travel-planner.ts."
+    }
+  ],
+  "next_actions": [
+    "Add a visible candidate filtering control or update the sprint-1 acceptance criteria to remove filtering from scope.",
+    "Re-run sprint 1 with working browser automation, ideally Playwright MCP, against http://localhost:3000.",
+    "During that browser run, explicitly verify same-page generation, loading visibility, shortlist summary live updates, note persistence after sorting and comparison, 2-3 card comparison rendering, regenerate, reset, and no horizontal overflow at about 390px and 1280px."
+  ],
+  "limitations": [
+    "Interactive browser-only acceptance criteria were not exercised end-to-end because Playwright MCP was unavailable and fallback Chrome and Edge headless launches were blocked by sandbox access denied errors."
+  ],
+  "status_reason": "Sprint 1 is not accepted yet because the written acceptance criteria mention filtering, but no filtering control is implemented, and several browser-only acceptance criteria remain unverified in this sandbox."
+}

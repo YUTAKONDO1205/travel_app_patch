@@ -1,0 +1,201 @@
+{
+  "brand_name": "Maison Passage",
+  "product_name": "Maison Passage Open Jaw Explorer",
+  "summary": "Maison Passage Open Jaw Explorer is a browser-demoable overseas open-jaw planning app that helps travelers choose one departure country, compare multiple destination countries, and identify the cheapest inbound entry leg and cheapest return exit leg before handing off to live search.",
+  "vision": "Turn a complex multi-country overseas trip into a calm, luxury editorial decision flow where the traveler can confidently choose how to enter and leave a region before worrying about internal routing.",
+  "target_users": [
+    "Japanese-speaking travelers planning premium overseas trips across multiple countries.",
+    "Travelers who want to compare open-jaw entry and exit combinations before booking anything.",
+    "Users who prefer a refined, brand-led browsing experience instead of a dense airfare dashboard."
+  ],
+  "assumptions": [
+    "The first release may use curated representative airports and deterministic reference pricing instead of live fare inventory.",
+    "Displayed fares must be framed honestly as estimates until the user opens a live provider such as Skyscanner.",
+    "The MVP intentionally excludes the route between the inbound arrival airport and the return departure airport inside the destination region.",
+    "The default language is Japanese and the default displayed currency is JPY.",
+    "The experience should feel premium and quiet, with generous whitespace and a luxury editorial rhythm.",
+    "The app should remain usable in one browser session without login."
+  ],
+  "out_of_scope": [
+    "Booking, payment, or reservation management.",
+    "Automatic internal routing after the user lands in the destination region.",
+    "User accounts or shared collaborative editing.",
+    "Guaranteed live prices without a future provider integration.",
+    "Hotels, visas, exchange rates, or full itinerary planning."
+  ],
+  "design_direction": {
+    "tone": [
+      "High-end, warm, spacious, trustworthy, and calm.",
+      "Warm off-white should be the primary background instead of stark white.",
+      "Use gold, bronze, dark brown, and near-black as the dominant accent palette.",
+      "Avoid bright blue-first utility styling and avoid information-dense dashboard composition."
+    ],
+    "layout_principles": [
+      "The page should read like a luxury travel editorial landing page first and a planning tool second.",
+      "Whitespace should be treated as a primary design material.",
+      "Each major section should have a distinct visual rhythm while remaining cohesive.",
+      "CTA moments should be restrained and intentional rather than repeated aggressively."
+    ],
+    "motion": [
+      "Keep animation subtle and slow enough to feel premium.",
+      "Prefer fade, reveal, and light vertical slide treatments over flashy movement."
+    ],
+    "required_sections": [
+      "A fixed transparent header with minimal navigation that becomes more readable on scroll.",
+      "A full-screen hero with a warm dark overlay, short catch copy, and strong brand presentation.",
+      "A centered concept-introduction section using minimal copy and generous spacing.",
+      "A value collage section with one dominant visual block and smaller supporting blocks.",
+      "An alternating story section that explains the open-jaw decision flow in editorial beats.",
+      "A lineup card section with refined plan cards and thin divider details.",
+      "A restrained CTA section.",
+      "A dark footer with premium brand tone."
+    ]
+  },
+  "features": [
+    {
+      "id": "luxury-brand-shell",
+      "name": "Luxury Brand Shell",
+      "description": "The home page should establish Maison Passage as a luxury overseas travel planning brand before presenting the interactive planning tool.",
+      "must_have": [
+        "A fixed transparent header that gains a soft surface or blur after scroll.",
+        "A full-screen hero with warm off-white and dark overlay contrast, concise premium copy, and a clear primary CTA.",
+        "A centered concept introduction that explains the service in a restrained editorial voice.",
+        "A restrained CTA section and dark footer that maintain the premium tone."
+      ]
+    },
+    {
+      "id": "editorial-storytelling",
+      "name": "Editorial Storytelling Experience",
+      "description": "The page should communicate value through visual storytelling rather than dashboard density.",
+      "must_have": [
+        "A value collage section with asymmetrical composition and layered content blocks.",
+        "An alternating story section with text and visual blocks that explain the planning flow.",
+        "A lineup section with at least three refined cards showing different planning styles or trip profiles.",
+        "Typography, spacing, and dividers that feel premium and consistent from hero to footer."
+      ]
+    },
+    {
+      "id": "trip-brief-form",
+      "name": "Trip Brief Form",
+      "description": "The editorial landing page still needs a practical interface for the overseas open-jaw planning flow.",
+      "must_have": [
+        "Departure country selector.",
+        "Outbound date input.",
+        "Stay length selector that infers a return date.",
+        "Passenger count selector.",
+        "Cabin class selector.",
+        "A multi-select destination country picker.",
+        "A direct-first toggle.",
+        "A primary action to compare routes."
+      ]
+    },
+    {
+      "id": "airport-coverage",
+      "name": "Representative Airport Coverage",
+      "description": "Before results are shown, the app expands countries into representative airport sets for practical comparison.",
+      "must_have": [
+        "The departure country expands into multiple representative airports when local data exists.",
+        "Each destination country expands into inbound and outbound airport candidates.",
+        "The departure country cannot also be selected as a destination country.",
+        "The UI explains how many airports are being compared."
+      ]
+    },
+    {
+      "id": "open-jaw-results",
+      "name": "Open Jaw Comparison Results",
+      "description": "The core result surfaces the cheapest entry leg and cheapest exit leg separately for an overseas open-jaw itinerary.",
+      "must_have": [
+        "A clearly labeled cheapest outbound entry leg.",
+        "A clearly labeled cheapest return exit leg.",
+        "A combined estimated total and per-person estimate.",
+        "Clear explanation that the internal route between arrival and departure airports is excluded."
+      ]
+    },
+    {
+      "id": "handoff-and-alternatives",
+      "name": "Alternatives And Live Search Handoff",
+      "description": "Users should be able to inspect nearby options and then continue into live search without ambiguity.",
+      "must_have": [
+        "Alternative outbound entry options.",
+        "Alternative return exit options.",
+        "A per-country airport coverage section.",
+        "Links for outbound, return, and combined Skyscanner search handoff.",
+        "Honest explanation that live search is the source of truth for final fares."
+      ]
+    }
+  ],
+  "acceptance_criteria": [
+    "The home screen shows a fixed transparent header with the Maison Passage brand on the left and minimal navigation on the right.",
+    "After scrolling, the header gains a subtle readable background without breaking the premium visual tone.",
+    "The first viewport is a full-height hero with a warm dark overlay, concise luxury copy, and a clear brand-led CTA.",
+    "A centered concept-introduction section appears below the hero and uses restrained copy with generous whitespace.",
+    "A value collage section appears before or around the core planner experience and feels editorial rather than dashboard-like.",
+    "An alternating story section explains the open-jaw flow in multiple content blocks.",
+    "A lineup section presents at least three refined cards with visual areas, short descriptions, and plan names.",
+    "A restrained CTA section appears before a dark footer, and both sections remain visually consistent with the luxury palette.",
+    "The user cannot compare routes until departure country, outbound date, stay length, and at least one destination country are set.",
+    "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound leg, a cheapest return leg, and a combined estimated total.",
+    "The result explicitly states that the arrival airport and return airport may differ and that the internal route is not included.",
+    "The results area contains links for outbound, return, and combined Skyscanner search handoff.",
+    "The palette is based on warm off-white, gold, bronze, dark brown, and near-black rather than bright utility colors.",
+    "The page works at approximately 390px mobile width and 1280px desktop width without obvious horizontal overflow."
+  ],
+  "demo_script": [
+    "Open the app and confirm that the first impression is a luxury travel landing page rather than a dense utility dashboard.",
+    "Observe the fixed transparent header, then scroll and confirm that it becomes more readable with a subtle background treatment.",
+    "Review the hero, concept section, and value collage to confirm the warm off-white, gold, bronze, dark brown, and near-black visual direction.",
+    "Scroll through the alternating story section and confirm that the open-jaw value proposition is explained in clear editorial beats.",
+    "Review the lineup cards and confirm that at least three premium card treatments are shown.",
+    "Use the planner area to choose Japan as the departure country plus France, United Kingdom, and Germany as destination countries.",
+    "Pick an outbound date and stay length, then run the comparison.",
+    "Confirm that the app shows the cheapest outbound entry leg and cheapest return exit leg separately, with a combined estimate.",
+    "Confirm that the result explains the open-jaw assumption and excludes internal travel.",
+    "Open the Skyscanner open-jaw handoff and verify that the suggested entry and exit routes are carried into the live search."
+  ],
+  "sprints": [
+    {
+      "sprint": 1,
+      "name": "Open Jaw Planning MVP",
+      "goal": "Create the first runnable overseas open-jaw planning app that compares the cheapest inbound and outbound flight legs using local estimation logic.",
+      "scope": [
+        "Build the single-page planning experience in build/.",
+        "Expand countries into representative airport sets.",
+        "Generate cheapest outbound and return legs from local estimation logic.",
+        "Provide alternative route options and Skyscanner handoff links."
+      ],
+      "acceptance_criteria": [
+        "A local user can run the app from build/ and compare outbound and return legs in one browser session.",
+        "The app does not pretend that deterministic reference prices are final live inventory."
+      ]
+    },
+    {
+      "sprint": 2,
+      "name": "Luxury Editorial Shell",
+      "goal": "Wrap the existing overseas open-jaw planner in a luxury editorial brand experience without breaking the planning flow.",
+      "scope": [
+        "Add the fixed transparent header, full-screen hero, concept intro, value collage, alternating story section, lineup cards, restrained CTA, and dark footer.",
+        "Adapt the planner and results styling to the warm off-white, gold, bronze, dark brown, and near-black direction.",
+        "Preserve the existing open-jaw comparison flow while improving pacing, tone, and visual cohesion."
+      ],
+      "acceptance_criteria": [
+        "The page feels like a premium travel brand landing experience from top to bottom.",
+        "All required editorial sections are implemented without breaking the core comparison workflow.",
+        "All top-level design acceptance criteria are satisfied."
+      ]
+    },
+    {
+      "sprint": 3,
+      "name": "Live Fare Enrichment",
+      "goal": "Introduce a real fare source or provider-backed enrichment without losing the calm premium experience.",
+      "scope": [
+        "Introduce a live price provider or search integration.",
+        "Distinguish clearly between cached estimates and live prices.",
+        "Handle provider errors without breaking the planning flow or premium presentation."
+      ],
+      "acceptance_criteria": [
+        "The app can show at least one live or near-live fare source for the suggested entry and exit routes.",
+        "If the provider fails, the interface explains the fallback honestly."
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import {
   getGatewayAirportsForDestinationCodes,
   getGatewayCountriesForDestinationCodes,
   getCountryProfile,
+  isEuropeanCountryCode,
   type Airport,
   type CabinClassKey,
   type CountryCode,
@@ -102,6 +103,15 @@ export type FlightSearchResult = {
   betweenTicketsGap: BetweenTicketsGap;
   planningNote: string;
   combinedSearchUrl: string;
+};
+
+type PricingRouteProfile = {
+  stopCount: number;
+  stopLabel: string;
+  priceFactor: number;
+  averageSpeedKmh: number;
+  transferHours: number;
+  uncertaintyOffset: number;
 };
 
 export const INITIAL_FORM_STATE: PlannerFormState = {
@@ -292,6 +302,119 @@ function supportsDirectRoute(origin: Airport, destination: Airport, distanceKm: 
   return distanceKm <= 11800 && origin.hubScore + destination.hubScore >= 9;
 }
 
+function getRouteCorridorScore(origin: Airport, destination: Airport): number {
+  return Math.max(origin.corridorScore ?? 0, destination.corridorScore ?? 0);
+}
+
+function buildPricingRouteProfiles({
+  origin,
+  destination,
+  distanceKm,
+  cabinClass,
+  preferDirect,
+}: {
+  origin: Airport;
+  destination: Airport;
+  distanceKm: number;
+  cabinClass: CabinClassKey;
+  preferDirect: boolean;
+}): PricingRouteProfile[] {
+  const canDirect = supportsDirectRoute(origin, destination, distanceKm);
+
+  if (preferDirect) {
+    return canDirect
+      ? [
+          {
+            stopCount: 0,
+            stopLabel: "\u76f4\u884c\u4fbf",
+            priceFactor: 1.08,
+            averageSpeedKmh: 860,
+            transferHours: 1.1,
+            uncertaintyOffset: 0.03,
+          },
+        ]
+      : [];
+  }
+
+  const profiles: PricingRouteProfile[] = [];
+
+  if (canDirect) {
+    profiles.push({
+      stopCount: 0,
+      stopLabel: "\u76f4\u884c\u4fbf",
+      priceFactor: 1.08,
+      averageSpeedKmh: 860,
+      transferHours: 1.1,
+      uncertaintyOffset: 0.03,
+    });
+  }
+
+  profiles.push({
+    stopCount: 1,
+    stopLabel: "1\u56de\u4e57\u7d99",
+    priceFactor: 0.94,
+    averageSpeedKmh: 760,
+    transferHours: 4.1,
+    uncertaintyOffset: 0.06,
+  });
+
+  const corridorScore = getRouteCorridorScore(origin, destination);
+  const corridorEligible =
+    cabinClass !== "business" &&
+    distanceKm >= 7000 &&
+    (isEuropeanCountryCode(origin.countryCode) || isEuropeanCountryCode(destination.countryCode)) &&
+    corridorScore >= 3;
+
+  if (corridorEligible) {
+    const stopCount = corridorScore >= 5 ? 3 : 2;
+    const corridorBaseFactor = corridorScore >= 5 ? 0.62 : 0.68;
+    const premiumAdjustment = cabinClass === "premiumeconomy" ? 0.06 : 0;
+
+    profiles.push({
+      stopCount,
+      stopLabel: `${stopCount}\u56de\u4e57\u7d99`,
+      priceFactor: corridorBaseFactor + premiumAdjustment,
+      averageSpeedKmh: stopCount >= 3 ? 640 : 690,
+      transferHours: stopCount >= 3 ? 13.2 : 9.6,
+      uncertaintyOffset: 0.11,
+    });
+  }
+
+  return profiles;
+}
+
+function getHubFactor(origin: Airport, destination: Airport, stopCount: number): number {
+  const perPointAdjustment = stopCount >= 2 ? 0.008 : 0.018;
+  const minimumAdjustment = stopCount >= 2 ? -0.03 : -0.08;
+
+  return 1 - Math.max(minimumAdjustment, (origin.hubScore + destination.hubScore - 8) * perPointAdjustment);
+}
+
+function getStayCountryFactor({
+  selectedStayCountryCodes,
+  direction,
+  origin,
+  destination,
+}: {
+  selectedStayCountryCodes: CountryCode[];
+  direction: "outbound" | "return";
+  origin: Airport;
+  destination: Airport;
+}): number {
+  if (!selectedStayCountryCodes.length) {
+    return 1;
+  }
+
+  const routeCountryCode = direction === "outbound" ? destination.countryCode : origin.countryCode;
+  return selectedStayCountryCodes.includes(routeCountryCode)
+    ? direction === "outbound"
+      ? 0.95
+      : 0.99
+    : direction === "outbound"
+      ? 1.03
+      : 1.01;
+}
+
 function roundToNearestHundred(value: number): number {
   return Math.round(value / 100) * 100;
 }
@@ -316,15 +439,19 @@ function getEstimateConfidence({
 }): string {
   const hubStrength = origin.hubScore + destination.hubScore;
 
+  if (stopCount >= 2) {
+    return "\u4fe1\u983c\u5ea6: \u53c2\u8003";
+  }
+
   if (stopCount === 0 && hubStrength >= 9) {
-    return "信頼度: 高";
+    return "\u4fe1\u983c\u5ea6: \u9ad8";
   }
 
   if (hubStrength >= 7 && distanceKm < 10500) {
-    return "信頼度: 中";
+    return "\u4fe1\u983c\u5ea6: \u4e2d";
   }
 
-  return "信頼度: 参考";
+  return "\u4fe1\u983c\u5ea6: \u53c2\u8003";
 }
 
 function buildSkyscannerUrl(
@@ -369,6 +496,40 @@ function buildRouteReasons({
 
 function compareQuotes(left: FlightLegQuote, right: FlightLegQuote): number {
   return left.totalPrice - right.totalPrice || left.durationHours - right.durationHours;
+}
+
+function buildPlannerReasons({
+  origin,
+  destination,
+  dateString,
+  stopCount,
+  selectedStayCountryCodes,
+  direction,
+}: {
+  origin: Airport;
+  destination: Airport;
+  dateString: string;
+  stopCount: number;
+  selectedStayCountryCodes: CountryCode[];
+  direction: "outbound" | "return";
+}): string[] {
+  const season = getSeasonFactor(dateString);
+  const routeCountryCode = direction === "outbound" ? destination.countryCode : origin.countryCode;
+  const usesGatewayCountry = !selectedStayCountryCodes.includes(routeCountryCode);
+  const stopReason =
+    stopCount === 0
+      ? "直行便の成立を優先し、移動時間と乗り換え負荷を抑えています。"
+      : stopCount === 1
+        ? "1回乗継を許容し、価格と移動時間の均衡を見ています。"
+        : `${stopCount}回乗継まで含む価格重視の corridor を織り込み、長時間でも安さが出やすい組み合わせを残しています。`;
+
+  return [
+    `${origin.city}(${origin.code}) と ${destination.city}(${destination.code}) を代表空港として比較しています。`,
+    usesGatewayCountry
+      ? `${stopReason} 滞在国の外側にある gateway も入口・出口候補として比較しています。`
+      : stopReason,
+    `${season.label}の参考運賃です。実勢価格は Skyscanner 側で再確認してください。`,
+  ];
 }
 
 function buildFlightQuote({
@@ -435,6 +596,138 @@ function buildFlightQuote({
     stopLabel,
     distanceKm,
     reasonPoints: buildRouteReasons({ origin, destination, dateString: travelDate, stopCount }),
+    skyscannerUrl: buildSkyscannerUrl("day-view", {
+      origin: origin.code.toLowerCase(),
+      destination: destination.code.toLowerCase(),
+      outboundDate: travelDate,
+      adultsv2: Number.parseInt(passengerCount, 10),
+      cabinclass: cabinClass,
+      preferDirects: preferDirect,
+      outboundaltsenabled: false,
+      inboundaltsenabled: false,
+    }),
+  };
+}
+
+function buildPlannerQuote({
+  origin,
+  destination,
+  travelDate,
+  passengerCount,
+  cabinClass,
+  preferDirect,
+  direction,
+  selectedStayCountryCodes,
+}: {
+  origin: Airport;
+  destination: Airport;
+  travelDate: string;
+  passengerCount: PassengerCountKey;
+  cabinClass: CabinClassKey;
+  preferDirect: boolean;
+  direction: "outbound" | "return";
+  selectedStayCountryCodes: CountryCode[];
+}): FlightLegQuote | null {
+  const distanceKm = haversineDistanceKm(origin, destination);
+  const routeProfiles = buildPricingRouteProfiles({
+    origin,
+    destination,
+    distanceKm,
+    cabinClass,
+    preferDirect,
+  });
+
+  if (!routeProfiles.length) {
+    return null;
+  }
+
+  const season = getSeasonFactor(travelDate);
+  const dateFlex = getDateFlexFactor(travelDate);
+  const cabinMultiplier = getCabinMultiplier(cabinClass);
+  const directionFactor = direction === "return" ? 1.03 : 1;
+  const stayCountryFactor = getStayCountryFactor({
+    selectedStayCountryCodes,
+    direction,
+    origin,
+    destination,
+  });
+  const baseFare = 18000 + distanceKm * 11.4;
+
+  const selectedRouteProfile = [...routeProfiles]
+    .map((profile) => ({
+      profile,
+      weightedPrice:
+        baseFare *
+        season.factor *
+        dateFlex.factor *
+        getHubFactor(origin, destination, profile.stopCount) *
+        stayCountryFactor *
+        cabinMultiplier *
+        profile.priceFactor *
+        directionFactor,
+    }))
+    .sort((left, right) => left.weightedPrice - right.weightedPrice)[0]?.profile;
+
+  if (!selectedRouteProfile) {
+    return null;
+  }
+
+  const hubFactor = getHubFactor(origin, destination, selectedRouteProfile.stopCount);
+  const pricePerPerson = roundToNearestHundred(
+    baseFare *
+      season.factor *
+      dateFlex.factor *
+      hubFactor *
+      stayCountryFactor *
+      cabinMultiplier *
+      selectedRouteProfile.priceFactor *
+      directionFactor,
+  );
+  const totalPrice = pricePerPerson * Number.parseInt(passengerCount, 10);
+  const uncertainty = 0.1 + selectedRouteProfile.uncertaintyOffset + (distanceKm > 9500 ? 0.04 : 0);
+  const priceRangePerPerson = buildPriceRange(pricePerPerson, uncertainty);
+  const passengerCountValue = Number.parseInt(passengerCount, 10);
+  const totalPriceRange = {
+    low: priceRangePerPerson.low * passengerCountValue,
+    high: priceRangePerPerson.high * passengerCountValue,
+  };
+  const durationHours = Math.round(
+    (distanceKm / selectedRouteProfile.averageSpeedKmh + selectedRouteProfile.transferHours) * 10,
+  ) / 10;
+  const confidenceLabel = getEstimateConfidence({
+    origin,
+    destination,
+    distanceKm,
+    stopCount: selectedRouteProfile.stopCount,
+  });
+  const estimateBasisStopLabel =
+    selectedRouteProfile.stopCount >= 2
+      ? `${selectedRouteProfile.stopLabel} corridor`
+      : selectedRouteProfile.stopLabel;
+
+  return {
+    direction,
+    origin,
+    destination,
+    travelDate,
+    pricePerPerson,
+    totalPrice,
+    priceRangePerPerson,
+    totalPriceRange,
+    confidenceLabel,
+    estimateBasis: `${season.label} / ${dateFlex.label} / ${estimateBasisStopLabel} / ${distanceKm.toLocaleString("ja-JP")}km`,
+    durationHours,
+    stopCount: selectedRouteProfile.stopCount,
+    stopLabel: selectedRouteProfile.stopLabel,
+    distanceKm,
+    reasonPoints: buildPlannerReasons({
+      origin,
+      destination,
+      dateString: travelDate,
+      stopCount: selectedRouteProfile.stopCount,
+      selectedStayCountryCodes,
+      direction,
+    }),
     skyscannerUrl: buildSkyscannerUrl("day-view", {
       origin: origin.code.toLowerCase(),
       destination: destination.code.toLowerCase(),
@@ -621,15 +914,18 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const destinationCountries = formState.destinationCountries.map((countryCode) => getCountryProfile(countryCode));
   const departureAirports = getAirportsForCountry(departureCountry.code);
   const destinationAirports = destinationCountries.flatMap((country) => getAirportsForCountry(country.code));
-  const gatewayCountries = getGatewayCountriesForDestinationCodes(formState.destinationCountries);
-  const gatewayAirports = getGatewayAirportsForDestinationCodes(formState.destinationCountries);
+  const gatewayExpansionOptions = {
+    includeBudgetCorridors: !formState.preferDirect,
+  };
+  const gatewayCountries = getGatewayCountriesForDestinationCodes(formState.destinationCountries, gatewayExpansionOptions);
+  const gatewayAirports = getGatewayAirportsForDestinationCodes(formState.destinationCountries, gatewayExpansionOptions);
   const outboundCandidateDates = getOutboundCandidateDates(formState);
 
   const outboundQuotes = departureAirports
     .flatMap((origin) =>
       gatewayAirports.flatMap((destination) =>
         outboundCandidateDates.map((travelDate) =>
-          buildFlightQuote({
+          buildPlannerQuote({
             origin,
             destination,
             travelDate,
@@ -637,6 +933,7 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
             cabinClass: formState.cabinClass,
             preferDirect: formState.preferDirect,
             direction: "outbound",
+            selectedStayCountryCodes: formState.destinationCountries,
           }),
         ),
       ),
@@ -655,7 +952,7 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     .flatMap((origin) =>
       departureAirports.flatMap((destination) =>
         returnCandidateDates.map((travelDate) =>
-          buildFlightQuote({
+          buildPlannerQuote({
             origin,
             destination,
             travelDate,
@@ -663,6 +960,7 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
             cabinClass: formState.cabinClass,
             preferDirect: formState.preferDirect,
             direction: "return",
+            selectedStayCountryCodes: formState.destinationCountries,
           }),
         ),
       ),

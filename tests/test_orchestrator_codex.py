@@ -341,6 +341,8 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
         self,
         *,
         add_probe: subprocess.CompletedProcess[str],
+        push_probe: subprocess.CompletedProcess[str] | None = None,
+        ahead_behind_stdout: str = "0 0\n",
         status_stdout: str = " M README.md\n M agents/README.md\n M agents/orchestrator_codex.py\n",
     ):
         def side_effect(*args: str):
@@ -353,11 +355,12 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
                 ("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"): make_git_result(
                     *args, stdout="origin/codex/test\n"
                 ),
-                ("rev-list", "--left-right", "--count", "HEAD...@{u}"): make_git_result(*args, stdout="0 0\n"),
+                ("rev-list", "--left-right", "--count", "HEAD...@{u}"): make_git_result(*args, stdout=ahead_behind_stdout),
                 ("remote", "get-url", "origin"): make_git_result(
                     *args, stdout="https://github.com/example/repo.git\n"
                 ),
                 ("add", "-A", "--dry-run"): add_probe,
+                ("push", "--dry-run", "origin", "HEAD:refs/heads/codex/test"): push_probe or make_git_result(*args),
             }
             return mapping.get(command, make_git_result(*args))
 
@@ -428,6 +431,69 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
         self.assertFalse(sync["can_sync_without_git_index"])
         self.assertIn("GITHUB_TOKEN", sync["required_env_names"])
 
+    def test_git_sync_status_prefers_no_pending_changes_over_credentials_blocker(self) -> None:
+        add_probe = make_git_result(
+            "add",
+            "-A",
+            "--dry-run",
+            stderr="fatal: Unable to create '.git/index.lock': Permission denied",
+            returncode=1,
+        )
+        with patch.object(
+            orchestrator,
+            "_run_git_command",
+            side_effect=self.fake_git_side_effect(add_probe=add_probe, status_stdout=""),
+        ), patch.dict(os.environ, {}, clear=True):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["pending_changes_count"], 0)
+        self.assertEqual(sync["blocker"], "no_pending_changes")
+        self.assertEqual(sync["mode"], "github_api_required")
+        self.assertFalse(sync["can_sync_without_git_index"])
+
+    def test_git_sync_status_marks_local_git_https_credentials_missing(self) -> None:
+        add_probe = make_git_result("add", "-A", "--dry-run", stdout="")
+        push_probe = make_git_result(
+            "push",
+            "--dry-run",
+            "origin",
+            "HEAD:refs/heads/codex/test",
+            stderr="fatal: unable to access 'https://github.com/example/repo.git/': schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030E)",
+            returncode=1,
+        )
+        with patch.object(
+            orchestrator,
+            "_run_git_command",
+            side_effect=self.fake_git_side_effect(add_probe=add_probe, push_probe=push_probe),
+        ), patch.dict(os.environ, {}, clear=True):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["mode"], "github_api_required")
+        self.assertTrue(sync["local_git_writable"])
+        self.assertFalse(sync["local_git_pushable"])
+        self.assertEqual(sync["blocker"], "local_git_https_credentials_missing")
+        self.assertFalse(sync["can_sync_without_git_index"])
+        self.assertTrue(sync["diagnostics"]["network_used"])
+
+    def test_git_sync_status_marks_unpushed_commits_when_worktree_is_clean(self) -> None:
+        add_probe = make_git_result("add", "-A", "--dry-run", stdout="")
+        with patch.object(
+            orchestrator,
+            "_run_git_command",
+            side_effect=self.fake_git_side_effect(
+                add_probe=add_probe,
+                status_stdout="",
+                ahead_behind_stdout="2 0\n",
+            ),
+        ), patch.dict(os.environ, {}, clear=True):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["pending_changes_count"], 0)
+        self.assertEqual(sync["unpushed_commits_count"], 2)
+        self.assertEqual(sync["blocker"], "unpushed_commits_pending")
+        self.assertEqual(sync["mode"], "local_git")
+        self.assertTrue(sync["local_git_pushable"])
+
     def test_sync_changes_dry_run_does_not_call_commit_push_or_api(self) -> None:
         fake_status = {
             "branch": "codex/test",
@@ -435,9 +501,11 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
             "head_sha": "abc1234",
             "mode": "local_git",
             "local_git_writable": True,
+            "local_git_pushable": True,
             "blocker": None,
             "pending_changes_count": 3,
             "pending_changes_preview": ["README.md", "agents/README.md", "agents/orchestrator_codex.py"],
+            "unpushed_commits_count": 0,
             "can_sync_without_git_index": True,
             "manual_instructions": [],
         }
@@ -458,6 +526,71 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
         run_git.assert_not_called()
         github_commit.assert_not_called()
         github_pr.assert_not_called()
+
+    def test_sync_changes_dry_run_shows_push_for_unpushed_commits(self) -> None:
+        fake_status = {
+            "branch": "codex/test",
+            "upstream": "origin/codex/test",
+            "head_sha": "abc1234",
+            "mode": "local_git",
+            "local_git_writable": True,
+            "local_git_pushable": True,
+            "blocker": "unpushed_commits_pending",
+            "pending_changes_count": 0,
+            "pending_changes_preview": [],
+            "unpushed_commits_count": 2,
+            "can_sync_without_git_index": True,
+            "manual_instructions": [],
+        }
+        run_git = Mock()
+        with patch.object(orchestrator, "_git_sync_status", return_value=fake_status), patch.object(
+            orchestrator, "_run_git_command", run_git
+        ):
+            result = orchestrator.sync_changes("Publish ahead commits", dry_run=True)
+
+        self.assertEqual(result["outcome"], "dry_run")
+        self.assertEqual(result["performed_via"], "local_git")
+        self.assertEqual(result["planned_commands"], ["git push"])
+        run_git.assert_not_called()
+
+    def test_sync_changes_blocks_when_push_lacks_https_credentials_after_commit(self) -> None:
+        fake_status = {
+            "branch": "codex/test",
+            "upstream": "origin/codex/test",
+            "head_sha": "abc1234",
+            "mode": "local_git",
+            "local_git_writable": True,
+            "local_git_pushable": True,
+            "blocker": None,
+            "pending_changes_count": 2,
+            "pending_changes_preview": ["agents/orchestrator_codex.py", "tests/test_orchestrator_codex.py"],
+            "unpushed_commits_count": 0,
+            "can_sync_without_git_index": False,
+            "manual_instructions": [],
+        }
+        run_git = Mock(
+            side_effect=[
+                make_git_result("add", "-A", stdout=""),
+                make_git_result("commit", "-m", "Publish", stdout="[codex/test def5678] Publish\n"),
+                make_git_result("rev-parse", "--short", "HEAD", stdout="def5678\n"),
+                make_git_result(
+                    "push",
+                    stderr="fatal: unable to access 'https://github.com/example/repo.git/': schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030E)",
+                    returncode=1,
+                ),
+            ]
+        )
+        with patch.object(orchestrator, "_git_sync_status", return_value=fake_status), patch.object(
+            orchestrator, "_run_git_command", run_git
+        ):
+            result = orchestrator.sync_changes("Publish", dry_run=False)
+
+        self.assertEqual(result["outcome"], "blocked")
+        self.assertEqual(result["mode"], "github_api_required")
+        self.assertEqual(result["blocker"], "local_git_https_credentials_missing")
+        self.assertEqual(result["performed_via"], "local_git")
+        self.assertTrue(result["commit_created"])
+        self.assertEqual(result["head_sha"], "def5678")
 
     def test_github_api_dry_run_does_not_perform_api_mutations(self) -> None:
         sync_status = {
@@ -509,6 +642,158 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
         create_tree.assert_not_called()
         create_commit.assert_not_called()
         update_ref.assert_not_called()
+
+    def test_github_api_pr_dry_run_does_not_perform_api_mutations(self) -> None:
+        sync_status = {
+            "branch": "codex/test",
+            "origin": {
+                "present": True,
+                "url": "https://github.com/example/repo.git",
+                "github_like": True,
+                "repo_slug": "example/repo",
+            },
+            "manual_instructions": [],
+        }
+        github_context = {
+            "token_env_name": "GITHUB_TOKEN",
+            "token": "token",
+            "owner": "example",
+            "repo": "repo",
+            "branch": "codex/test",
+            "base_branch": "main",
+            "can_sync_without_git_index": True,
+            "missing_env_names": [],
+        }
+        read_pending = Mock(return_value=([{"path": "README.md", "change": "update"}], []))
+        get_repo_metadata = Mock()
+        get_head_sha = Mock()
+        create_ref = Mock()
+        get_tree_sha = Mock()
+        create_tree = Mock()
+        create_commit = Mock()
+        update_ref = Mock()
+        create_pr = Mock()
+        with patch.object(orchestrator, "_resolve_github_sync_context", return_value=github_context), patch.object(
+            orchestrator, "_read_pending_changes", read_pending
+        ), patch.object(
+            orchestrator, "_github_get_repo_metadata", get_repo_metadata
+        ), patch.object(
+            orchestrator, "_github_get_head_sha", get_head_sha
+        ), patch.object(
+            orchestrator, "_github_create_ref", create_ref
+        ), patch.object(
+            orchestrator, "_github_get_tree_sha", get_tree_sha
+        ), patch.object(
+            orchestrator, "_github_create_tree", create_tree
+        ), patch.object(
+            orchestrator, "_github_create_commit", create_commit
+        ), patch.object(
+            orchestrator, "_github_update_ref", update_ref
+        ), patch.object(
+            orchestrator, "_github_create_pull_request", create_pr
+        ):
+            result = orchestrator._sync_with_github_pr(sync_status, message="API PR dry run", dry_run=True)
+
+        self.assertIsNone(result["blocker"])
+        self.assertEqual(result["planned_change_count"], 1)
+        self.assertTrue(result["planned_pr_branch"].startswith("codex/test-codex-sync-"))
+        read_pending.assert_called_once()
+        get_repo_metadata.assert_not_called()
+        get_head_sha.assert_not_called()
+        create_ref.assert_not_called()
+        get_tree_sha.assert_not_called()
+        create_tree.assert_not_called()
+        create_commit.assert_not_called()
+        update_ref.assert_not_called()
+        create_pr.assert_not_called()
+
+    def test_sync_changes_falls_back_to_pr_when_direct_commit_fails(self) -> None:
+        fake_status = {
+            "branch": "codex/test",
+            "upstream": "origin/codex/test",
+            "head_sha": "abc1234",
+            "mode": "github_api_required",
+            "local_git_writable": False,
+            "blocker": "local_git_index_lock_permission_denied",
+            "pending_changes_count": 2,
+            "pending_changes_preview": ["agents/orchestrator_codex.py", "tests/test_orchestrator_codex.py"],
+            "can_sync_without_git_index": True,
+            "manual_instructions": [],
+        }
+        direct_commit = Mock(return_value={"mode": "github_api", "blocker": "github_api_direct_commit_failed"})
+        pr_sync = Mock(
+            return_value={
+                "mode": "github_api",
+                "blocker": None,
+                "performed_via": "github_api_pr",
+                "pr_url": "https://github.com/example/repo/pull/1",
+            }
+        )
+        with patch.object(orchestrator, "_git_sync_status", return_value=fake_status), patch.object(
+            orchestrator, "_sync_with_github_direct_commit", direct_commit
+        ), patch.object(
+            orchestrator, "_sync_with_github_pr", pr_sync
+        ):
+            result = orchestrator.sync_changes("Fallback to PR", dry_run=False)
+
+        self.assertEqual(result["outcome"], "synced")
+        self.assertEqual(result["performed_via"], "github_api_pr")
+        self.assertEqual(result["pr_url"], "https://github.com/example/repo/pull/1")
+        direct_commit.assert_called_once()
+        pr_sync.assert_called_once()
+
+    def test_cmd_sync_raises_on_blocked_result(self) -> None:
+        blocked_result = {
+            "branch": "codex/test",
+            "upstream": "origin/codex/test",
+            "head_sha": "abc1234",
+            "mode": "github_api_required",
+            "local_git_writable": False,
+            "blocker": "manual_sync_required",
+            "pending_changes_count": 2,
+            "pending_changes_preview": ["agents/orchestrator_codex.py", "tests/test_orchestrator_codex.py"],
+            "can_sync_without_git_index": False,
+            "dry_run": False,
+            "performed_via": None,
+            "manual_instructions": ["Create the commit manually."],
+            "outcome": "blocked",
+        }
+        with patch.object(orchestrator, "sync_changes", return_value=blocked_result), patch(
+            "sys.stdout",
+            new_callable=StringIO,
+        ) as stdout:
+            with self.assertRaises(orchestrator.HarnessError):
+                orchestrator.cmd_sync("Blocked sync", dry_run=False)
+
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["blocker"], "manual_sync_required")
+        self.assertEqual(payload["outcome"], "blocked")
+
+    def test_cmd_sync_dry_run_does_not_raise_on_blocked_result(self) -> None:
+        blocked_result = {
+            "branch": "codex/test",
+            "upstream": "origin/codex/test",
+            "head_sha": "abc1234",
+            "mode": "github_api_required",
+            "local_git_writable": False,
+            "blocker": "github_api_credentials_missing",
+            "pending_changes_count": 2,
+            "pending_changes_preview": ["agents/orchestrator_codex.py", "tests/test_orchestrator_codex.py"],
+            "can_sync_without_git_index": False,
+            "dry_run": True,
+            "performed_via": "github_api_direct_commit",
+            "manual_instructions": ["Set GITHUB_TOKEN or GH_TOKEN."],
+            "outcome": "blocked",
+        }
+        with patch.object(orchestrator, "sync_changes", return_value=blocked_result), patch(
+            "sys.stdout",
+            new_callable=StringIO,
+        ) as stdout:
+            orchestrator.cmd_sync("Blocked sync dry run", dry_run=True)
+
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(payload["blocker"], "github_api_credentials_missing")
+        self.assertEqual(payload["outcome"], "blocked")
 
 
 class AutodevHarnessTests(OrchestratorCodexTestCase):
@@ -630,6 +915,53 @@ class AutodevHarnessTests(OrchestratorCodexTestCase):
 
         self.assertEqual(exit_code, 0)
         sync_changes.assert_not_called()
+
+    def test_autodev_reports_push_only_follow_up_when_auto_sync_commit_cannot_push(self) -> None:
+        def fake_run_codex(prompt: str, **_: object) -> CodexRunResult:
+            if "planner skill" in prompt:
+                self.write_json(orchestrator.spec_path(), self.valid_spec())
+            elif "generator skill" in prompt:
+                orchestrator.BUILD_DIR.mkdir(parents=True, exist_ok=True)
+                (orchestrator.BUILD_DIR / "package.json").write_text('{"name":"trip-app"}', encoding="utf-8")
+                self.write_json(orchestrator.sprint_eval_path(1), self.valid_sprint_eval())
+            elif "evaluator skill" in prompt:
+                self.write_json(orchestrator.evaluation_report_path(1), self.valid_report(status="PASS"))
+            return make_codex_result()
+
+        sync_changes = Mock(
+            return_value={
+                "outcome": "blocked",
+                "performed_via": "local_git",
+                "blocker": "local_git_https_credentials_missing",
+                "commit_created": True,
+                "head_sha": "def5678",
+            }
+        )
+        with patch.object(orchestrator, "run_codex", side_effect=fake_run_codex), patch.object(
+            orchestrator, "install_build_dependencies", return_value=True
+        ), patch.object(
+            orchestrator, "start_dev_server", return_value=None
+        ), patch.object(
+            orchestrator, "wait_for_url", return_value=True
+        ), patch.object(
+            orchestrator, "stop_dev_server", Mock()
+        ), patch.object(
+            orchestrator, "_read_pending_changes", return_value=([], [])
+        ), patch.object(
+            orchestrator, "sync_changes", sync_changes
+        ), patch("sys.stderr", new_callable=StringIO) as stderr:
+            exit_code = orchestrator.cmd_autodev(
+                description="Build a web app that organizes travel options from user inputs.",
+                sprint=1,
+                max_iterations=3,
+                url="http://localhost:3000",
+                startup_timeout=1,
+                replan=False,
+                auto_sync=True,
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("created local commit def5678 but could not push it", stderr.getvalue())
 
     def test_autodev_retries_with_source_bug_ids_and_survives_pass_overwrite(self) -> None:
         evaluator_calls = 0

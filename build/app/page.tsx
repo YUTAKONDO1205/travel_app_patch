@@ -189,13 +189,22 @@ export default function HomePage() {
     (count, countryCode) => count + getAirportsForCountry(countryCode).length,
     0,
   );
-  const gatewayCountries = getGatewayCountriesForDestinationCodes(formState.destinationCountries);
+  const gatewayExpansionOptions = {
+    includeBudgetCorridors: !formState.preferDirect,
+  };
+  const gatewayCountries = getGatewayCountriesForDestinationCodes(
+    formState.destinationCountries,
+    gatewayExpansionOptions,
+  );
   const gatewayOnlyCountries = gatewayCountries.filter((country) => !formState.destinationCountries.includes(country.code));
   const gatewayOnlyAirportCount = gatewayOnlyCountries.reduce(
     (count, country) => count + getAirportsForCountry(country.code).length,
     0,
   );
-  const destinationAirportCount = getGatewayAirportsForDestinationCodes(formState.destinationCountries).length;
+  const destinationAirportCount = getGatewayAirportsForDestinationCodes(
+    formState.destinationCountries,
+    gatewayExpansionOptions,
+  ).length;
   const selectedDestinationLabels =
     formState.destinationCountries.map((countryCode) => COUNTRY_LABELS[countryCode]).join(" / ") || "滞在国を選ぶとここに表示します。";
   const gatewayOnlyLabels =

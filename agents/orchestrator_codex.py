@@ -913,7 +913,20 @@ def cmd_autodev(
                         print("[autodev] Auto-sync found no pending changes to publish.")
                     else:
                         blocker = sync_result.get("blocker") or "unknown"
-                        print(f"[autodev] Auto-sync could not publish this PASS run: {blocker}", file=sys.stderr)
+                        if blocker == "local_git_https_credentials_missing" and sync_result.get("commit_created"):
+                            head_sha = sync_result.get("head_sha")
+                            suffix = f" {head_sha}" if isinstance(head_sha, str) and head_sha.strip() else ""
+                            print(
+                                f"[autodev] Auto-sync created local commit{suffix} but could not push it from this shell; run git push from a credentialed shell.",
+                                file=sys.stderr,
+                            )
+                        elif blocker == "unpushed_commits_pending":
+                            print(
+                                "[autodev] Auto-sync detected unpushed commits already on this branch; run git push to publish them.",
+                                file=sys.stderr,
+                            )
+                        else:
+                            print(f"[autodev] Auto-sync could not publish this PASS run: {blocker}", file=sys.stderr)
                 else:
                     print(
                         "[autodev] PASS was reached, but auto-sync was skipped to avoid committing pre-existing worktree changes.",
@@ -993,6 +1006,11 @@ def _git_error_text(result: Optional[subprocess.CompletedProcess[str]]) -> str:
 def _is_index_lock_permission_denied(result: Optional[subprocess.CompletedProcess[str]]) -> bool:
     text = _git_error_text(result)
     return "index.lock" in text and "Permission denied" in text
+
+
+def _is_git_https_credentials_missing(result: Optional[subprocess.CompletedProcess[str]]) -> bool:
+    text = _git_error_text(result)
+    return "SEC_E_NO_CREDENTIALS" in text or "AcquireCredentialsHandle failed" in text
 
 
 def _parse_git_status_lines(output: str) -> list[dict[str, str]]:
@@ -1092,9 +1110,11 @@ def _git_sync_status() -> dict[str, Any]:
         "head_sha": None,
         "mode": "local_git",
         "local_git_writable": None,
+        "local_git_pushable": None,
         "blocker": None,
         "pending_changes_count": 0,
         "pending_changes_preview": [],
+        "unpushed_commits_count": 0,
         "can_sync_without_git_index": False,
         "origin": {
             "present": False,
@@ -1168,6 +1188,7 @@ def _git_sync_status() -> dict[str, Any]:
                 try:
                     status["upstream_detail"]["ahead"] = int(counts[0])
                     status["upstream_detail"]["behind"] = int(counts[1])
+                    status["unpushed_commits_count"] = status["upstream_detail"]["ahead"] or 0
                 except ValueError:
                     pass
             if ahead_behind.stderr.strip():
@@ -1207,25 +1228,61 @@ def _git_sync_status() -> dict[str, Any]:
             if error_text:
                 status["diagnostics"]["warnings"].append(error_text)
 
+    if (
+        (status["pending_changes_count"] > 0 or status["unpushed_commits_count"] > 0)
+        and status["local_git_writable"] is True
+        and isinstance(status["branch"], str)
+        and status["branch"].strip()
+        and status["origin"]["present"]
+    ):
+        push_probe = _run_git_command(
+            "push",
+            "--dry-run",
+            "origin",
+            f"HEAD:refs/heads/{status['branch']}",
+        )
+        status["diagnostics"]["network_used"] = True
+        if push_probe is not None:
+            if push_probe.returncode == 0:
+                status["local_git_pushable"] = True
+            elif _is_git_https_credentials_missing(push_probe):
+                status["local_git_pushable"] = False
+                status["blocker"] = "local_git_https_credentials_missing"
+            else:
+                status["local_git_pushable"] = False
+                error_text = _git_error_text(push_probe)
+                if error_text:
+                    status["diagnostics"]["warnings"].append(error_text)
+
     github_context = _resolve_github_sync_context(status["branch"], status["origin"])
     status["can_sync_without_git_index"] = github_context["can_sync_without_git_index"]
     status["required_env_names"] = github_context["missing_env_names"]
 
     if status["mode"] != "github_api_required":
-        if status["local_git_writable"] is True:
+        if status["local_git_writable"] is True and status["local_git_pushable"] is not False:
             status["mode"] = "local_git"
         elif status["can_sync_without_git_index"]:
             status["mode"] = "github_api"
         else:
-            status["mode"] = "github_api_required" if status["local_git_writable"] is False else "local_git"
+            if status["local_git_writable"] is False or status["local_git_pushable"] is False:
+                status["mode"] = "github_api_required"
+            else:
+                status["mode"] = "local_git"
 
-    if status["mode"] in {"github_api", "github_api_required"} and not status["can_sync_without_git_index"]:
+    if status["pending_changes_count"] == 0 and status["unpushed_commits_count"] > 0:
+        if status["blocker"] is None:
+            status["blocker"] = "unpushed_commits_pending"
+    elif status["pending_changes_count"] == 0:
+        status["blocker"] = "no_pending_changes"
+    elif (
+        status["blocker"] != "local_git_https_credentials_missing"
+        and status["mode"] in {"github_api", "github_api_required"}
+        and not status["can_sync_without_git_index"]
+    ):
         status["blocker"] = "github_api_credentials_missing"
 
     if status["blocker"] is None:
-        if status["pending_changes_count"] == 0:
-            status["blocker"] = "no_pending_changes"
-        elif not status["origin"]["present"]:
+        if not status["origin"]["present"]:
             status["blocker"] = "origin_remote_missing"
         elif not status["origin"]["github_like"]:
             status["blocker"] = "origin_not_github"
@@ -1239,7 +1296,7 @@ def _git_sync_status() -> dict[str, Any]:
 
     status["manual_instructions"] = [
         "1. If local git works, run: git add -A && git commit -m \"<message>\" && git push",
-        "2. If local git is blocked, export the GitHub API env vars and run: python agents/orchestrator_codex.py sync \"<message>\"",
+        "2. If local git push is blocked by HTTPS credentials, use a shell where git push already works or export the GitHub API env vars and run: python agents/orchestrator_codex.py sync \"<message>\"",
         "3. If API sync still cannot run, create the commit manually from the same branch and push it.",
     ]
     return status
@@ -1498,17 +1555,45 @@ def sync_changes(message: str, *, dry_run: bool = False) -> dict[str, Any]:
         "blocker": sync_status.get("blocker"),
         "pending_changes_count": sync_status.get("pending_changes_count"),
         "pending_changes_preview": sync_status.get("pending_changes_preview"),
+        "unpushed_commits_count": sync_status.get("unpushed_commits_count"),
         "can_sync_without_git_index": sync_status.get("can_sync_without_git_index"),
         "dry_run": dry_run,
         "performed_via": None,
+        "commit_created": False,
         "manual_instructions": sync_status.get("manual_instructions", []),
     }
 
-    if result["pending_changes_count"] == 0:
+    has_unpushed_commits = isinstance(result["unpushed_commits_count"], int) and result["unpushed_commits_count"] > 0
+
+    if result["pending_changes_count"] == 0 and not has_unpushed_commits:
         result["outcome"] = "noop"
         return result
 
     if sync_status.get("mode") == "local_git":
+        if result["pending_changes_count"] == 0 and has_unpushed_commits:
+            if dry_run:
+                result["outcome"] = "dry_run"
+                result["performed_via"] = "local_git"
+                result["planned_commands"] = ["git push"]
+                return result
+
+            push_result = _run_git_command("push")
+            if push_result is None:
+                raise HarnessError("git is not available in PATH.")
+            if push_result.returncode != 0:
+                if _is_git_https_credentials_missing(push_result):
+                    result["mode"] = "github_api_required"
+                    result["blocker"] = "local_git_https_credentials_missing"
+                    result["performed_via"] = "local_git"
+                    result["outcome"] = "blocked"
+                    return result
+                raise HarnessError(_git_error_text(push_result) or "git push failed.")
+
+            result["outcome"] = "synced"
+            result["performed_via"] = "local_git"
+            result["mode"] = "local_git"
+            return result
+
         if dry_run:
             result["outcome"] = "dry_run"
             result["performed_via"] = "local_git"
@@ -1535,11 +1620,22 @@ def sync_changes(message: str, *, dry_run: bool = False) -> dict[str, Any]:
                     result["performed_via"] = "local_git"
                     return result
                 raise HarnessError(commit_error or "git commit failed.")
+            result["commit_created"] = True
+
+            refreshed_head_sha = _run_git_command("rev-parse", "--short", "HEAD")
+            if refreshed_head_sha and refreshed_head_sha.returncode == 0:
+                result["head_sha"] = refreshed_head_sha.stdout.strip() or result["head_sha"]
 
             push_result = _run_git_command("push")
             if push_result is None:
                 raise HarnessError("git is not available in PATH.")
             if push_result.returncode != 0:
+                if _is_git_https_credentials_missing(push_result):
+                    result["mode"] = "github_api_required"
+                    result["blocker"] = "local_git_https_credentials_missing"
+                    result["performed_via"] = "local_git"
+                    result["outcome"] = "blocked"
+                    return result
                 raise HarnessError(_git_error_text(push_result) or "git push failed.")
 
             result["outcome"] = "synced"
@@ -1812,7 +1908,7 @@ def cmd_status() -> None:
 def cmd_sync(message: str, *, dry_run: bool) -> None:
     result = sync_changes(message, dry_run=dry_run)
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    if result.get("outcome") == "blocked":
+    if result.get("outcome") == "blocked" and not dry_run:
         blocker = result.get("blocker") or "sync_blocked"
         raise HarnessError(f"Sync blocked: {blocker}")
 

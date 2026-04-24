@@ -6,6 +6,7 @@ export type CountryCode =
   | "IT"
   | "ES"
   | "NL"
+  | "HU"
   | "US"
   | "KR"
   | "TW"
@@ -44,6 +45,7 @@ export type Airport = {
   latitude: number;
   longitude: number;
   hubScore: number;
+  corridorScore?: number;
 };
 
 export type CountryProfile = {
@@ -53,6 +55,14 @@ export type CountryProfile = {
   airportCodes: string[];
   summary: string;
 };
+
+type GatewayExpansionOptions = {
+  includeBudgetCorridors?: boolean;
+};
+
+const EUROPE_COUNTRY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL", "HU"];
+const EUROPE_GATEWAY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL"];
+const EUROPE_BUDGET_CORRIDOR_CODES: CountryCode[] = ["HU"];
 
 export const CABIN_CLASS_OPTIONS: Array<{ value: CabinClassKey; label: string; hint: string }> = [
   { value: "economy", label: "Economy", hint: "最安重視の基本設定" },
@@ -151,6 +161,13 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     region: "西ヨーロッパ",
     airportCodes: ["AMS", "EIN"],
     summary: "アムステルダム中心に補助ハブを1つ追加",
+  },
+  {
+    code: "HU",
+    name: "ハンガリー",
+    region: "中央ヨーロッパ",
+    airportCodes: ["BUD"],
+    summary: "中欧の価格重視 gateway として比較に加える",
   },
   {
     code: "US",
@@ -307,6 +324,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 51.1537,
     longitude: -0.1821,
     hubScore: 4,
+    corridorScore: 5,
   },
   MAN: {
     code: "MAN",
@@ -317,6 +335,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 53.365,
     longitude: -2.2728,
     hubScore: 4,
+    corridorScore: 3,
   },
   FRA: {
     code: "FRA",
@@ -347,6 +366,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 52.3667,
     longitude: 13.5033,
     hubScore: 3,
+    corridorScore: 2,
   },
   FCO: {
     code: "FCO",
@@ -367,6 +387,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 45.63,
     longitude: 8.7231,
     hubScore: 4,
+    corridorScore: 4,
   },
   VCE: {
     code: "VCE",
@@ -377,6 +398,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 45.5053,
     longitude: 12.3519,
     hubScore: 3,
+    corridorScore: 2,
   },
   MAD: {
     code: "MAD",
@@ -397,6 +419,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 41.2974,
     longitude: 2.0833,
     hubScore: 5,
+    corridorScore: 3,
   },
   AGP: {
     code: "AGP",
@@ -407,6 +430,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 36.6749,
     longitude: -4.4991,
     hubScore: 3,
+    corridorScore: 2,
   },
   AMS: {
     code: "AMS",
@@ -417,6 +441,7 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 52.3105,
     longitude: 4.7683,
     hubScore: 5,
+    corridorScore: 3,
   },
   EIN: {
     code: "EIN",
@@ -427,6 +452,18 @@ export const AIRPORTS: Record<string, Airport> = {
     latitude: 51.4501,
     longitude: 5.3745,
     hubScore: 3,
+    corridorScore: 4,
+  },
+  BUD: {
+    code: "BUD",
+    city: "ブダペスト",
+    name: "ブダペスト空港",
+    countryCode: "HU",
+    countryName: "ハンガリー",
+    latitude: 47.4369,
+    longitude: 19.2556,
+    hubScore: 3,
+    corridorScore: 5,
   },
   JFK: {
     code: "JFK",
@@ -598,25 +635,35 @@ export function getAirportsForCountry(code: CountryCode): Airport[] {
   return getCountryProfile(code).airportCodes.map((airportCode) => AIRPORTS[airportCode]);
 }
 
-export function getGatewayCountriesForDestinationCodes(countryCodes: CountryCode[]): CountryProfile[] {
+export function isEuropeanCountryCode(countryCode: CountryCode): boolean {
+  return EUROPE_COUNTRY_CODES.includes(countryCode);
+}
+
+export function getGatewayCountriesForDestinationCodes(
+  countryCodes: CountryCode[],
+  options: GatewayExpansionOptions = {},
+): CountryProfile[] {
   const expandedCountryCodes = new Set<CountryCode>(countryCodes);
-  const shouldExpandToEurope = countryCodes.some((countryCode) =>
-    getCountryProfile(countryCode).region.includes("ヨーロッパ"),
-  );
+  const shouldExpandToEurope = countryCodes.some((countryCode) => isEuropeanCountryCode(countryCode));
 
   if (shouldExpandToEurope) {
-    COUNTRY_PROFILES.filter((country) => country.region.includes("ヨーロッパ")).forEach((country) =>
-      expandedCountryCodes.add(country.code),
-    );
+    EUROPE_GATEWAY_CODES.forEach((countryCode) => expandedCountryCodes.add(countryCode));
+
+    if (options.includeBudgetCorridors) {
+      EUROPE_BUDGET_CORRIDOR_CODES.forEach((countryCode) => expandedCountryCodes.add(countryCode));
+    }
   }
 
   return COUNTRY_PROFILES.filter((country) => expandedCountryCodes.has(country.code));
 }
 
-export function getGatewayAirportsForDestinationCodes(countryCodes: CountryCode[]): Airport[] {
+export function getGatewayAirportsForDestinationCodes(
+  countryCodes: CountryCode[],
+  options: GatewayExpansionOptions = {},
+): Airport[] {
   const seenAirportCodes = new Set<string>();
 
-  return getGatewayCountriesForDestinationCodes(countryCodes)
+  return getGatewayCountriesForDestinationCodes(countryCodes, options)
     .flatMap((country) => getAirportsForCountry(country.code))
     .filter((airport) => {
       if (seenAirportCodes.has(airport.code)) {

@@ -4,18 +4,21 @@ This repository contains the Maison Passage Gateway Pair Explorer and the local 
 
 ## What This Builds
 
-Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
+Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, and now adds Europe-only low-cost corridor gateways such as Budapest when non-direct routing is allowed. It finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
 
 The current app supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
 
 The planner now also separates the selected stay countries from any automatically expanded gateway countries before search, so the traveler can see exactly how the international entry and exit pool is being widened.
+
+The current deterministic estimator is also more realistic for Europe searches with non-direct routes allowed: it can prefer higher-stop budget corridors when those corridors materially undercut the cleaner hub-first route.
 
 The current approved roadmap is:
 
 - `Sprint 5`: Grand Tour Ledger Redesign
 - `Sprint 6`: Gateway Pair Ticketing
 - `Sprint 7`: Bauhaus Motion Refresh
-- `Sprint 8`: Live Fare Enrichment
+- `Sprint 8`: Europe Corridor Overlay
+- `Sprint 9`: Live Fare Enrichment
 
 ## Repository Layout
 

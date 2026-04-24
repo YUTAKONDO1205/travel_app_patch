@@ -1,0 +1,40 @@
+{
+  "sprint": 8,
+  "implemented": [
+    "Added a Europe-only corridor overlay that expands the gateway pool with Hungary and Budapest when non-direct comparison is allowed.",
+    "Introduced corridor-aware pricing profiles so higher-stop budget routes can undercut cleaner hub-first routes in deterministic estimates.",
+    "Added direction-aware stay-country weighting so outbound still prefers headline stay countries while return exits can shift to a cheaper gateway such as Budapest.",
+    "Updated the planner smoke coverage to assert Hungary gateway expansion and a Western Europe corridor regression scenario that now resolves to FUK→LGW and BUD→FUK.",
+    "Updated the product spec, design notes, and README files so Sprint 8 is now Europe Corridor Overlay and live fare enrichment moves to Sprint 9."
+  ],
+  "known_issues": [
+    "Fare outputs remain deterministic estimates; live provider integration is still out of scope until Sprint 9.",
+    "The corridor overlay is intentionally curated and Europe-only for now, so other regions still use the older representative-airport model.",
+    "Interactive browser automation was unavailable in this session, so verification relied on deterministic planner smoke, rendered smoke output, and production build integrity."
+  ],
+  "source_bug_ids": [],
+  "addressed_bug_ids": [],
+  "unresolved_bug_ids": [],
+  "run_instructions": {
+    "install": "npm install",
+    "dev": "npm run dev"
+  },
+  "validation": [
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:planner",
+      "result": "passed"
+    },
+    {
+      "command": "npm run smoke",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    }
+  ]
+}

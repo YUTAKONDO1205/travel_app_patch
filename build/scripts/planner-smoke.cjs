@@ -87,12 +87,40 @@ try {
 
   assert(gatewayResult, "Expected a result for Japan to Germany gateway search.");
   assert(
-    gatewayResult.gatewayCountries.some((country) => country.code === "IT"),
-    "Expected Italy to appear in the gateway search pool for Germany.",
+    gatewayResult.gatewayCountries.some((country) => country.code === "HU"),
+    "Expected Hungary to appear in the Europe corridor gateway pool when non-direct search is allowed.",
   );
   assert(
     gatewayResult.gatewayAirports.length > gatewayResult.destinationAirports.length,
     "Expected gateway airport expansion for Germany search.",
+  );
+
+  const corridorResult = planner.generateFlightSearchResult({
+    ...planner.INITIAL_FORM_STATE,
+    departureCountry: "JP",
+    destinationCountries: ["FR", "GB", "DE", "IT", "ES"],
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-07", "2026-08"],
+    stayLengthMin: "21",
+    stayLengthMax: "45",
+    passengerCount: "2",
+    cabinClass: "economy",
+    preferDirect: false,
+  });
+
+  assert(corridorResult, "Expected a result for the Western Europe corridor scenario.");
+  assert(
+    corridorResult.gatewayCountries.some((country) => country.code === "HU"),
+    "Expected corridor search to include Hungary in the gateway country pool.",
+  );
+  assert(corridorResult.bestOutbound.destination.code === "LGW", "Expected London Gatwick to win the outbound corridor estimate.");
+  assert(corridorResult.bestInbound.origin.code === "BUD", "Expected Budapest to win the return corridor estimate.");
+  assert(corridorResult.bestOutbound.stopCount >= 2, "Expected a higher-stop corridor outbound route.");
+  assert(corridorResult.bestInbound.stopCount >= 2, "Expected a higher-stop corridor return route.");
+  assert(
+    corridorResult.bestOutbound.estimateBasis.includes("corridor"),
+    "Expected the outbound estimate basis to call out corridor pricing.",
   );
 
   console.log("[planner-smoke] PASS deterministic gateway-pair planner result");

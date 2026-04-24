@@ -1,0 +1,72 @@
+{
+  "sprint": 8,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-24",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build"
+    ],
+    "notes": "Interactive browser automation was not available in this session. Validation focused on deterministic route selection, smoke rendering, and successful production build output."
+  },
+  "checks": [
+    {
+      "name": "Europe corridor overlay expands the gateway pool when non-direct search is allowed",
+      "result": "PASS",
+      "evidence": "travel-data.ts now separates Europe gateway expansion from Europe budget-corridor expansion, and planner-smoke explicitly verifies that Hungary appears in the gateway pool for a non-direct Europe search."
+    },
+    {
+      "name": "Deterministic estimates can now surface budget-corridor shapes closer to market behavior",
+      "result": "PASS",
+      "evidence": "planner-smoke now asserts that the Western Europe regression scenario resolves to an outbound FUK→LGW estimate and a return BUD→FUK estimate, both using higher-stop corridor pricing."
+    },
+    {
+      "name": "Stay countries remain legible while return exits can move to cheaper gateways",
+      "result": "PASS",
+      "evidence": "travel-planner.ts now applies direction-aware stay-country weighting so the outbound leg still prefers the selected stay countries, while the return leg is freer to exit from a cheaper corridor gateway such as Budapest."
+    },
+    {
+      "name": "Two-ticket framing and internal-travel exclusion remain intact",
+      "result": "PASS",
+      "evidence": "The app still returns separate outbound and return one-way recommendations, keeps Skyscanner handoff links, and preserves the between-ticket note that internal travel is excluded."
+    },
+    {
+      "name": "The app still renders and builds after the estimator change",
+      "result": "PASS",
+      "evidence": "npm run smoke and npm run build both passed after the corridor overlay and estimator changes. build was rerun separately from smoke to avoid the known .next concurrency conflict."
+    }
+  ],
+  "acceptance_criteria_results": [
+    {
+      "criterion": "A Europe search with non-direct routes allowed can expand to a corridor gateway such as Hungary / Budapest.",
+      "status": "PASS",
+      "evidence": "The gateway expansion now includes Hungary when non-direct Europe search is allowed, and planner-smoke verifies that behavior."
+    },
+    {
+      "criterion": "A flexible Japan to Western Europe search can surface a result shape closer to real market behavior, such as an outbound through London and a return from Budapest, instead of always preferring the nearest hub.",
+      "status": "PASS",
+      "evidence": "The deterministic regression scenario now resolves to FUK→LGW on the outbound side and BUD→FUK on the return side."
+    },
+    {
+      "criterion": "The app still frames the recommendation as two one-way tickets and keeps internal travel out of scope.",
+      "status": "PASS",
+      "evidence": "The result folio still presents separate outbound and return one-way tickets, and the between-ticket note continues to state that internal travel is excluded."
+    },
+    {
+      "criterion": "Typecheck, deterministic planner smoke, smoke render, and production build still pass after the estimator change.",
+      "status": "PASS",
+      "evidence": "npm run typecheck, npm run test:planner, npm run smoke, and npm run build all passed in build/."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Expand the corridor overlay beyond Hungary with a still-curated set of additional Europe gateways once more real-market evidence is gathered.",
+    "Add browser-based visual QA when automation is available so the planner preview and result folio can be verified end to end beyond smoke rendering.",
+    "Introduce live fare enrichment in Sprint 9 while preserving the current deterministic corridor model as the honest fallback."
+  ]
+}

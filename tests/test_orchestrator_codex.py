@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import shutil
+import subprocess
 import unittest
 import uuid
 from io import StringIO
@@ -17,6 +19,10 @@ orchestrator = importlib.import_module("agents.orchestrator_codex")
 
 def make_codex_result(stdout: str = "ok") -> CodexRunResult:
     return CodexRunResult(command=("codex", "exec"), stdout=stdout, stderr="", returncode=0)
+
+
+def make_git_result(*args: str, stdout: str = "", stderr: str = "", returncode: int = 0) -> subprocess.CompletedProcess[str]:
+    return subprocess.CompletedProcess(args=("git", *args), returncode=returncode, stdout=stdout, stderr=stderr)
 
 
 class OrchestratorCodexTestCase(unittest.TestCase):
@@ -267,23 +273,25 @@ class ContractValidationTests(OrchestratorCodexTestCase):
         self.write_json(orchestrator.evaluation_report_path(1), self.valid_report(status="PASS"))
 
         fake_sync = {
-            "git_repo": True,
             "branch": "codex/test",
+            "upstream": "origin/codex/test",
             "head_sha": "abc1234",
-            "worktree_dirty": True,
-            "upstream": {"configured": True, "ref": "origin/codex/test", "ahead": 1, "behind": 0},
+            "mode": "github_api_required",
+            "local_git_writable": False,
+            "blocker": "github_api_credentials_missing",
+            "pending_changes_count": 3,
+            "pending_changes_preview": ["README.md", "agents/README.md", "agents/orchestrator_codex.py"],
+            "can_sync_without_git_index": False,
+            "git_repo": True,
             "origin": {
                 "present": True,
                 "url": "https://github.com/example/repo.git",
                 "github_like": True,
                 "repo_slug": "example/repo",
             },
-            "local_write": {"git_dir_exists": True, "git_dir_writable": False},
-            "readiness": {
-                "push_ready_local": False,
-                "pr_ready_local": False,
-                "reasons": [".git directory is not writable by the current process"],
-            },
+            "required_env_names": ["GITHUB_TOKEN", "GH_TOKEN"],
+            "manual_instructions": ["Export GITHUB_TOKEN and retry sync."],
+            "upstream_detail": {"configured": True, "ahead": 1, "behind": 0},
             "diagnostics": {
                 "warnings": [],
                 "network_used": False,
@@ -300,8 +308,207 @@ class ContractValidationTests(OrchestratorCodexTestCase):
 
         payload = json.loads(stdout.getvalue())
         self.assertIn("sync", payload)
+        self.assertEqual(payload["branch"], "codex/test")
+        self.assertEqual(payload["upstream"], "origin/codex/test")
+        self.assertEqual(payload["head_sha"], "abc1234")
         self.assertEqual(payload["sync"]["branch"], "codex/test")
-        self.assertFalse(payload["sync"]["readiness"]["push_ready_local"])
+        self.assertEqual(payload["sync"]["mode"], "github_api_required")
+        self.assertFalse(payload["sync"]["local_git_writable"])
+        self.assertEqual(payload["sync"]["blocker"], "github_api_credentials_missing")
+        self.assertEqual(payload["sync"]["pending_changes_count"], 3)
+        self.assertFalse(payload["sync"]["can_sync_without_git_index"])
+
+    def test_cmd_plan_raises_when_planner_does_not_write_valid_spec(self) -> None:
+        with patch.object(orchestrator, "run_plan", return_value=make_codex_result()):
+            with self.assertRaises(orchestrator.HarnessError):
+                orchestrator.cmd_plan("Build a travel planner")
+
+    def test_cmd_evaluate_raises_when_report_mismatches_invocation(self) -> None:
+        self.write_json(orchestrator.spec_path(), self.valid_spec())
+        self.write_json(orchestrator.sprint_eval_path(1), self.valid_sprint_eval())
+        self.write_json(
+            orchestrator.evaluation_report_path(1),
+            self.valid_report(status="PASS", target_url="http://localhost:4000"),
+        )
+
+        with patch.object(orchestrator, "run_evaluate", return_value=make_codex_result()):
+            with self.assertRaises(orchestrator.HarnessError):
+                orchestrator.cmd_evaluate(1, "http://localhost:3000")
+
+
+class SyncAutomationTests(OrchestratorCodexTestCase):
+    def fake_git_side_effect(
+        self,
+        *,
+        add_probe: subprocess.CompletedProcess[str],
+        status_stdout: str = " M README.md\n M agents/README.md\n M agents/orchestrator_codex.py\n",
+    ):
+        def side_effect(*args: str):
+            command = tuple(args)
+            mapping = {
+                ("rev-parse", "--is-inside-work-tree"): make_git_result(*args, stdout="true\n"),
+                ("branch", "--show-current"): make_git_result(*args, stdout="codex/test\n"),
+                ("rev-parse", "--short", "HEAD"): make_git_result(*args, stdout="abc1234\n"),
+                ("status", "--porcelain", "--untracked-files=normal"): make_git_result(*args, stdout=status_stdout),
+                ("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"): make_git_result(
+                    *args, stdout="origin/codex/test\n"
+                ),
+                ("rev-list", "--left-right", "--count", "HEAD...@{u}"): make_git_result(*args, stdout="0 0\n"),
+                ("remote", "get-url", "origin"): make_git_result(
+                    *args, stdout="https://github.com/example/repo.git\n"
+                ),
+                ("add", "-A", "--dry-run"): add_probe,
+            }
+            return mapping.get(command, make_git_result(*args))
+
+        return side_effect
+
+    def test_git_sync_status_uses_local_git_mode_when_writable(self) -> None:
+        add_probe = make_git_result("add", "-A", "--dry-run", stdout="")
+        with patch.object(orchestrator, "_run_git_command", side_effect=self.fake_git_side_effect(add_probe=add_probe)), patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["mode"], "local_git")
+        self.assertTrue(sync["local_git_writable"])
+
+    def test_git_sync_status_switches_to_github_api_required_on_index_lock_denied(self) -> None:
+        add_probe = make_git_result(
+            "add",
+            "-A",
+            "--dry-run",
+            stderr="fatal: Unable to create '.git/index.lock': Permission denied",
+            returncode=1,
+        )
+        with patch.object(orchestrator, "_run_git_command", side_effect=self.fake_git_side_effect(add_probe=add_probe)), patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["mode"], "github_api_required")
+        self.assertFalse(sync["local_git_writable"])
+
+    def test_git_sync_status_reports_pending_change_count_and_preview(self) -> None:
+        add_probe = make_git_result("add", "-A", "--dry-run", stdout="")
+        status_stdout = " M README.md\n M agents/README.md\n M agents/orchestrator_codex.py\n"
+        with patch.object(
+            orchestrator,
+            "_run_git_command",
+            side_effect=self.fake_git_side_effect(add_probe=add_probe, status_stdout=status_stdout),
+        ), patch.dict(os.environ, {}, clear=True):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["pending_changes_count"], 3)
+        self.assertEqual(
+            sync["pending_changes_preview"],
+            ["README.md", "agents/README.md", "agents/orchestrator_codex.py"],
+        )
+
+    def test_git_sync_status_marks_missing_github_api_credentials(self) -> None:
+        add_probe = make_git_result(
+            "add",
+            "-A",
+            "--dry-run",
+            stderr="fatal: Unable to create '.git/index.lock': Permission denied",
+            returncode=1,
+        )
+        with patch.object(orchestrator, "_run_git_command", side_effect=self.fake_git_side_effect(add_probe=add_probe)), patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["blocker"], "github_api_credentials_missing")
+        self.assertFalse(sync["can_sync_without_git_index"])
+        self.assertIn("GITHUB_TOKEN", sync["required_env_names"])
+
+    def test_sync_changes_dry_run_does_not_call_commit_push_or_api(self) -> None:
+        fake_status = {
+            "branch": "codex/test",
+            "upstream": "origin/codex/test",
+            "head_sha": "abc1234",
+            "mode": "local_git",
+            "local_git_writable": True,
+            "blocker": None,
+            "pending_changes_count": 3,
+            "pending_changes_preview": ["README.md", "agents/README.md", "agents/orchestrator_codex.py"],
+            "can_sync_without_git_index": True,
+            "manual_instructions": [],
+        }
+        run_git = Mock()
+        github_commit = Mock()
+        github_pr = Mock()
+        with patch.object(orchestrator, "_git_sync_status", return_value=fake_status), patch.object(
+            orchestrator, "_run_git_command", run_git
+        ), patch.object(
+            orchestrator, "_sync_with_github_direct_commit", github_commit
+        ), patch.object(
+            orchestrator, "_sync_with_github_pr", github_pr
+        ):
+            result = orchestrator.sync_changes("Test sync", dry_run=True)
+
+        self.assertEqual(result["outcome"], "dry_run")
+        self.assertEqual(result["performed_via"], "local_git")
+        run_git.assert_not_called()
+        github_commit.assert_not_called()
+        github_pr.assert_not_called()
+
+    def test_github_api_dry_run_does_not_perform_api_mutations(self) -> None:
+        sync_status = {
+            "branch": "codex/test",
+            "origin": {
+                "present": True,
+                "url": "https://github.com/example/repo.git",
+                "github_like": True,
+                "repo_slug": "example/repo",
+            },
+            "manual_instructions": [],
+        }
+        github_context = {
+            "token_env_name": "GITHUB_TOKEN",
+            "token": "token",
+            "owner": "example",
+            "repo": "repo",
+            "branch": "codex/test",
+            "base_branch": "main",
+            "can_sync_without_git_index": True,
+            "missing_env_names": [],
+        }
+        read_pending = Mock(return_value=([{"path": "README.md", "change": "update"}], []))
+        get_head_sha = Mock()
+        get_tree_sha = Mock()
+        create_tree = Mock()
+        create_commit = Mock()
+        update_ref = Mock()
+        with patch.object(orchestrator, "_resolve_github_sync_context", return_value=github_context), patch.object(
+            orchestrator, "_read_pending_changes", read_pending
+        ), patch.object(
+            orchestrator, "_github_get_head_sha", get_head_sha
+        ), patch.object(
+            orchestrator, "_github_get_tree_sha", get_tree_sha
+        ), patch.object(
+            orchestrator, "_github_create_tree", create_tree
+        ), patch.object(
+            orchestrator, "_github_create_commit", create_commit
+        ), patch.object(
+            orchestrator, "_github_update_ref", update_ref
+        ):
+            result = orchestrator._sync_with_github_direct_commit(sync_status, message="API dry run", dry_run=True)
+
+        self.assertIsNone(result["blocker"])
+        self.assertEqual(result["planned_change_count"], 1)
+        read_pending.assert_called_once()
+        get_head_sha.assert_not_called()
+        get_tree_sha.assert_not_called()
+        create_tree.assert_not_called()
+        create_commit.assert_not_called()
+        update_ref.assert_not_called()
 
 
 class AutodevHarnessTests(OrchestratorCodexTestCase):
@@ -339,11 +546,90 @@ class AutodevHarnessTests(OrchestratorCodexTestCase):
                 url="http://localhost:3000",
                 startup_timeout=1,
                 replan=False,
+                auto_sync=False,
             )
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(call_counts, {"planner": 1, "generator": 1, "evaluator": 1})
         stop_dev_server.assert_called_once()
+
+    def test_autodev_auto_syncs_after_pass_when_worktree_starts_clean(self) -> None:
+        def fake_run_codex(prompt: str, **_: object) -> CodexRunResult:
+            if "planner skill" in prompt:
+                self.write_json(orchestrator.spec_path(), self.valid_spec())
+            elif "generator skill" in prompt:
+                orchestrator.BUILD_DIR.mkdir(parents=True, exist_ok=True)
+                (orchestrator.BUILD_DIR / "package.json").write_text('{"name":"trip-app"}', encoding="utf-8")
+                self.write_json(orchestrator.sprint_eval_path(1), self.valid_sprint_eval())
+            elif "evaluator skill" in prompt:
+                self.write_json(orchestrator.evaluation_report_path(1), self.valid_report(status="PASS"))
+            return make_codex_result()
+
+        sync_changes = Mock(return_value={"outcome": "synced", "performed_via": "github_api"})
+        with patch.object(orchestrator, "run_codex", side_effect=fake_run_codex), patch.object(
+            orchestrator, "install_build_dependencies", return_value=True
+        ), patch.object(
+            orchestrator, "start_dev_server", return_value=None
+        ), patch.object(
+            orchestrator, "wait_for_url", return_value=True
+        ), patch.object(
+            orchestrator, "stop_dev_server", Mock()
+        ), patch.object(
+            orchestrator, "_read_pending_changes", return_value=([], [])
+        ), patch.object(
+            orchestrator, "sync_changes", sync_changes
+        ):
+            exit_code = orchestrator.cmd_autodev(
+                description="Build a web app that organizes travel options from user inputs.",
+                sprint=1,
+                max_iterations=3,
+                url="http://localhost:3000",
+                startup_timeout=1,
+                replan=False,
+                auto_sync=True,
+            )
+
+        self.assertEqual(exit_code, 0)
+        sync_changes.assert_called_once_with("autodev: sprint 1 attempt 1 PASS", dry_run=False)
+
+    def test_autodev_skips_auto_sync_when_worktree_started_dirty(self) -> None:
+        def fake_run_codex(prompt: str, **_: object) -> CodexRunResult:
+            if "planner skill" in prompt:
+                self.write_json(orchestrator.spec_path(), self.valid_spec())
+            elif "generator skill" in prompt:
+                orchestrator.BUILD_DIR.mkdir(parents=True, exist_ok=True)
+                (orchestrator.BUILD_DIR / "package.json").write_text('{"name":"trip-app"}', encoding="utf-8")
+                self.write_json(orchestrator.sprint_eval_path(1), self.valid_sprint_eval())
+            elif "evaluator skill" in prompt:
+                self.write_json(orchestrator.evaluation_report_path(1), self.valid_report(status="PASS"))
+            return make_codex_result()
+
+        sync_changes = Mock()
+        with patch.object(orchestrator, "run_codex", side_effect=fake_run_codex), patch.object(
+            orchestrator, "install_build_dependencies", return_value=True
+        ), patch.object(
+            orchestrator, "start_dev_server", return_value=None
+        ), patch.object(
+            orchestrator, "wait_for_url", return_value=True
+        ), patch.object(
+            orchestrator, "stop_dev_server", Mock()
+        ), patch.object(
+            orchestrator, "_read_pending_changes", return_value=([{"path": "README.md", "change": "update"}], [])
+        ), patch.object(
+            orchestrator, "sync_changes", sync_changes
+        ):
+            exit_code = orchestrator.cmd_autodev(
+                description="Build a web app that organizes travel options from user inputs.",
+                sprint=1,
+                max_iterations=3,
+                url="http://localhost:3000",
+                startup_timeout=1,
+                replan=False,
+                auto_sync=True,
+            )
+
+        self.assertEqual(exit_code, 0)
+        sync_changes.assert_not_called()
 
     def test_autodev_retries_with_source_bug_ids_and_survives_pass_overwrite(self) -> None:
         evaluator_calls = 0
@@ -392,6 +678,7 @@ class AutodevHarnessTests(OrchestratorCodexTestCase):
                 url="http://localhost:3000",
                 startup_timeout=1,
                 replan=False,
+                auto_sync=False,
             )
 
         self.assertEqual(exit_code, 0)
@@ -439,6 +726,7 @@ class AutodevHarnessTests(OrchestratorCodexTestCase):
                 url="http://localhost:3000",
                 startup_timeout=1,
                 replan=False,
+                auto_sync=False,
             )
 
         self.assertEqual(exit_code, 1)
@@ -475,6 +763,7 @@ class AutodevHarnessTests(OrchestratorCodexTestCase):
                     url="http://localhost:3000",
                     startup_timeout=1,
                     replan=False,
+                    auto_sync=False,
                 )
 
 

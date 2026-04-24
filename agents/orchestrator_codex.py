@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -12,8 +13,9 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, TextIO
+from urllib.parse import quote
 from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 try:
     from .codex_runner import CodexRunResult, CodexRunnerError, run_codex
@@ -30,6 +32,11 @@ SKILLS_DIR = ROOT / ".agents" / "skills"
 PLANNER_SKILL_PATH = SKILLS_DIR / "planner" / "SKILL.md"
 GENERATOR_SKILL_PATH = SKILLS_DIR / "generator" / "SKILL.md"
 EVALUATOR_SKILL_PATH = SKILLS_DIR / "evaluator" / "SKILL.md"
+GITHUB_TOKEN_ENV_CANDIDATES = ("GITHUB_TOKEN", "GH_TOKEN")
+GITHUB_OWNER_ENV = "GITHUB_OWNER"
+GITHUB_REPO_ENV = "GITHUB_REPO"
+GITHUB_BRANCH_ENV = "GITHUB_SYNC_BRANCH"
+GITHUB_BASE_BRANCH_ENV = "GITHUB_BASE_BRANCH"
 
 
 class HarnessError(RuntimeError):
@@ -787,17 +794,25 @@ def stop_dev_server(handle: Optional[DevServerHandle]) -> None:
 def cmd_plan(description: str) -> None:
     result = run_plan(description)
     print_run_result(result)
+    validate_spec_file()
 
 
 def cmd_generate(sprint: int) -> None:
+    validate_spec_file()
     result = run_generate(sprint)
     print_run_result(result)
-    validate_sprint_eval(sprint)
+    sprint_eval = validate_sprint_eval(sprint)
+    validate_retry_bug_linkage(sprint_eval, None, path=sprint_eval_path(sprint))
 
 
 def cmd_evaluate(sprint: int, url: str) -> None:
+    validate_spec_file()
+    validate_sprint_eval(sprint)
     result = run_evaluate(sprint, url)
     print_run_result(result)
+    report = validate_evaluation_report(sprint, url)
+    if report.get("status") == "FAIL":
+        raise HarnessError(f"Evaluator reported FAIL for sprint {sprint}.")
 
 
 def cmd_autodev(
@@ -807,6 +822,7 @@ def cmd_autodev(
     url: str,
     startup_timeout: int,
     replan: bool,
+    auto_sync: bool,
 ) -> int:
     if max_iterations < 1:
         raise HarnessError("--max-iterations must be at least 1.")
@@ -815,6 +831,19 @@ def cmd_autodev(
         raise HarnessError("--startup-timeout must be at least 1.")
 
     ensure_pipeline_dirs()
+
+    baseline_pending_changes: list[dict[str, str]] = []
+    auto_sync_allowed = auto_sync
+    if auto_sync:
+        baseline_pending_changes, _ = _read_pending_changes()
+        if baseline_pending_changes:
+            auto_sync_allowed = False
+            preview = ", ".join(item["path"] for item in baseline_pending_changes[:5])
+            print(
+                "[autodev] Auto-sync is disabled for this run because the worktree already had pending changes "
+                f"before generation: {preview}",
+                file=sys.stderr,
+            )
 
     if replan or not spec_path().exists():
         print(f"[autodev] Planning sprint {sprint}.")
@@ -873,6 +902,23 @@ def cmd_autodev(
         report = validate_evaluation_report(sprint, url)
         status = report["status"]
         if status == "PASS":
+            if auto_sync:
+                if auto_sync_allowed:
+                    sync_message = f"autodev: sprint {sprint} attempt {attempt} PASS"
+                    sync_result = sync_changes(sync_message, dry_run=False)
+                    sync_outcome = sync_result.get("outcome")
+                    if sync_outcome == "synced":
+                        print(f"[autodev] Auto-sync completed via {sync_result.get('performed_via')}.")
+                    elif sync_outcome == "noop":
+                        print("[autodev] Auto-sync found no pending changes to publish.")
+                    else:
+                        blocker = sync_result.get("blocker") or "unknown"
+                        print(f"[autodev] Auto-sync could not publish this PASS run: {blocker}", file=sys.stderr)
+                else:
+                    print(
+                        "[autodev] PASS was reached, but auto-sync was skipped to avoid committing pre-existing worktree changes.",
+                        file=sys.stderr,
+                    )
             print(f"[autodev] Sprint {sprint} passed on iteration {attempt}.")
             return 0
 
@@ -926,22 +972,6 @@ def _run_git_command(*args: str) -> Optional[subprocess.CompletedProcess[str]]:
     )
 
 
-def _probe_git_writeability(git_dir: Path) -> bool:
-    probe_path = git_dir / f".codex-write-probe-{os.getpid()}"
-    try:
-        with probe_path.open("x", encoding="utf-8") as handle:
-            handle.write("probe")
-    except OSError:
-        return False
-    finally:
-        try:
-            probe_path.unlink()
-        except OSError:
-            pass
-
-    return True
-
-
 def _extract_repo_slug(remote_url: str) -> Optional[str]:
     patterns = [
         r"github\.com[:/](?P<slug>[^/\s]+/[^/\s]+?)(?:\.git)?$",
@@ -954,32 +984,130 @@ def _extract_repo_slug(remote_url: str) -> Optional[str]:
     return None
 
 
+def _git_error_text(result: Optional[subprocess.CompletedProcess[str]]) -> str:
+    if result is None:
+        return ""
+    return "\n".join(part.strip() for part in (result.stdout, result.stderr) if part and part.strip())
+
+
+def _is_index_lock_permission_denied(result: Optional[subprocess.CompletedProcess[str]]) -> bool:
+    text = _git_error_text(result)
+    return "index.lock" in text and "Permission denied" in text
+
+
+def _parse_git_status_lines(output: str) -> list[dict[str, str]]:
+    changes: list[dict[str, str]] = []
+    for raw_line in output.splitlines():
+        line = raw_line.rstrip()
+        if not line:
+            continue
+        if line.startswith("?? "):
+            path_text = line[3:].strip()
+            if path_text:
+                changes.append({"path": path_text, "change": "add"})
+            continue
+
+        if len(line) < 4:
+            continue
+
+        staged_marker = line[0]
+        unstaged_marker = line[1]
+        path_text = line[3:].strip()
+        if " -> " in path_text and (staged_marker == "R" or unstaged_marker == "R"):
+            old_path, new_path = [item.strip() for item in path_text.split(" -> ", 1)]
+            if old_path:
+                changes.append({"path": old_path, "change": "delete"})
+            if new_path:
+                changes.append({"path": new_path, "change": "add"})
+            continue
+
+        if not path_text:
+            continue
+
+        if staged_marker == "D" or unstaged_marker == "D":
+            changes.append({"path": path_text, "change": "delete"})
+        else:
+            changes.append({"path": path_text, "change": "update"})
+
+    return changes
+
+
+def _read_pending_changes() -> tuple[list[dict[str, str]], list[str]]:
+    result = _run_git_command("status", "--porcelain", "--untracked-files=normal")
+    if result is None:
+        return [], []
+
+    warnings: list[str] = []
+    if result.stderr.strip():
+        warnings.append(result.stderr.strip())
+    if result.returncode != 0:
+        return [], warnings
+
+    return _parse_git_status_lines(result.stdout), warnings
+
+
+def _resolve_github_sync_context(branch: Optional[str], origin: dict[str, Any]) -> dict[str, Any]:
+    token_env_name = next(
+        (name for name in GITHUB_TOKEN_ENV_CANDIDATES if os.environ.get(name, "").strip()),
+        None,
+    )
+    token = os.environ.get(token_env_name, "").strip() if token_env_name else ""
+    repo_slug = origin.get("repo_slug") if isinstance(origin, dict) else None
+    owner = os.environ.get(GITHUB_OWNER_ENV, "").strip()
+    repo = os.environ.get(GITHUB_REPO_ENV, "").strip()
+    if not owner and isinstance(repo_slug, str) and "/" in repo_slug:
+        owner = repo_slug.split("/", 1)[0]
+    if not repo and isinstance(repo_slug, str) and "/" in repo_slug:
+        repo = repo_slug.split("/", 1)[1]
+    sync_branch = os.environ.get(GITHUB_BRANCH_ENV, "").strip() or (branch or "")
+    base_branch = os.environ.get(GITHUB_BASE_BRANCH_ENV, "").strip()
+
+    missing_env_names: list[str] = []
+    if not token:
+        missing_env_names.extend(list(GITHUB_TOKEN_ENV_CANDIDATES))
+    if not owner:
+        missing_env_names.append(GITHUB_OWNER_ENV)
+    if not repo:
+        missing_env_names.append(GITHUB_REPO_ENV)
+    if not sync_branch:
+        missing_env_names.append(GITHUB_BRANCH_ENV)
+
+    return {
+        "token_env_name": token_env_name,
+        "token": token,
+        "owner": owner or None,
+        "repo": repo or None,
+        "branch": sync_branch or None,
+        "base_branch": base_branch or None,
+        "can_sync_without_git_index": bool(token and owner and repo and sync_branch),
+        "missing_env_names": missing_env_names,
+    }
+
+
 def _git_sync_status() -> dict[str, Any]:
     status: dict[str, Any] = {
         "git_repo": False,
         "branch": None,
+        "upstream": None,
         "head_sha": None,
-        "worktree_dirty": None,
-        "upstream": {
-            "configured": False,
-            "ref": None,
-            "ahead": None,
-            "behind": None,
-        },
+        "mode": "local_git",
+        "local_git_writable": None,
+        "blocker": None,
+        "pending_changes_count": 0,
+        "pending_changes_preview": [],
+        "can_sync_without_git_index": False,
         "origin": {
             "present": False,
             "url": None,
             "github_like": False,
             "repo_slug": None,
         },
-        "local_write": {
-            "git_dir_exists": None,
-            "git_dir_writable": None,
-        },
-        "readiness": {
-            "push_ready_local": False,
-            "pr_ready_local": False,
-            "reasons": [],
+        "required_env_names": [],
+        "manual_instructions": [],
+        "upstream_detail": {
+            "configured": False,
+            "ahead": None,
+            "behind": None,
         },
         "diagnostics": {
             "warnings": [],
@@ -989,26 +1117,28 @@ def _git_sync_status() -> dict[str, Any]:
         },
     }
 
-    git_dir = ROOT / ".git"
-    status["local_write"]["git_dir_exists"] = git_dir.exists()
-    status["local_write"]["git_dir_writable"] = _probe_git_writeability(git_dir) if git_dir.exists() else None
-
     inside_worktree = _run_git_command("rev-parse", "--is-inside-work-tree")
     if inside_worktree is None:
-        status["readiness"]["reasons"].append("git is not available in PATH")
+        status["blocker"] = "git_not_available"
+        status["manual_instructions"] = [
+            "Install git in PATH or run the sync step from a git-enabled shell.",
+        ]
         return status
+
     if inside_worktree.returncode != 0 or inside_worktree.stdout.strip() != "true":
-        status["readiness"]["reasons"].append("current workspace is not inside a git worktree")
+        status["blocker"] = "not_a_git_worktree"
         if inside_worktree.stderr.strip():
             status["diagnostics"]["warnings"].append(inside_worktree.stderr.strip())
+        status["manual_instructions"] = [
+            "Run the harness inside a cloned git repository before attempting sync.",
+        ]
         return status
 
     status["git_repo"] = True
 
     branch = _run_git_command("branch", "--show-current")
     if branch and branch.returncode == 0:
-        branch_name = branch.stdout.strip() or None
-        status["branch"] = branch_name
+        status["branch"] = branch.stdout.strip() or None
         if branch.stderr.strip():
             status["diagnostics"]["warnings"].append(branch.stderr.strip())
 
@@ -1018,19 +1148,16 @@ def _git_sync_status() -> dict[str, Any]:
         if head_sha.stderr.strip():
             status["diagnostics"]["warnings"].append(head_sha.stderr.strip())
 
-    worktree = _run_git_command("status", "--porcelain", "--untracked-files=normal")
-    if worktree and worktree.returncode == 0:
-        status["worktree_dirty"] = bool(worktree.stdout.strip())
-        if worktree.stderr.strip():
-            status["diagnostics"]["warnings"].append(worktree.stderr.strip())
-    elif worktree and worktree.stderr.strip():
-        status["diagnostics"]["warnings"].append(worktree.stderr.strip())
+    pending_changes, pending_warnings = _read_pending_changes()
+    status["diagnostics"]["warnings"].extend(pending_warnings)
+    status["pending_changes_count"] = len(pending_changes)
+    status["pending_changes_preview"] = [item["path"] for item in pending_changes[:10]]
 
     upstream = _run_git_command("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
     if upstream and upstream.returncode == 0:
         upstream_ref = upstream.stdout.strip() or None
-        status["upstream"]["configured"] = upstream_ref is not None
-        status["upstream"]["ref"] = upstream_ref
+        status["upstream"] = upstream_ref
+        status["upstream_detail"]["configured"] = upstream_ref is not None
         if upstream.stderr.strip():
             status["diagnostics"]["warnings"].append(upstream.stderr.strip())
 
@@ -1039,8 +1166,8 @@ def _git_sync_status() -> dict[str, Any]:
             counts = ahead_behind.stdout.strip().split()
             if len(counts) == 2:
                 try:
-                    status["upstream"]["ahead"] = int(counts[0])
-                    status["upstream"]["behind"] = int(counts[1])
+                    status["upstream_detail"]["ahead"] = int(counts[0])
+                    status["upstream_detail"]["behind"] = int(counts[1])
                 except ValueError:
                     pass
             if ahead_behind.stderr.strip():
@@ -1065,37 +1192,399 @@ def _git_sync_status() -> dict[str, Any]:
     elif origin and origin.stderr.strip():
         status["diagnostics"]["warnings"].append(origin.stderr.strip())
 
-    reasons: list[str] = []
-    if status["local_write"]["git_dir_writable"] is False:
-        reasons.append(".git directory is not writable by the current process")
-    if status["worktree_dirty"]:
-        reasons.append("worktree has uncommitted changes")
-    if not status["upstream"]["configured"]:
-        reasons.append("no upstream branch is configured")
-    elif isinstance(status["upstream"]["behind"], int) and status["upstream"]["behind"] > 0:
-        reasons.append(
-            f"branch is behind {status['upstream']['ref']} by {status['upstream']['behind']} commit(s)"
-        )
-    if not status["origin"]["present"]:
-        reasons.append("origin remote is not configured")
-    elif not status["origin"]["github_like"]:
-        reasons.append("origin remote is not recognized as a GitHub repository")
-    if status["diagnostics"]["warnings"]:
-        reasons.append("git emitted local diagnostics; inspect sync.diagnostics.warnings")
+    add_probe = _run_git_command("add", "-A", "--dry-run")
+    if add_probe is not None:
+        if add_probe.returncode == 0:
+            status["local_git_writable"] = True
+        elif _is_index_lock_permission_denied(add_probe):
+            status["local_git_writable"] = False
+            status["mode"] = "github_api_required"
+            status["blocker"] = "local_git_index_lock_permission_denied"
+        else:
+            status["local_git_writable"] = False
+            status["blocker"] = "local_git_probe_failed"
+            error_text = _git_error_text(add_probe)
+            if error_text:
+                status["diagnostics"]["warnings"].append(error_text)
 
-    status["readiness"]["reasons"] = reasons
-    status["readiness"]["push_ready_local"] = (
-        status["git_repo"]
-        and status["local_write"]["git_dir_writable"] is not False
-        and status["worktree_dirty"] is False
-        and status["upstream"]["configured"] is True
-        and isinstance(status["upstream"]["behind"], int)
-        and status["upstream"]["behind"] == 0
-    )
-    status["readiness"]["pr_ready_local"] = (
-        status["readiness"]["push_ready_local"] and status["origin"]["github_like"] is True
-    )
+    github_context = _resolve_github_sync_context(status["branch"], status["origin"])
+    status["can_sync_without_git_index"] = github_context["can_sync_without_git_index"]
+    status["required_env_names"] = github_context["missing_env_names"]
+
+    if status["mode"] != "github_api_required":
+        if status["local_git_writable"] is True:
+            status["mode"] = "local_git"
+        elif status["can_sync_without_git_index"]:
+            status["mode"] = "github_api"
+        else:
+            status["mode"] = "github_api_required" if status["local_git_writable"] is False else "local_git"
+
+    if status["mode"] in {"github_api", "github_api_required"} and not status["can_sync_without_git_index"]:
+        status["blocker"] = "github_api_credentials_missing"
+
+    if status["blocker"] is None:
+        if status["pending_changes_count"] == 0:
+            status["blocker"] = "no_pending_changes"
+        elif not status["origin"]["present"]:
+            status["blocker"] = "origin_remote_missing"
+        elif not status["origin"]["github_like"]:
+            status["blocker"] = "origin_not_github"
+        elif not status["upstream_detail"]["configured"]:
+            status["blocker"] = "upstream_missing"
+        elif (
+            isinstance(status["upstream_detail"]["behind"], int)
+            and status["upstream_detail"]["behind"] > 0
+        ):
+            status["blocker"] = "branch_behind_upstream"
+
+    status["manual_instructions"] = [
+        "1. If local git works, run: git add -A && git commit -m \"<message>\" && git push",
+        "2. If local git is blocked, export the GitHub API env vars and run: python agents/orchestrator_codex.py sync \"<message>\"",
+        "3. If API sync still cannot run, create the commit manually from the same branch and push it.",
+    ]
     return status
+
+
+def _github_api_request(method: str, path: str, token: str, payload: Optional[dict[str, Any]] = None) -> Any:
+    url = f"https://api.github.com{path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "User-Agent": "codex-autodev-harness",
+    }
+    body = json.dumps(payload).encode("utf-8") if payload is not None else None
+    request = Request(url, data=body, headers=headers, method=method)
+    try:
+        with urlopen(request, timeout=30) as response:
+            raw = response.read()
+    except HTTPError as exc:
+        error_body = exc.read().decode("utf-8", errors="replace")
+        raise HarnessError(f"GitHub API {method} {path} failed: {exc.code} {error_body}") from exc
+    except URLError as exc:
+        raise HarnessError(f"GitHub API {method} {path} failed: {exc}") from exc
+
+    if not raw:
+        return None
+    return json.loads(raw.decode("utf-8"))
+
+
+def _github_branch_ref_path(branch: str) -> str:
+    return quote(f"heads/{branch}", safe="")
+
+
+def _github_get_head_sha(owner: str, repo: str, branch: str, token: str) -> str:
+    ref_payload = _github_api_request("GET", f"/repos/{owner}/{repo}/git/ref/{_github_branch_ref_path(branch)}", token)
+    sha = ref_payload.get("object", {}).get("sha") if isinstance(ref_payload, dict) else None
+    if not isinstance(sha, str) or not sha.strip():
+        raise HarnessError(f"Could not resolve head sha for {owner}/{repo}:{branch}.")
+    return sha
+
+
+def _github_get_tree_sha(owner: str, repo: str, commit_sha: str, token: str) -> str:
+    commit_payload = _github_api_request("GET", f"/repos/{owner}/{repo}/git/commits/{commit_sha}", token)
+    tree_sha = commit_payload.get("tree", {}).get("sha") if isinstance(commit_payload, dict) else None
+    if not isinstance(tree_sha, str) or not tree_sha.strip():
+        raise HarnessError(f"Could not resolve tree sha for commit {commit_sha}.")
+    return tree_sha
+
+
+def _github_create_blob(owner: str, repo: str, path: str, token: str) -> str:
+    file_path = ROOT / path
+    content = file_path.read_bytes()
+    payload = {
+        "content": base64.b64encode(content).decode("ascii"),
+        "encoding": "base64",
+    }
+    blob_payload = _github_api_request("POST", f"/repos/{owner}/{repo}/git/blobs", token, payload)
+    blob_sha = blob_payload.get("sha") if isinstance(blob_payload, dict) else None
+    if not isinstance(blob_sha, str) or not blob_sha.strip():
+        raise HarnessError(f"Could not create blob for {path}.")
+    return blob_sha
+
+
+def _github_create_tree(
+    owner: str,
+    repo: str,
+    base_tree_sha: str,
+    entries: list[dict[str, Any]],
+    token: str,
+) -> str:
+    tree_payload = _github_api_request(
+        "POST",
+        f"/repos/{owner}/{repo}/git/trees",
+        token,
+        {"base_tree": base_tree_sha, "tree": entries},
+    )
+    tree_sha = tree_payload.get("sha") if isinstance(tree_payload, dict) else None
+    if not isinstance(tree_sha, str) or not tree_sha.strip():
+        raise HarnessError("Could not create git tree through the GitHub API.")
+    return tree_sha
+
+
+def _github_create_commit(owner: str, repo: str, message: str, tree_sha: str, parent_sha: str, token: str) -> str:
+    commit_payload = _github_api_request(
+        "POST",
+        f"/repos/{owner}/{repo}/git/commits",
+        token,
+        {"message": message, "tree": tree_sha, "parents": [parent_sha]},
+    )
+    commit_sha = commit_payload.get("sha") if isinstance(commit_payload, dict) else None
+    if not isinstance(commit_sha, str) or not commit_sha.strip():
+        raise HarnessError("Could not create commit through the GitHub API.")
+    return commit_sha
+
+
+def _github_update_ref(owner: str, repo: str, branch: str, commit_sha: str, token: str) -> None:
+    _github_api_request(
+        "PATCH",
+        f"/repos/{owner}/{repo}/git/refs/{_github_branch_ref_path(branch)}",
+        token,
+        {"sha": commit_sha, "force": False},
+    )
+
+
+def _github_create_ref(owner: str, repo: str, branch: str, commit_sha: str, token: str) -> None:
+    _github_api_request(
+        "POST",
+        f"/repos/{owner}/{repo}/git/refs",
+        token,
+        {"ref": f"refs/heads/{branch}", "sha": commit_sha},
+    )
+
+
+def _github_get_repo_metadata(owner: str, repo: str, token: str) -> dict[str, Any]:
+    payload = _github_api_request("GET", f"/repos/{owner}/{repo}", token)
+    if not isinstance(payload, dict):
+        raise HarnessError(f"Could not read repository metadata for {owner}/{repo}.")
+    return payload
+
+
+def _github_create_pull_request(
+    owner: str,
+    repo: str,
+    *,
+    title: str,
+    body: str,
+    head: str,
+    base: str,
+    token: str,
+) -> str:
+    payload = _github_api_request(
+        "POST",
+        f"/repos/{owner}/{repo}/pulls",
+        token,
+        {"title": title, "body": body, "head": head, "base": base, "draft": True},
+    )
+    html_url = payload.get("html_url") if isinstance(payload, dict) else None
+    if not isinstance(html_url, str) or not html_url.strip():
+        raise HarnessError("Could not create pull request through the GitHub API.")
+    return html_url
+
+
+def _build_github_tree_entries(owner: str, repo: str, changes: list[dict[str, str]], token: str) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for item in changes:
+        path = item["path"].replace("\\", "/")
+        change_type = item["change"]
+        if change_type == "delete":
+            entries.append({"path": path, "mode": "100644", "type": "blob", "sha": None})
+            continue
+
+        blob_sha = _github_create_blob(owner, repo, path, token)
+        entries.append({"path": path, "mode": "100644", "type": "blob", "sha": blob_sha})
+    return entries
+
+
+def _sync_with_github_direct_commit(sync_status: dict[str, Any], *, message: str, dry_run: bool) -> dict[str, Any]:
+    github_context = _resolve_github_sync_context(sync_status.get("branch"), sync_status.get("origin", {}))
+    result = {
+        "mode": "github_api",
+        "blocker": None,
+        "dry_run": dry_run,
+        "performed_via": "github_api_direct_commit",
+        "actions": ["github_api_direct_commit"],
+        "commit_sha": None,
+        "pr_url": None,
+        "manual_instructions": sync_status.get("manual_instructions", []),
+    }
+    if not github_context["can_sync_without_git_index"]:
+        result["blocker"] = "github_api_credentials_missing"
+        result["required_env_names"] = github_context["missing_env_names"]
+        return result
+
+    owner = github_context["owner"]
+    repo = github_context["repo"]
+    branch = github_context["branch"]
+    token = github_context["token"]
+    pending_changes, _ = _read_pending_changes()
+    if dry_run:
+        result["planned_change_count"] = len(pending_changes)
+        result["planned_paths"] = [item["path"] for item in pending_changes[:10]]
+        return result
+
+    parent_sha = _github_get_head_sha(owner, repo, branch, token)
+    base_tree_sha = _github_get_tree_sha(owner, repo, parent_sha, token)
+    tree_entries = _build_github_tree_entries(owner, repo, pending_changes, token)
+    new_tree_sha = _github_create_tree(owner, repo, base_tree_sha, tree_entries, token)
+    new_commit_sha = _github_create_commit(owner, repo, message, new_tree_sha, parent_sha, token)
+    _github_update_ref(owner, repo, branch, new_commit_sha, token)
+    result["commit_sha"] = new_commit_sha
+    return result
+
+
+def _sync_with_github_pr(sync_status: dict[str, Any], *, message: str, dry_run: bool) -> dict[str, Any]:
+    github_context = _resolve_github_sync_context(sync_status.get("branch"), sync_status.get("origin", {}))
+    result = {
+        "mode": "github_api",
+        "blocker": None,
+        "dry_run": dry_run,
+        "performed_via": "github_api_pr",
+        "actions": ["github_api_pr"],
+        "commit_sha": None,
+        "pr_url": None,
+        "manual_instructions": sync_status.get("manual_instructions", []),
+    }
+    if not github_context["can_sync_without_git_index"]:
+        result["blocker"] = "github_api_credentials_missing"
+        result["required_env_names"] = github_context["missing_env_names"]
+        return result
+
+    owner = github_context["owner"]
+    repo = github_context["repo"]
+    base_branch = github_context["base_branch"]
+    current_branch = github_context["branch"]
+    token = github_context["token"]
+    pending_changes, _ = _read_pending_changes()
+    pr_branch = f"{current_branch}-codex-sync-{int(time.time())}"
+    if dry_run:
+        result["planned_change_count"] = len(pending_changes)
+        result["planned_paths"] = [item["path"] for item in pending_changes[:10]]
+        result["planned_pr_branch"] = pr_branch
+        return result
+
+    if not base_branch:
+        repo_metadata = _github_get_repo_metadata(owner, repo, token)
+        base_branch = repo_metadata.get("default_branch") if isinstance(repo_metadata.get("default_branch"), str) else current_branch
+
+    base_sha = _github_get_head_sha(owner, repo, current_branch, token)
+    _github_create_ref(owner, repo, pr_branch, base_sha, token)
+    base_tree_sha = _github_get_tree_sha(owner, repo, base_sha, token)
+    tree_entries = _build_github_tree_entries(owner, repo, pending_changes, token)
+    new_tree_sha = _github_create_tree(owner, repo, base_tree_sha, tree_entries, token)
+    new_commit_sha = _github_create_commit(owner, repo, message, new_tree_sha, base_sha, token)
+    _github_update_ref(owner, repo, pr_branch, new_commit_sha, token)
+    pr_url = _github_create_pull_request(
+        owner,
+        repo,
+        title=message,
+        body="Automated fallback PR created by the Codex harness because direct local git sync was unavailable.",
+        head=pr_branch,
+        base=base_branch,
+        token=token,
+    )
+    result["commit_sha"] = new_commit_sha
+    result["pr_url"] = pr_url
+    return result
+
+
+def sync_changes(message: str, *, dry_run: bool = False) -> dict[str, Any]:
+    sync_status = _git_sync_status()
+    result: dict[str, Any] = {
+        "branch": sync_status.get("branch"),
+        "upstream": sync_status.get("upstream"),
+        "head_sha": sync_status.get("head_sha"),
+        "mode": sync_status.get("mode"),
+        "local_git_writable": sync_status.get("local_git_writable"),
+        "blocker": sync_status.get("blocker"),
+        "pending_changes_count": sync_status.get("pending_changes_count"),
+        "pending_changes_preview": sync_status.get("pending_changes_preview"),
+        "can_sync_without_git_index": sync_status.get("can_sync_without_git_index"),
+        "dry_run": dry_run,
+        "performed_via": None,
+        "manual_instructions": sync_status.get("manual_instructions", []),
+    }
+
+    if result["pending_changes_count"] == 0:
+        result["outcome"] = "noop"
+        return result
+
+    if sync_status.get("mode") == "local_git":
+        if dry_run:
+            result["outcome"] = "dry_run"
+            result["performed_via"] = "local_git"
+            result["planned_commands"] = ["git add -A", f'git commit -m "{message}"', "git push"]
+            return result
+
+        add_result = _run_git_command("add", "-A")
+        if add_result is None:
+            raise HarnessError("git is not available in PATH.")
+        if add_result.returncode != 0:
+            if _is_index_lock_permission_denied(add_result):
+                result["mode"] = "github_api_required"
+                result["blocker"] = "local_git_index_lock_permission_denied"
+            else:
+                raise HarnessError(_git_error_text(add_result) or "git add -A failed.")
+        else:
+            commit_result = _run_git_command("commit", "-m", message)
+            if commit_result is None:
+                raise HarnessError("git is not available in PATH.")
+            if commit_result.returncode != 0:
+                commit_error = _git_error_text(commit_result)
+                if "nothing to commit" in commit_error:
+                    result["outcome"] = "noop"
+                    result["performed_via"] = "local_git"
+                    return result
+                raise HarnessError(commit_error or "git commit failed.")
+
+            push_result = _run_git_command("push")
+            if push_result is None:
+                raise HarnessError("git is not available in PATH.")
+            if push_result.returncode != 0:
+                raise HarnessError(_git_error_text(push_result) or "git push failed.")
+
+            result["outcome"] = "synced"
+            result["performed_via"] = "local_git"
+            result["mode"] = "local_git"
+            return result
+
+    if result["mode"] in {"github_api", "github_api_required"}:
+        try:
+            direct_result = _sync_with_github_direct_commit(sync_status, message=message, dry_run=dry_run)
+        except HarnessError as exc:
+            direct_result = {
+                "mode": "github_api",
+                "blocker": "github_api_direct_commit_failed",
+                "error": str(exc),
+            }
+        if direct_result.get("blocker") is None:
+            result.update(direct_result)
+            result["outcome"] = "dry_run" if dry_run else "synced"
+            return result
+
+        if direct_result.get("blocker") == "github_api_credentials_missing":
+            result.update(direct_result)
+            result["outcome"] = "blocked"
+            return result
+
+        try:
+            pr_result = _sync_with_github_pr(sync_status, message=message, dry_run=dry_run)
+        except HarnessError as exc:
+            pr_result = {
+                "mode": "github_api",
+                "blocker": "manual_sync_required",
+                "error": str(exc),
+            }
+        if pr_result.get("blocker") is None:
+            result.update(pr_result)
+            result["outcome"] = "dry_run" if dry_run else "synced"
+            return result
+
+        result.update(pr_result)
+        result["outcome"] = "blocked"
+        return result
+
+    result["outcome"] = "blocked"
+    return result
 
 
 def _safe_validation_snapshot(kind: str, path: Optional[Path]) -> dict[str, Any]:
@@ -1249,7 +1738,11 @@ def _best_effort_bug_tracking_summary(
 def cmd_status() -> None:
     latest_sprint_eval = latest_json(SPRINTS_DIR, "sprint_*_eval.json") if SPRINTS_DIR.exists() else None
     latest_evaluation_report = latest_json(EVALS_DIR, "sprint_*_report.json") if EVALS_DIR.exists() else None
+    sync = _git_sync_status()
     status = {
+        "branch": sync.get("branch"),
+        "upstream": sync.get("upstream"),
+        "head_sha": sync.get("head_sha"),
         "pipeline": {
             "spec_exists": spec_path().exists(),
             "build_exists": BUILD_DIR.exists(),
@@ -1282,7 +1775,7 @@ def cmd_status() -> None:
             "latest_sprint_eval": _safe_validation_snapshot("sprint_eval", latest_sprint_eval),
             "latest_evaluation_report": _safe_validation_snapshot("evaluation_report", latest_evaluation_report),
         },
-        "sync": _git_sync_status(),
+        "sync": sync,
         "bug_tracking": _best_effort_bug_tracking_summary(latest_sprint_eval, latest_evaluation_report),
         "agents": {
             "planner": {
@@ -1308,9 +1801,20 @@ def cmd_status() -> None:
             "entrypoint": "python agents/orchestrator_codex.py autodev \"<description>\" --sprint 1 --max-iterations 3 [--replan]",
             "replans_by_default": False,
             "loop": ["planner", "generator", "npm install", "npm run dev", "evaluator"],
+            "auto_sync_supported": True,
+            "auto_sync_trigger": "pass_only_when_worktree_started_clean",
+            "auto_sync_flag": "--auto-sync",
         },
     }
     print(json.dumps(status, indent=2, ensure_ascii=False))
+
+
+def cmd_sync(message: str, *, dry_run: bool) -> None:
+    result = sync_changes(message, dry_run=dry_run)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    if result.get("outcome") == "blocked":
+        blocker = result.get("blocker") or "sync_blocked"
+        raise HarnessError(f"Sync blocked: {blocker}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1343,6 +1847,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=120,
         help="Seconds to wait for the local dev server before continuing to evaluation",
     )
+    autodev_parser.add_argument(
+        "--auto-sync",
+        action="store_true",
+        help="After a PASS report, attempt to sync the resulting changes if the worktree was clean at the start of the run",
+    )
+
+    sync_parser = subparsers.add_parser("sync", help="Sync pending changes via local git or GitHub API fallback")
+    sync_parser.add_argument("message", help="Commit or PR title/message")
+    sync_parser.add_argument("--dry-run", action="store_true", help="Show the planned sync path without mutating git or GitHub")
 
     subparsers.add_parser("status", help="Show agent-centric pipeline status")
     return parser
@@ -1367,7 +1880,10 @@ def main() -> int:
                 url=args.url,
                 startup_timeout=args.startup_timeout,
                 replan=args.replan,
+                auto_sync=args.auto_sync,
             )
+        elif args.command == "sync":
+            cmd_sync(args.message, dry_run=args.dry_run)
         elif args.command == "status":
             cmd_status()
         else:

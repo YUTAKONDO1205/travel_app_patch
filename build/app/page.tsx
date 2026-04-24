@@ -13,6 +13,7 @@ import {
   getAirportsForCountry,
   getGatewayAirportsForDestinationCodes,
   getGatewayCountriesForDestinationCodes,
+  isEuropeanCountryCode,
   type CabinClassKey,
   type CountryCode,
   type FlexibleStayDayKey,
@@ -210,6 +211,8 @@ export default function HomePage() {
   const gatewayOnlyLabels =
     gatewayOnlyCountries.map((country) => country.name).join(" / ") || "今の組み合わせでは追加の gateway 拡張はありません。";
   const noRouteGuidance = buildNoRouteGuidance(formState);
+  const corridorModeActive =
+    !formState.preferDirect && formState.destinationCountries.some((countryCode) => isEuropeanCountryCode(countryCode));
 
   function updateFormState<Key extends keyof PlannerFormState>(key: Key, value: PlannerFormState[Key]) {
     setFormState((current) => ({
@@ -771,6 +774,17 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
+
+                  {corridorModeActive ? (
+                    <div className={styles.corridorNote} data-reveal style={revealStyle(8)}>
+                      <span>Europe corridor mode</span>
+                      <strong>非直行を許容しているため、通常の gateway に加えて Budapest のような curated corridor gateway も比較します。</strong>
+                      <p>
+                        滞在国は主目的地のまま維持しつつ、入口と出口だけ価格重視の長距離回廊まで広げて見ています。最終運賃は
+                        Skyscanner 側で確認してください。
+                      </p>
+                    </div>
+                  ) : null}
                 </article>
 
                 <div className={styles.compareBar} data-reveal style={revealStyle(9)}>

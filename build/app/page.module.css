@@ -769,6 +769,60 @@
   text-align: left;
 }
 
+.gatewayPreview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.gatewayPreviewCard {
+  min-height: 154px;
+  padding: 18px;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(245, 237, 222, 0.95)),
+    #fffaf1;
+  box-shadow: 8px 8px 0 rgba(17, 17, 17, 0.9);
+}
+
+.gatewayPreviewCard:nth-child(2) {
+  background:
+    linear-gradient(135deg, rgba(31, 85, 255, 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(245, 237, 222, 0.95));
+}
+
+.gatewayPreviewCard:nth-child(3) {
+  background:
+    linear-gradient(135deg, rgba(255, 79, 47, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 251, 246, 0.98), rgba(245, 237, 222, 0.95));
+}
+
+.gatewayPreviewCard span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.gatewayPreviewCard strong {
+  display: block;
+  margin: 8px 0 10px;
+  color: var(--ink);
+  font-family: var(--font-numeric);
+  font-size: 1.42rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.gatewayPreviewCard p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .compareBar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1235,6 +1289,7 @@
 
   .previewLegend,
   .briefRibbon,
+  .gatewayPreview,
   .compareBar,
   .resultLedger {
     grid-template-columns: 1fr;

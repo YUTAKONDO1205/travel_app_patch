@@ -9,6 +9,7 @@
 - Current pricing model: fares in the app are deterministic reference estimates unless a future live provider is added.
 - Current estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
 - Current flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.
+- Current planner clarity: before search, the form shows selected stay countries separately from any automatically expanded gateway countries so the comparison pool is explicit.
 - Current shell: the app wraps the planner in a Bauhaus-leaning neo-brutalist travel atelier built on the Grand Tour Ledger structure.
 - Current typography and motion: `Noto Sans JP` drives Japanese hierarchy, `Oswald` is reserved for numeric moments and route codes, hover states lift softly over `0.3s`, and major sections reveal with staggered spring-like motion.
 - Roadmap note: live fare enrichment now follows the gateway-pair ticketing and Bauhaus motion refresh work in Sprint 8.

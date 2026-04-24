@@ -125,7 +125,8 @@
         "The departure country expands into multiple representative airports when local data exists.",
         "Each destination country expands into inbound and outbound airport candidates.",
         "The departure country cannot also be selected as a destination country.",
-        "The UI explains how many airports are being compared."
+        "The UI explains how many airports are being compared.",
+        "Before search, the planner distinguishes selected stay countries from automatically expanded gateway countries."
       ]
     },
     {
@@ -170,6 +171,7 @@
     "The first viewport is a true cover spread with bold brand framing, concise copy, and dossier-like presentation rather than a generic hero.",
     "A proof strip appears immediately below the cover spread and surfaces trust cues such as estimate honesty, airport coverage scale, or method framing.",
     "The planner atelier contains the full overseas gateway-pair input set, including exact-date mode, flexible month mode, and stay-length range controls.",
+    "Before search, the planner distinguishes selected stay countries from the automatically expanded gateway pool so the search scope is legible.",
     "The result folio appears as the next major spread after planning interaction and frames the recommended outbound one-way, return one-way, total estimate, range, confidence metadata, and gateway summary.",
     "The story/method rail explains the two one-way gateway flow and the flexible month plus stay-window method in multiple editorial beats.",
     "The archetypes section presents at least three refined travel profiles or planning styles.",

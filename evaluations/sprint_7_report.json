@@ -31,6 +31,11 @@
       "evidence": "Buttons and tiles now use a 0.3 second lift-hover treatment, and page.tsx plus page.module.css add staggered spring-like reveal behavior for major sections with a reduced-motion fallback."
     },
     {
+      "name": "Planner preview distinguishes stay countries from gateway expansion before search",
+      "result": "PASS",
+      "evidence": "The planner form now shows a dedicated preview that separates selected stay countries, auto-expanded gateway countries, and the total airport pool so the search scope is explicit before the comparison runs."
+    },
+    {
       "name": "Gateway-pair planner behavior remains intact",
       "result": "PASS",
       "evidence": "npm run test:planner passed without changes to the planning logic, confirming that flexible months, stay windows, gateway expansion, and two-ticket outputs still work."
@@ -41,10 +46,32 @@
       "evidence": "npm run smoke and npm run build both passed after the Bauhaus Motion Refresh changes. build was run separately from smoke to avoid the known .next concurrency conflict."
     }
   ],
+  "acceptance_criteria_results": [
+    {
+      "criterion": "The shell feels materially more geometric and confident than the prior Grand Tour Ledger dossier treatment.",
+      "status": "PASS",
+      "evidence": "The shell now uses a Bauhaus-leaning neo-brutalist palette, stronger borders, harder shadows, and a less parchment-only presentation across the planner and results UI."
+    },
+    {
+      "criterion": "Numeric callouts and route codes visibly use Oswald while Japanese editorial copy uses weighted Noto Sans JP.",
+      "status": "PASS",
+      "evidence": "layout.tsx loads both Noto Sans JP and Oswald, and the UI applies Oswald to fares, route codes, and metrics while retaining weighted Noto Sans JP for Japanese hierarchy."
+    },
+    {
+      "criterion": "Buttons hover with a soft lift and stronger shadow instead of abrupt color swaps.",
+      "status": "PASS",
+      "evidence": "The updated page.module.css hover treatment uses a 0.3 second lift, scale, and shadow increase on the main interactive controls."
+    },
+    {
+      "criterion": "Major sections reveal from below with staggered spring-like motion without harming usability.",
+      "status": "PASS",
+      "evidence": "page.tsx and page.module.css now use staggered reveal timing with spring-like easing and a reduced-motion fallback, while smoke and build validation still pass."
+    }
+  ],
   "bugs": [],
   "next_actions": [
     "Add live fare enrichment in Sprint 8 without breaking the current numeric typography and result-card hierarchy.",
     "Perform a true browser-based visual QA pass when automation is available so spacing, animation timing, and mobile composition can be verified beyond smoke rendering.",
-    "Consider expanding the new geometric accent system into the outbound and inbound alternative cards with richer state feedback once live data work begins."
+    "Consider expanding the gateway preview into a richer before-search route diagram once live data work begins."
   ]
 }

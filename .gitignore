@@ -12,6 +12,7 @@ build/.npm-cache/
 .codex-publish/
 .tmp-chrome/
 .tmp-edge/
+.tmp-harness-tests/
 .pytest_cache/
 __pycache__/
 *.py[cod]

@@ -8,6 +8,8 @@ Maison Passage is a premium overseas travel planner that searches the trip as tw
 
 The current app supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
 
+The planner now also separates the selected stay countries from any automatically expanded gateway countries before search, so the traveler can see exactly how the international entry and exit pool is being widened.
+
 The current approved roadmap is:
 
 - `Sprint 5`: Grand Tour Ledger Redesign
@@ -54,6 +56,22 @@ python agents/orchestrator_codex.py autodev "Advance Maison Passage toward gatew
 ```
 
 The harness treats `specs/spec.json` as the product truth, updates `build/`, writes `sprints/sprint_N_eval.json`, and writes `evaluations/sprint_N_report.json`.
+
+The harness is organized around three local sub-agent roles:
+
+- `Planner`: expands a short request into `specs/spec.json` without over-specifying implementation details.
+- `Generator`: implements one sprint at a time and leaves a self-evaluation handoff in `sprints/`.
+- `Evaluator`: validates the sprint strictly and writes a `PASS` or `FAIL` report in `evaluations/`.
+
+The handoff contract is now bug-aware:
+
+- `Evaluator` writes structured `bugs` entries with stable `bug_id` values when a sprint fails.
+- `Generator` copies the bug ids it is responding to into `source_bug_ids`, then classifies them with `addressed_bug_ids` and `unresolved_bug_ids` in `sprints/sprint_N_eval.json`.
+- `status` surfaces the latest bug linkage so it is obvious which findings were classified, which remain open, and whether the current report, when it is `FAIL`, still matches the generator's source bug set.
+
+`python agents/orchestrator_codex.py status` now returns an agent-centric JSON view of the pipeline, including planner/generator/evaluator readiness, read/write contracts, structural validation of the latest artifacts, summary metadata for the latest sprint/report, bug-linkage summaries, local git sync readiness, and the latest evaluation status.
+
+`autodev` now reuses the existing `specs/spec.json` by default so Planner remains the spec-authoring role, while Generator and Evaluator iterate on the current sprint. Pass `--replan` when you intentionally want to regenerate the spec first.
 
 ## Current Design Direction
 

@@ -5,6 +5,7 @@
     "Switched the app typography contract to weighted Noto Sans JP for Japanese hierarchy and Oswald for numeric callouts, route codes, and fare metrics.",
     "Updated buttons, inputs, tiles, cards, and result surfaces to use stronger borders, harder shadows, tighter radii, and primary-color geometry instead of the older parchment-only luxury treatment.",
     "Added staggered spring-like reveal motion for major sections and a 0.3 second lift-hover treatment for interactive controls.",
+    "Added a planner-side gateway preview that separates selected stay countries from automatically expanded gateway countries before the user runs the comparison.",
     "Updated the spec, design document, and README files so the current design and roadmap are aligned with the Bauhaus Motion Refresh sprint."
   ],
   "known_issues": [
@@ -12,6 +13,9 @@
     "The app remains deterministic for fares and still hands off to Skyscanner for live confirmation.",
     "Some premium dossier copy remains intentionally intact, so the visual language is now a hybrid of travel atelier branding and the earlier Grand Tour Ledger structure."
   ],
+  "source_bug_ids": [],
+  "addressed_bug_ids": [],
+  "unresolved_bug_ids": [],
   "run_instructions": {
     "install": "npm install",
     "dev": "npm run dev"

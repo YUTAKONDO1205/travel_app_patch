@@ -4,6 +4,7 @@ import { startTransition, useEffect, useRef, useState, type CSSProperties } from
 import styles from "./page.module.css";
 import {
   CABIN_CLASS_OPTIONS,
+  COUNTRY_LABELS,
   COUNTRY_OPTIONS,
   FLEXIBLE_MONTH_OPTIONS,
   FLEXIBLE_STAY_DAY_OPTIONS,
@@ -11,6 +12,7 @@ import {
   STAY_LENGTH_OPTIONS,
   getAirportsForCountry,
   getGatewayAirportsForDestinationCodes,
+  getGatewayCountriesForDestinationCodes,
   type CabinClassKey,
   type CountryCode,
   type FlexibleStayDayKey,
@@ -183,7 +185,21 @@ export default function HomePage() {
   const previewOutboundDate = `${formState.targetMonths[0] ?? "2026-07"}-15`;
   const returnWindowPreview = formState.dateSearchMode === "exact" ? returnDate : getReturnWindowLabel(previewOutboundDate, formState);
   const departureAirportCount = formState.departureCountry ? getAirportsForCountry(formState.departureCountry).length : 0;
+  const selectedDestinationAirportCount = formState.destinationCountries.reduce(
+    (count, countryCode) => count + getAirportsForCountry(countryCode).length,
+    0,
+  );
+  const gatewayCountries = getGatewayCountriesForDestinationCodes(formState.destinationCountries);
+  const gatewayOnlyCountries = gatewayCountries.filter((country) => !formState.destinationCountries.includes(country.code));
+  const gatewayOnlyAirportCount = gatewayOnlyCountries.reduce(
+    (count, country) => count + getAirportsForCountry(country.code).length,
+    0,
+  );
   const destinationAirportCount = getGatewayAirportsForDestinationCodes(formState.destinationCountries).length;
+  const selectedDestinationLabels =
+    formState.destinationCountries.map((countryCode) => COUNTRY_LABELS[countryCode]).join(" / ") || "滞在国を選ぶとここに表示します。";
+  const gatewayOnlyLabels =
+    gatewayOnlyCountries.map((country) => country.name).join(" / ") || "今の組み合わせでは追加の gateway 拡張はありません。";
   const noRouteGuidance = buildNoRouteGuidance(formState);
 
   function updateFormState<Key extends keyof PlannerFormState>(key: Key, value: PlannerFormState[Key]) {
@@ -718,9 +734,37 @@ export default function HomePage() {
                       );
                     })}
                   </div>
+
+                  <div className={styles.gatewayPreview} data-reveal style={revealStyle(8)}>
+                    <div className={styles.gatewayPreviewCard}>
+                      <span>Stay countries</span>
+                      <strong>
+                        {formState.destinationCountries.length}カ国 / {selectedDestinationAirportCount}空港
+                      </strong>
+                      <p>{selectedDestinationLabels}</p>
+                    </div>
+                    <div className={styles.gatewayPreviewCard}>
+                      <span>Auto gateway</span>
+                      <strong>
+                        {gatewayOnlyCountries.length}カ国 / {gatewayOnlyAirportCount}空港
+                      </strong>
+                      <p>{gatewayOnlyLabels}</p>
+                    </div>
+                    <div className={styles.gatewayPreviewCard}>
+                      <span>Total pool</span>
+                      <strong>
+                        {gatewayCountries.length}カ国 / {destinationAirportCount}空港
+                      </strong>
+                      <p>
+                        {gatewayOnlyCountries.length
+                          ? "滞在国はそのまま、入口と出口の候補だけを周辺 gateway に広げて比較します。"
+                          : "選択した滞在国の代表空港だけで比較します。"}
+                      </p>
+                    </div>
+                  </div>
                 </article>
 
-                <div className={styles.compareBar} data-reveal style={revealStyle(8)}>
+                <div className={styles.compareBar} data-reveal style={revealStyle(9)}>
                   <div className={styles.compareMeta}>
                     <span>現在の探索</span>
                     <strong>{dateSearchSummary}</strong>

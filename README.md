@@ -4,7 +4,7 @@ This repository contains the Maison Passage Gateway Pair Explorer and the local 
 
 ## What This Builds
 
-Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, and now adds Europe-only low-cost corridor gateways such as Budapest when non-direct routing is allowed. It finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
+Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, and now adds Europe-only low-cost corridor gateways such as Budapest and Prague when non-direct routing is allowed. It finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
 
 The current app supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
 

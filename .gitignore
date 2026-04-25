@@ -4,6 +4,7 @@ build/node_modules/
 
 # Next.js and generated build output
 build/.next/
+build/.next-smoke/
 build/out/
 build/tsconfig.tsbuildinfo
 
@@ -31,6 +32,9 @@ pnpm-debug.log*
 build/.env
 build/.env.*
 !build/.env.example
+.env.sync.local
+.env.sync.local/
+.env.sync.local.txt
 
 # OS/editor noise
 .DS_Store

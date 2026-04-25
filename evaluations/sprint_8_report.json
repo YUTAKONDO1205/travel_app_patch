@@ -2,7 +2,7 @@
   "sprint": 8,
   "target_url": "http://localhost:3000",
   "status": "PASS",
-  "checked_at": "2026-04-24",
+  "checked_at": "2026-04-25",
   "validation_method": {
     "playwright_mcp_available": false,
     "agent_browser_available": false,
@@ -18,12 +18,12 @@
     {
       "name": "Europe corridor overlay expands the gateway pool when non-direct search is allowed",
       "result": "PASS",
-      "evidence": "travel-data.ts now separates Europe gateway expansion from Europe budget-corridor expansion, and planner-smoke explicitly verifies that Hungary appears in the gateway pool for a non-direct Europe search."
+      "evidence": "travel-data.ts now separates Europe gateway expansion from Europe budget-corridor expansion, and planner-smoke explicitly verifies that both Hungary and Czech Republic appear in the gateway pool for a non-direct Europe search."
     },
     {
       "name": "Deterministic estimates can now surface budget-corridor shapes closer to market behavior",
       "result": "PASS",
-      "evidence": "planner-smoke now asserts that the Western Europe regression scenario resolves to an outbound FUK→LGW estimate and a return BUD→FUK estimate, both using higher-stop corridor pricing."
+      "evidence": "planner-smoke now asserts that the Western Europe regression scenario resolves to an outbound FUK→LGW estimate and a return BUD→FUK estimate, both using higher-stop corridor pricing, while also asserting the expanded CZ corridor pool."
     },
     {
       "name": "Stay countries remain legible while return exits can move to cheaper gateways",
@@ -38,14 +38,14 @@
     {
       "name": "The app still renders and builds after the estimator change",
       "result": "PASS",
-      "evidence": "npm run smoke and npm run build both passed after the corridor overlay and estimator changes. build was rerun separately from smoke to avoid the known .next concurrency conflict."
+      "evidence": "npm run smoke and npm run build both passed after the corridor overlay refinement. smoke now runs through an isolated .next-smoke dist directory, so its dev artifacts no longer contaminate the production build output."
     }
   ],
   "acceptance_criteria_results": [
     {
-      "criterion": "A Europe search with non-direct routes allowed can expand to a corridor gateway such as Hungary / Budapest.",
+      "criterion": "A Europe search with non-direct routes allowed can expand to curated corridor gateways such as Hungary / Budapest and Czech Republic / Prague.",
       "status": "PASS",
-      "evidence": "The gateway expansion now includes Hungary when non-direct Europe search is allowed, and planner-smoke verifies that behavior."
+      "evidence": "The gateway expansion now includes both Hungary and Czech Republic when non-direct Europe search is allowed, and planner-smoke verifies that behavior."
     },
     {
       "criterion": "A flexible Japan to Western Europe search can surface a result shape closer to real market behavior, such as an outbound through London and a return from Budapest, instead of always preferring the nearest hub.",
@@ -65,7 +65,7 @@
   ],
   "bugs": [],
   "next_actions": [
-    "Expand the corridor overlay beyond Hungary with a still-curated set of additional Europe gateways once more real-market evidence is gathered.",
+    "Continue expanding the corridor overlay beyond Hungary and Czech Republic with a still-curated set of additional Europe gateways once more real-market evidence is gathered.",
     "Add browser-based visual QA when automation is available so the planner preview and result folio can be verified end to end beyond smoke rendering.",
     "Introduce live fare enrichment in Sprint 9 while preserving the current deterministic corridor model as the honest fallback."
   ]

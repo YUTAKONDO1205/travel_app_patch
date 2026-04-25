@@ -1,11 +1,11 @@
 {
   "sprint": 8,
   "implemented": [
-    "Added a Europe-only corridor overlay that expands the gateway pool with Hungary and Budapest when non-direct comparison is allowed.",
+    "Expanded the Europe-only corridor overlay so the non-direct gateway pool now includes curated budget gateways for Hungary / Budapest and Czech Republic / Prague.",
     "Introduced corridor-aware pricing profiles so higher-stop budget routes can undercut cleaner hub-first routes in deterministic estimates.",
     "Added direction-aware stay-country weighting so outbound still prefers headline stay countries while return exits can shift to a cheaper gateway such as Budapest.",
-    "Updated the planner smoke coverage to assert Hungary gateway expansion and a Western Europe corridor regression scenario that now resolves to FUK→LGW and BUD→FUK.",
-    "Updated the product spec, design notes, and README files so Sprint 8 is now Europe Corridor Overlay and live fare enrichment moves to Sprint 9."
+    "Updated the planner smoke coverage to assert both Hungary and Czech Republic gateway expansion while preserving the Western Europe corridor regression scenario that resolves to FUK→LGW and BUD→FUK.",
+    "Isolated smoke validation into a dedicated Next.js dist directory so render smoke and production build can both pass reliably in the same local session, and refreshed the Sprint 8 docs to match the broader curated corridor overlay."
   ],
   "known_issues": [
     "Fare outputs remain deterministic estimates; live provider integration is still out of scope until Sprint 9.",

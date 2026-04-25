@@ -7,6 +7,7 @@ export type CountryCode =
   | "ES"
   | "NL"
   | "HU"
+  | "CZ"
   | "US"
   | "KR"
   | "TW"
@@ -60,9 +61,9 @@ type GatewayExpansionOptions = {
   includeBudgetCorridors?: boolean;
 };
 
-const EUROPE_COUNTRY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL", "HU"];
+const EUROPE_COUNTRY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL", "HU", "CZ"];
 const EUROPE_GATEWAY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL"];
-const EUROPE_BUDGET_CORRIDOR_CODES: CountryCode[] = ["HU"];
+const EUROPE_BUDGET_CORRIDOR_CODES: CountryCode[] = ["HU", "CZ"];
 
 export const CABIN_CLASS_OPTIONS: Array<{ value: CabinClassKey; label: string; hint: string }> = [
   { value: "economy", label: "Economy", hint: "最安重視の基本設定" },
@@ -168,6 +169,13 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     region: "中央ヨーロッパ",
     airportCodes: ["BUD"],
     summary: "中欧の価格重視 gateway として比較に加える",
+  },
+  {
+    code: "CZ",
+    name: "繝√ぉ繧ｳ",
+    region: "荳ｭ螟ｮ繝ｨ繝ｼ繝ｭ繝・ヱ",
+    airportCodes: ["PRG"],
+    summary: "荳ｭ谺ｧ縺ｮ蛻･ corridor 繧定ｶｳ縺・ｽ・gateway 縺ｨ縺励※蜉縺医ｋ",
   },
   {
     code: "US",
@@ -464,6 +472,17 @@ export const AIRPORTS: Record<string, Airport> = {
     longitude: 19.2556,
     hubScore: 3,
     corridorScore: 5,
+  },
+  PRG: {
+    code: "PRG",
+    city: "繝励Λ繝上",
+    name: "繝励Λ繝上遨ｺ貂ｯ",
+    countryCode: "CZ",
+    countryName: "繝√ぉ繧ｳ",
+    latitude: 50.1008,
+    longitude: 14.26,
+    hubScore: 3,
+    corridorScore: 4,
   },
   JFK: {
     code: "JFK",

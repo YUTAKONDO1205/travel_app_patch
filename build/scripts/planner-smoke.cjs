@@ -91,8 +91,40 @@ try {
     "Expected Hungary to appear in the Europe corridor gateway pool when non-direct search is allowed.",
   );
   assert(
+    gatewayResult.gatewayCountries.some((country) => country.code === "CZ"),
+    "Expected Czech Republic to appear in the Europe corridor gateway pool when non-direct search is allowed.",
+  );
+  assert(
+    gatewayResult.gatewayAirports.some((airport) => airport.code === "PRG"),
+    "Expected Prague to appear in the Europe corridor gateway airport pool when non-direct search is allowed.",
+  );
+  assert(
     gatewayResult.gatewayAirports.length > gatewayResult.destinationAirports.length,
     "Expected gateway airport expansion for Germany search.",
+  );
+
+  const directGatewayResult = planner.generateFlightSearchResult({
+    ...planner.INITIAL_FORM_STATE,
+    departureCountry: "JP",
+    destinationCountries: ["DE"],
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-08"],
+    stayLengthMin: "30",
+    stayLengthMax: "36",
+    passengerCount: "2",
+    cabinClass: "economy",
+    preferDirect: true,
+  });
+
+  assert(directGatewayResult, "Expected a result for Japan to Germany direct-first search.");
+  assert(
+    directGatewayResult.gatewayCountries.every((country) => country.code !== "HU" && country.code !== "CZ"),
+    "Expected corridor gateway countries to stay out of the pool when direct-first search is enabled.",
+  );
+  assert(
+    directGatewayResult.gatewayAirports.every((airport) => airport.code !== "BUD" && airport.code !== "PRG"),
+    "Expected corridor gateway airports to stay out of the pool when direct-first search is enabled.",
   );
 
   const corridorResult = planner.generateFlightSearchResult({
@@ -113,6 +145,10 @@ try {
   assert(
     corridorResult.gatewayCountries.some((country) => country.code === "HU"),
     "Expected corridor search to include Hungary in the gateway country pool.",
+  );
+  assert(
+    corridorResult.gatewayCountries.some((country) => country.code === "CZ"),
+    "Expected corridor search to include Czech Republic in the gateway country pool.",
   );
   assert(corridorResult.bestOutbound.destination.code === "LGW", "Expected London Gatwick to win the outbound corridor estimate.");
   assert(corridorResult.bestInbound.origin.code === "BUD", "Expected Budapest to win the return corridor estimate.");

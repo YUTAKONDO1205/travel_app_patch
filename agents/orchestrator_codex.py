@@ -1064,21 +1064,77 @@ def _read_pending_changes() -> tuple[list[dict[str, str]], list[str]]:
     return _parse_git_status_lines(result.stdout), warnings
 
 
+def _strip_env_value(value: str) -> str:
+    trimmed = value.strip()
+    if len(trimmed) >= 2 and trimmed[0] == trimmed[-1] and trimmed[0] in {"'", '"'}:
+        return trimmed[1:-1]
+    return trimmed
+
+
+def _sync_env_file_candidates() -> tuple[Path, ...]:
+    return (
+        ROOT / ".env.sync.local",
+        ROOT / ".env.sync.local.txt",
+        ROOT / ".env.sync.local" / ".env.sync.local",
+        ROOT / ".env.sync.local" / ".env.sync.local.txt",
+    )
+
+
+def _load_sync_env_file() -> tuple[dict[str, str], Optional[Path]]:
+    for candidate in _sync_env_file_candidates():
+        if not candidate.is_file():
+            continue
+
+        content = candidate.read_text(encoding="utf-8").strip()
+        if not content:
+            return {}, candidate
+
+        values: dict[str, str] = {}
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                key, value = line.split("=", 1)
+                key = key.strip()
+                if key:
+                    values[key] = _strip_env_value(value)
+                continue
+
+            if not values:
+                values["GITHUB_TOKEN"] = _strip_env_value(line)
+                break
+
+        return values, candidate
+
+    return {}, None
+
+
+def _get_sync_env_value(name: str, file_values: Optional[dict[str, str]] = None) -> str:
+    env_value = os.environ.get(name, "").strip()
+    if env_value:
+        return env_value
+    if file_values is None:
+        file_values, _ = _load_sync_env_file()
+    return file_values.get(name, "").strip()
+
+
 def _resolve_github_sync_context(branch: Optional[str], origin: dict[str, Any]) -> dict[str, Any]:
+    file_values, file_path = _load_sync_env_file()
     token_env_name = next(
-        (name for name in GITHUB_TOKEN_ENV_CANDIDATES if os.environ.get(name, "").strip()),
+        (name for name in GITHUB_TOKEN_ENV_CANDIDATES if _get_sync_env_value(name, file_values)),
         None,
     )
-    token = os.environ.get(token_env_name, "").strip() if token_env_name else ""
+    token = _get_sync_env_value(token_env_name, file_values) if token_env_name else ""
     repo_slug = origin.get("repo_slug") if isinstance(origin, dict) else None
-    owner = os.environ.get(GITHUB_OWNER_ENV, "").strip()
-    repo = os.environ.get(GITHUB_REPO_ENV, "").strip()
+    owner = _get_sync_env_value(GITHUB_OWNER_ENV, file_values)
+    repo = _get_sync_env_value(GITHUB_REPO_ENV, file_values)
     if not owner and isinstance(repo_slug, str) and "/" in repo_slug:
         owner = repo_slug.split("/", 1)[0]
     if not repo and isinstance(repo_slug, str) and "/" in repo_slug:
         repo = repo_slug.split("/", 1)[1]
-    sync_branch = os.environ.get(GITHUB_BRANCH_ENV, "").strip() or (branch or "")
-    base_branch = os.environ.get(GITHUB_BASE_BRANCH_ENV, "").strip()
+    sync_branch = _get_sync_env_value(GITHUB_BRANCH_ENV, file_values) or (branch or "")
+    base_branch = _get_sync_env_value(GITHUB_BASE_BRANCH_ENV, file_values)
 
     missing_env_names: list[str] = []
     if not token:
@@ -1099,6 +1155,7 @@ def _resolve_github_sync_context(branch: Optional[str], origin: dict[str, Any]) 
         "base_branch": base_branch or None,
         "can_sync_without_git_index": bool(token and owner and repo and sync_branch),
         "missing_env_names": missing_env_names,
+        "env_file_path": str(file_path) if file_path is not None else None,
     }
 
 

@@ -11,6 +11,8 @@ $runner = Join-Path $PSScriptRoot "next-dev-direct.cjs"
 $stdoutLog = Join-Path $projectRoot "codex-smoke-out.log"
 $stderrLog = Join-Path $projectRoot "codex-smoke-err.log"
 $url = "http://$BindHost`:$Port"
+$previousDistDir = $env:NEXT_DIST_DIR
+$env:NEXT_DIST_DIR = ".next-smoke"
 
 Remove-Item -LiteralPath $stdoutLog, $stderrLog -ErrorAction SilentlyContinue
 
@@ -59,5 +61,11 @@ try {
 } finally {
   if ($serverProcess -and -not $serverProcess.HasExited) {
     Stop-Process -Id $serverProcess.Id -Force -ErrorAction SilentlyContinue
+  }
+
+  if ($null -eq $previousDistDir) {
+    Remove-Item Env:NEXT_DIST_DIR -ErrorAction SilentlyContinue
+  } else {
+    $env:NEXT_DIST_DIR = $previousDistDir
   }
 }

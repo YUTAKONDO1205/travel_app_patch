@@ -366,6 +366,54 @@ class SyncAutomationTests(OrchestratorCodexTestCase):
 
         return side_effect
 
+    def test_resolve_github_sync_context_reads_token_from_sync_env_file(self) -> None:
+        env_dir = self.root / ".env.sync.local"
+        env_dir.mkdir(parents=True, exist_ok=True)
+        (env_dir / ".env.sync.local.txt").write_text(
+            "GITHUB_TOKEN=file-token\nGITHUB_OWNER=example\nGITHUB_REPO=repo\nGITHUB_SYNC_BRANCH=codex/test\n",
+            encoding="utf-8",
+        )
+
+        with patch.dict(os.environ, {}, clear=True):
+            context = orchestrator._resolve_github_sync_context(
+                "codex/test",
+                {"repo_slug": "example/repo"},
+            )
+
+        self.assertEqual(context["token_env_name"], "GITHUB_TOKEN")
+        self.assertEqual(context["token"], "file-token")
+        self.assertEqual(context["owner"], "example")
+        self.assertEqual(context["repo"], "repo")
+        self.assertEqual(context["branch"], "codex/test")
+        self.assertTrue(context["can_sync_without_git_index"])
+        self.assertTrue(str(context["env_file_path"]).endswith(".env.sync.local.txt"))
+
+    def test_git_sync_status_uses_sync_env_file_for_github_api_fallback(self) -> None:
+        env_dir = self.root / ".env.sync.local"
+        env_dir.mkdir(parents=True, exist_ok=True)
+        (env_dir / ".env.sync.local.txt").write_text(
+            "file-token\n",
+            encoding="utf-8",
+        )
+        add_probe = make_git_result(
+            "add",
+            "-A",
+            "--dry-run",
+            stderr="fatal: Unable to create '.git/index.lock': Permission denied",
+            returncode=1,
+        )
+        with patch.object(orchestrator, "_run_git_command", side_effect=self.fake_git_side_effect(add_probe=add_probe)), patch.dict(
+            os.environ,
+            {},
+            clear=True,
+        ):
+            sync = orchestrator._git_sync_status()
+
+        self.assertEqual(sync["mode"], "github_api_required")
+        self.assertEqual(sync["blocker"], "local_git_index_lock_permission_denied")
+        self.assertTrue(sync["can_sync_without_git_index"])
+        self.assertEqual(sync["required_env_names"], [])
+
     def test_git_sync_status_uses_local_git_mode_when_writable(self) -> None:
         add_probe = make_git_result("add", "-A", "--dry-run", stdout="")
         with patch.object(orchestrator, "_run_git_command", side_effect=self.fake_git_side_effect(add_probe=add_probe)), patch.dict(

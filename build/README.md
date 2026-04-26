@@ -7,6 +7,7 @@
 - Current purpose: help a traveler compare the cheapest outbound and return one-way tickets for a multi-country overseas trip before moving to live search.
 - Current search model: selected destination countries act as the headline stay countries, while nearby gateway airports may also be searched when that produces a cheaper international entry or exit.
 - Current Europe realism layer: when non-direct routes are allowed, Europe searches may add low-cost corridor gateways such as Hungary / Budapest and Czech Republic / Prague, and allow higher-stop budget corridors to undercut cleaner hub-first routes.
+- Current planner scope: those corridor gateways stay internal to the gateway-expansion logic and result folio, rather than appearing as new primary destination picker options.
 - Current pricing model: fares in the app are deterministic reference estimates unless a future live provider is added.
 - Current estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
 - Current flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.

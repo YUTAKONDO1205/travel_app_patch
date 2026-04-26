@@ -736,6 +736,7 @@ export default function HomePage() {
                         <button
                           key={option.value}
                           type="button"
+                          data-country-code={option.value}
                           className={`${styles.destinationChip} ${active ? styles.destinationChipActive : ""} ${disabled ? styles.destinationChipDisabled : ""}`}
                           onClick={() => toggleDestinationCountry(option.value as CountryCode)}
                           disabled={disabled}
@@ -778,7 +779,7 @@ export default function HomePage() {
                   {corridorModeActive ? (
                     <div className={styles.corridorNote} data-reveal style={revealStyle(8)}>
                       <span>Europe corridor mode</span>
-                      <strong>非直行を許容しているため、通常の gateway に加えて Budapest のような curated corridor gateway も比較します。</strong>
+                      <strong>非直行を許容しているため、通常の gateway に加えて Budapest や Prague のような curated corridor gateway も内部候補として比較します。</strong>
                       <p>
                         滞在国は主目的地のまま維持しつつ、入口と出口だけ価格重視の長距離回廊まで広げて見ています。最終運賃は
                         Skyscanner 側で確認してください。

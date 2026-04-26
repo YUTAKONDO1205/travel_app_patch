@@ -32,6 +32,17 @@ try {
   transpileFile("lib/travel-planner.ts", "travel-planner.js");
 
   const planner = require(path.join(tempDir, "travel-planner.js"));
+  const travelData = require(path.join(tempDir, "travel-data.js"));
+
+  assert(
+    travelData.COUNTRY_OPTIONS.every((option) => option.value !== "HU" && option.value !== "CZ"),
+    "Expected corridor-only countries to stay out of the primary country picker.",
+  );
+  assert(
+    travelData.COUNTRY_LABELS.HU && travelData.COUNTRY_LABELS.CZ,
+    "Expected corridor-only country labels to remain available for gateway summaries.",
+  );
+
   const result = planner.generateFlightSearchResult({
     ...planner.INITIAL_FORM_STATE,
     departureCountry: "JP",

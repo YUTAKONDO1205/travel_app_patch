@@ -38,8 +38,10 @@ try {
     try {
       $response = Invoke-WebRequest -UseBasicParsing $url -TimeoutSec 10
       $html = [string]$response.Content
-      $requiredText = @("Maison Passage", "Gateway Pair Explorer", "Grand Tour Ledger", "Auto gateway")
+      $requiredText = @("Maison Passage", "Gateway Pair Explorer", "Grand Tour Ledger", "Auto gateway", 'data-country-code="FR"')
       $missingText = $requiredText | Where-Object { -not $html.Contains($_) }
+      $forbiddenText = @('data-country-code="HU"', 'data-country-code="CZ"')
+      $unexpectedText = $forbiddenText | Where-Object { $html.Contains($_) }
 
       if ($response.StatusCode -ne 200) {
         throw "Expected HTTP 200 from $url, received $($response.StatusCode)."
@@ -47,6 +49,10 @@ try {
 
       if ($missingText.Count -gt 0) {
         throw "Rendered HTML is missing required text: $($missingText -join ', ')"
+      }
+
+      if ($unexpectedText.Count -gt 0) {
+        throw "Rendered HTML unexpectedly exposed corridor-only destination options: $($unexpectedText -join ', ')"
       }
 
       Write-Host "[smoke] PASS $url"

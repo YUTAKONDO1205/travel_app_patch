@@ -127,7 +127,8 @@
         "The departure country cannot also be selected as a destination country.",
         "The UI explains how many airports are being compared.",
         "Before search, the planner distinguishes selected stay countries from automatically expanded gateway countries.",
-        "For Europe searches with non-direct routes allowed, the pool may add dedicated low-cost corridor gateways such as Hungary / Budapest and Czech Republic / Prague."
+        "For Europe searches with non-direct routes allowed, the pool may add dedicated low-cost corridor gateways such as Hungary / Budapest and Czech Republic / Prague.",
+        "Corridor-only gateway countries remain internal search candidates and do not appear as primary destination picker options."
       ]
     },
     {
@@ -181,6 +182,7 @@
     "The user cannot compare routes until departure country, valid date mode inputs, stay length or stay range, and at least one destination country are set.",
     "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound one-way, a cheapest return one-way, and a combined estimated total.",
     "For Europe searches with non-direct routes allowed, the gateway pool may widen beyond the headline stay countries to include curated corridor gateways such as Hungary / Budapest and Czech Republic / Prague.",
+    "Corridor-only gateway countries such as Hungary and Czech Republic remain internal auto-gateway candidates rather than user-selectable headline destinations.",
     "For flexible planning, the user can choose multiple target months such as July, August, and September, choose a stay range such as 26 to 36 days, and receive a best outbound date plus a best return date from the derived return window.",
     "Exact-date mode remains available for users with fixed outbound dates and fixed stay lengths.",
     "The flexible result states the compared outbound window, return window, stay range, and compared date counts.",
@@ -333,6 +335,7 @@
       ],
       "acceptance_criteria": [
         "A Europe search with non-direct routes allowed can expand to curated corridor gateways such as Hungary / Budapest and Czech Republic / Prague.",
+        "Corridor-only gateway countries such as Hungary and Czech Republic remain internal auto-gateway candidates rather than user-selectable headline destinations.",
         "A flexible Japan to Western Europe search can surface a result shape closer to real market behavior, such as an outbound through London and a return from Budapest, instead of always preferring the nearest hub.",
         "The app still frames the recommendation as two one-way tickets and keeps internal travel out of scope.",
         "Typecheck, deterministic planner smoke, smoke render, and production build still pass after the estimator change."

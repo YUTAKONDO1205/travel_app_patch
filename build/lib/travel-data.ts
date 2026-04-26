@@ -57,6 +57,12 @@ export type CountryProfile = {
   summary: string;
 };
 
+export type CountryOption = {
+  value: CountryCode;
+  label: string;
+  hint: string;
+};
+
 type GatewayExpansionOptions = {
   includeBudgetCorridors?: boolean;
 };
@@ -64,6 +70,7 @@ type GatewayExpansionOptions = {
 const EUROPE_COUNTRY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL", "HU", "CZ"];
 const EUROPE_GATEWAY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL"];
 const EUROPE_BUDGET_CORRIDOR_CODES: CountryCode[] = ["HU", "CZ"];
+const TRAVELER_SELECTABLE_COUNTRY_CODES: CountryCode[] = ["JP", "FR", "GB", "DE", "IT", "ES", "NL", "US", "KR", "TW", "TH", "SG", "AU"];
 
 export const CABIN_CLASS_OPTIONS: Array<{ value: CabinClassKey; label: string; hint: string }> = [
   { value: "economy", label: "Economy", hint: "最安重視の基本設定" },
@@ -221,7 +228,9 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
   },
 ];
 
-export const COUNTRY_OPTIONS = COUNTRY_PROFILES.map((country) => ({
+export const COUNTRY_OPTIONS: CountryOption[] = COUNTRY_PROFILES.filter((country) =>
+  TRAVELER_SELECTABLE_COUNTRY_CODES.includes(country.code),
+).map((country) => ({
   value: country.code,
   label: country.name,
   hint: `${country.region} / ${country.airportCodes.length}空港`,

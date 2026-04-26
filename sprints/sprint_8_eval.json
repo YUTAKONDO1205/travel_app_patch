@@ -2,9 +2,9 @@
   "sprint": 8,
   "implemented": [
     "Expanded the Europe-only corridor overlay so the non-direct gateway pool now includes curated budget gateways for Hungary / Budapest and Czech Republic / Prague.",
+    "Kept corridor-only gateways internal to the gateway-expansion model so they appear in gateway summaries and winning results without becoming new primary destination picker options.",
     "Introduced corridor-aware pricing profiles so higher-stop budget routes can undercut cleaner hub-first routes in deterministic estimates.",
-    "Added direction-aware stay-country weighting so outbound still prefers headline stay countries while return exits can shift to a cheaper gateway such as Budapest.",
-    "Updated the planner smoke coverage to assert both Hungary and Czech Republic gateway expansion while preserving the Western Europe corridor regression scenario that resolves to FUK→LGW and BUD→FUK.",
+    "Updated the planner smoke coverage to assert both Hungary and Czech Republic gateway expansion, keep corridor-only countries out of the primary picker, preserve the Western Europe corridor regression scenario that resolves to FUK→LGW and BUD→FUK, and guard the rendered picker against leaking corridor-only options.",
     "Isolated smoke validation into a dedicated Next.js dist directory so render smoke and production build can both pass reliably in the same local session, and refreshed the Sprint 8 docs to match the broader curated corridor overlay."
   ],
   "known_issues": [

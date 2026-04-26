@@ -21,19 +21,19 @@
       "evidence": "travel-data.ts now separates Europe gateway expansion from Europe budget-corridor expansion, and planner-smoke explicitly verifies that both Hungary and Czech Republic appear in the gateway pool for a non-direct Europe search."
     },
     {
+      "name": "Corridor-only gateways stay internal to the search model",
+      "result": "PASS",
+      "evidence": "planner-smoke verifies that Hungary and Czech Republic stay out of COUNTRY_OPTIONS while their labels remain available for gateway summaries and result framing, and render smoke now also checks that the primary destination picker HTML exposes FR while not exposing HU or CZ chips."
+    },
+    {
       "name": "Deterministic estimates can now surface budget-corridor shapes closer to market behavior",
       "result": "PASS",
-      "evidence": "planner-smoke now asserts that the Western Europe regression scenario resolves to an outbound FUK→LGW estimate and a return BUD→FUK estimate, both using higher-stop corridor pricing, while also asserting the expanded CZ corridor pool."
+      "evidence": "planner-smoke asserts that the Western Europe regression scenario resolves to an outbound FUK→LGW estimate and a return BUD→FUK estimate, both using higher-stop corridor pricing."
     },
     {
       "name": "Stay countries remain legible while return exits can move to cheaper gateways",
       "result": "PASS",
-      "evidence": "travel-planner.ts now applies direction-aware stay-country weighting so the outbound leg still prefers the selected stay countries, while the return leg is freer to exit from a cheaper corridor gateway such as Budapest."
-    },
-    {
-      "name": "Two-ticket framing and internal-travel exclusion remain intact",
-      "result": "PASS",
-      "evidence": "The app still returns separate outbound and return one-way recommendations, keeps Skyscanner handoff links, and preserves the between-ticket note that internal travel is excluded."
+      "evidence": "travel-planner.ts applies direction-aware stay-country weighting so the outbound leg still prefers the selected stay countries, while the return leg is freer to exit from a cheaper corridor gateway such as Budapest."
     },
     {
       "name": "The app still renders and builds after the estimator change",
@@ -48,9 +48,14 @@
       "evidence": "The gateway expansion now includes both Hungary and Czech Republic when non-direct Europe search is allowed, and planner-smoke verifies that behavior."
     },
     {
+      "criterion": "Corridor-only gateway countries such as Hungary and Czech Republic remain internal auto-gateway candidates rather than user-selectable headline destinations.",
+      "status": "PASS",
+      "evidence": "COUNTRY_OPTIONS now excludes Hungary and Czech Republic while gateway summaries still retain both labels and airports."
+    },
+    {
       "criterion": "A flexible Japan to Western Europe search can surface a result shape closer to real market behavior, such as an outbound through London and a return from Budapest, instead of always preferring the nearest hub.",
       "status": "PASS",
-      "evidence": "The deterministic regression scenario now resolves to FUK→LGW on the outbound side and BUD→FUK on the return side."
+      "evidence": "The deterministic regression scenario resolves to FUK→LGW on the outbound side and BUD→FUK on the return side."
     },
     {
       "criterion": "The app still frames the recommendation as two one-way tickets and keeps internal travel out of scope.",

@@ -12,6 +12,8 @@ The planner now also separates the selected stay countries from any automaticall
 
 The current deterministic estimator is also more realistic for Europe searches with non-direct routes allowed: it can prefer higher-stop budget corridors when those corridors materially undercut the cleaner hub-first route.
 
+Those corridor gateways remain internal search candidates. They should appear in gateway summaries and results when they win, but not as new primary destination picker options.
+
 The current approved roadmap is:
 
 - `Sprint 5`: Grand Tour Ledger Redesign

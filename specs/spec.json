@@ -152,7 +152,9 @@
         "Alternative outbound entry options.",
         "Alternative return exit options.",
         "A per-country airport coverage section.",
-        "Primary links for outbound and return one-way Skyscanner handoff, with an optional combined reference handoff.",
+        "Structured handoff cards for outbound, return, and combined Skyscanner searches.",
+        "The structured handoff cards themselves act as the primary outbound and return Skyscanner handoff surface, with an optional combined reference handoff in the same card system.",
+        "Clear copy that separates deterministic estimates from near-live handoff links.",
         "Honest explanation that live search is the source of truth for final fares."
       ]
     },
@@ -165,6 +167,17 @@
         "Each recommended leg shows a confidence label.",
         "Each recommended leg shows the estimate basis, including season, stop assumption, and distance.",
         "A deterministic smoke test verifies price ranges, confidence labels, between-ticket notes, gateway expansion, corridor overlay behavior, and Skyscanner handoff generation."
+      ]
+    },
+    {
+      "id": "live-fare-handoff-cards",
+      "name": "Live Fare Handoff Cards",
+      "description": "Sprint 9 should add a structured near-live source handoff layer so travelers can move from deterministic estimates into provider-backed fare searches without losing clarity.",
+      "must_have": [
+        "Outbound, return, and combined fare source cards that present Skyscanner handoff as a structured next step.",
+        "Visual and copy separation between deterministic estimates and near-live provider handoff cards.",
+        "Fallback guidance that explains when the provider link fails, redirects poorly, or returns no usable fare.",
+        "Honest copy that keeps deterministic estimates visible as the fallback when the provider handoff cannot complete."
       ]
     }
   ],
@@ -189,7 +202,9 @@
     "Estimated fares are shown with ranges and confidence labels so deterministic reference prices are not mistaken for final live inventory.",
     "When non-direct routes are allowed, the estimator may recommend a higher-stop low-cost corridor such as London or Budapest if it materially undercuts the cleaner hub-first route.",
     "The result explicitly states that the arrival airport and return airport may differ, that nearby gateway airports may win, and that the internal route is not included.",
-    "The results area contains primary links for outbound and return Skyscanner handoff plus an optional combined reference handoff.",
+    "The results area uses the structured handoff cards as the primary outbound and return Skyscanner handoff surface, with an optional combined reference handoff.",
+    "The results area also presents structured near-live fare source handoff cards for outbound, return, and combined searches, with clear distinction between deterministic estimates and provider-backed handoff.",
+    "If the provider link fails or returns no usable fare, the interface explains the fallback honestly and keeps the deterministic estimate visible as the fallback reference.",
     "The visual language uses warm off-white fields, geometric Bauhaus accents, bold neo-brutalist borders, Noto Sans JP weight contrast, and Oswald for numeric moments rather than generic warm-off-white minimalism.",
     "The page works at approximately 390px mobile width and 1280px desktop width without obvious horizontal overflow."
   ],
@@ -343,16 +358,19 @@
     },
     {
       "sprint": 9,
-      "name": "Live Fare Enrichment",
-      "goal": "Introduce a real fare source or provider-backed enrichment after the gateway-pair framing, Bauhaus motion refresh, and corridor realism work land.",
+      "name": "Live Fare Handoff Cards",
+      "goal": "Introduce structured near-live fare source handoff cards after the gateway-pair framing, Bauhaus motion refresh, and corridor realism work land.",
       "scope": [
-        "Introduce a live price provider or search integration.",
-        "Distinguish clearly between cached estimates and live prices.",
-        "Handle provider errors without breaking the planning flow or premium atelier presentation."
+        "Introduce structured near-live fare source handoff cards for outbound, return, and combined Skyscanner searches.",
+        "Distinguish clearly between deterministic estimates and near-live provider handoff.",
+        "Make the handoff cards the single primary route into live search so the result folio does not duplicate the same outbound and return actions elsewhere.",
+        "Handle provider errors or empty fare responses without breaking the planning flow or premium atelier presentation.",
+        "Explain the fallback honestly when the provider link fails or returns no usable fare."
       ],
       "acceptance_criteria": [
-        "The app can show at least one live or near-live fare source for the suggested entry and exit routes.",
-        "If the provider fails, the interface explains the fallback honestly."
+        "The app can show structured outbound, return, and combined near-live fare handoff cards for the suggested entry and exit routes.",
+        "Deterministic estimates are clearly distinguished from near-live provider handoff cards.",
+        "If the provider link fails or returns no usable fare, the interface explains the fallback honestly and preserves the deterministic estimate as the fallback reference."
       ]
     }
   ]

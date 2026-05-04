@@ -37,6 +37,7 @@ import {
   isFormValid,
   type FlightLegQuote,
   type FlightSearchResult,
+  type LiveFareSource,
   type PlannerFormState,
 } from "../lib/travel-planner";
 
@@ -164,6 +165,43 @@ function renderTicketCard(quote: FlightLegQuote, title: string, revealStep?: num
 
       <a className={styles.ticketLink} href={quote.skyscannerUrl} target="_blank" rel="noreferrer">
         この片道を Skyscanner で確認
+      </a>
+    </article>
+  );
+}
+
+function renderLiveFareSourceCard(source: LiveFareSource) {
+  const isReference = source.status === "reference";
+
+  return (
+    <article className={styles.liveSourceCard} data-tone={source.status}>
+      <div className={styles.liveSourceHead}>
+        <div>
+          <span className={styles.liveSourceLabel}>{source.label}</span>
+          <strong className={styles.liveSourceRoute}>{source.routeLabel}</strong>
+        </div>
+        <span className={styles.liveSourceStatus}>{source.statusLabel}</span>
+      </div>
+
+      <div className={styles.liveSourceMeta}>
+        <div className={styles.liveSourceMetaItem}>
+          <span>Provider</span>
+          <strong>{source.provider}</strong>
+        </div>
+        <div className={styles.liveSourceMetaItem}>
+          <span>Date</span>
+          <strong>{source.dateLabel}</strong>
+        </div>
+        <div className={styles.liveSourceMetaItem}>
+          <span>Search brief</span>
+          <strong>{source.detailsLabel}</strong>
+        </div>
+      </div>
+
+      <p className={styles.liveSourceFallback}>{source.fallbackLabel}</p>
+
+      <a className={isReference ? styles.secondaryLink : styles.ticketLink} href={source.url} target="_blank" rel="noreferrer">
+        {isReference ? "参考検索を開く" : "この検索を Skyscanner で開く"}
       </a>
     </article>
   );
@@ -932,17 +970,33 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className={styles.ctaStrip} data-reveal style={revealStyle(5)}>
-                <a className={styles.primaryLink} href={result.bestOutbound.skyscannerUrl} target="_blank" rel="noreferrer">
-                  往路の片道を Skyscanner で開く
-                </a>
-                <a className={styles.primaryLink} href={result.bestInbound.skyscannerUrl} target="_blank" rel="noreferrer">
-                  復路の片道を Skyscanner で開く
-                </a>
-                <a className={styles.secondaryLink} href={result.combinedSearchUrl} target="_blank" rel="noreferrer">
-                  参考として複数区間検索も開く
-                </a>
-              </div>
+              <section className={styles.liveSourceSection} data-reveal style={revealStyle(5)}>
+                <div className={styles.rackHead}>
+                  <h3>Live fare sources</h3>
+                  <span>{result.liveFareSources.length} cards</span>
+                </div>
+                <p className={styles.liveSourceIntro}>
+                  ここから先は推定カードではなく near-live handoff です。Skyscanner 側で価格が取れない場合は、各カードの route と date を
+                  そのまま手入力して再検索し、画面内の推定値は fallback reference として扱ってください。
+                </p>
+                <div className={styles.liveSourceLegend} aria-label="Estimate and handoff guidance">
+                  <article className={styles.liveSourceLegendItem} data-tone="estimate">
+                    <span>Estimate anchor</span>
+                    <strong>画面内の価格帯・信頼度・basis を比較の基準にする</strong>
+                    <p>最初に意思決定するための reference layer です。provider 側で価格が崩れても、比較の形はここで保ちます。</p>
+                  </article>
+                  <article className={styles.liveSourceLegendItem} data-tone="handoff">
+                    <span>Near-live handoff</span>
+                    <strong>Skyscanner で最終価格を確認し、だめなら同条件で手入力する</strong>
+                    <p>route・date・人数・cabin をそのまま引き継ぎ、live 側の最終差分だけを確認するための handoff layer です。</p>
+                  </article>
+                </div>
+                <div className={styles.liveSourceGrid}>
+                  {result.liveFareSources.map((source) => (
+                    <div key={source.id}>{renderLiveFareSourceCard(source)}</div>
+                  ))}
+                </div>
+              </section>
 
               <div className={styles.ticketRack}>
                 <section className={styles.rackSection} data-reveal style={revealStyle(6)}>

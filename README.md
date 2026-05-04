@@ -6,6 +6,8 @@ This repository contains the Maison Passage Gateway Pair Explorer and the local 
 
 Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, and now adds Europe-only low-cost corridor gateways such as Budapest and Prague when non-direct routing is allowed. It finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
 
+The current result folio now adds structured near-live fare source handoff cards for outbound, return, and combined Skyscanner searches. Those cards are the single primary route into live search, deterministic estimates stay visually separate from provider-backed handoff links, and the interface explains the fallback honestly if the provider link fails or returns no usable fare.
+
 The current app supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
 
 The planner now also separates the selected stay countries from any automatically expanded gateway countries before search, so the traveler can see exactly how the international entry and exit pool is being widened.
@@ -20,7 +22,7 @@ The current approved roadmap is:
 - `Sprint 6`: Gateway Pair Ticketing
 - `Sprint 7`: Bauhaus Motion Refresh
 - `Sprint 8`: Europe Corridor Overlay
-- `Sprint 9`: Live Fare Enrichment
+- `Sprint 9`: Live Fare Handoff Cards
 
 ## Repository Layout
 
@@ -98,3 +100,5 @@ GitHub API fallback can infer `owner` and `repo` from the `origin` remote when i
 ## Current Design Direction
 
 The current UI direction is a Bauhaus-leaning neo-brutalist travel atelier. The app uses `Noto Sans JP` with visible weight contrast for Japanese hierarchy, `Oswald` for numeric callouts and route codes, a warm off-white field with red, blue, yellow, and near-black accents, soft `0.3s` lift hover motion, and staggered spring-like scroll reveals.
+
+Sprint 9 keeps that visual language while turning the results area into a clearer handoff layer: deterministic estimates remain the anchor, and outbound, return, and combined Skyscanner cards become the single explicit next step.

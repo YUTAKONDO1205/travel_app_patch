@@ -10,11 +10,13 @@
 - Current planner scope: those corridor gateways stay internal to the gateway-expansion logic and result folio, rather than appearing as new primary destination picker options.
 - Current pricing model: fares in the app are deterministic reference estimates unless a future live provider is added.
 - Current estimate integrity: deterministic fares are shown with ranges, confidence labels, and estimate-basis notes before live search handoff.
+- Current handoff layer: outbound, return, and combined Skyscanner searches are presented as structured near-live fare source cards that stay clearly separate from deterministic estimates and act as the single primary live-search handoff surface.
+- Current fallback policy: if the provider link fails or returns no usable fare, the interface says so honestly and preserves the deterministic estimate as the fallback reference.
 - Current flexible planning: users can compare multiple target outbound months, such as July through September, and choose an approximate stay range such as 26 to 36 days before exact dates are fixed.
 - Current planner clarity: before search, the form shows selected stay countries separately from any automatically expanded gateway countries so the comparison pool is explicit.
 - Current shell: the app wraps the planner in a Bauhaus-leaning neo-brutalist travel atelier built on the Grand Tour Ledger structure.
 - Current typography and motion: `Noto Sans JP` drives Japanese hierarchy, `Oswald` is reserved for numeric moments and route codes, hover states lift softly over `0.3s`, and major sections reveal with staggered spring-like motion.
-- Roadmap note: Europe corridor overlay realism is now Sprint 8, and live fare enrichment follows it in Sprint 9.
+- Roadmap note: Europe corridor overlay realism is now Sprint 8, and live fare handoff cards follow it in Sprint 9.
 
 ## Run Locally
 

@@ -73,6 +73,19 @@ export type BetweenTicketsGap = {
   note: string;
 };
 
+export type LiveFareSource = {
+  id: "outbound" | "return" | "combined";
+  label: string;
+  provider: string;
+  status: "near-live" | "reference";
+  statusLabel: string;
+  routeLabel: string;
+  dateLabel: string;
+  detailsLabel: string;
+  fallbackLabel: string;
+  url: string;
+};
+
 export type FlightSearchResult = {
   departureCountry: CountryProfile;
   destinationCountries: CountryProfile[];
@@ -102,6 +115,7 @@ export type FlightSearchResult = {
   ticketingSummary: string;
   betweenTicketsGap: BetweenTicketsGap;
   planningNote: string;
+  liveFareSources: LiveFareSource[];
   combinedSearchUrl: string;
 };
 
@@ -472,6 +486,73 @@ function buildSkyscannerUrl(
   searchParams.set("currency", "JPY");
 
   return `https://www.skyscanner.net/g/referrals/v1/flights/${pageType}/?${searchParams.toString()}`;
+}
+
+function formatCabinClassLabel(cabinClass: CabinClassKey): string {
+  switch (cabinClass) {
+    case "premiumeconomy":
+      return "Premium Economy";
+    case "business":
+      return "Business";
+    case "economy":
+    default:
+      return "Economy";
+  }
+}
+
+function buildLiveFareSources({
+  bestOutbound,
+  bestInbound,
+  passengerCount,
+  cabinClass,
+  combinedSearchUrl,
+}: {
+  bestOutbound: FlightLegQuote;
+  bestInbound: FlightLegQuote;
+  passengerCount: PassengerCountKey;
+  cabinClass: CabinClassKey;
+  combinedSearchUrl: string;
+}): LiveFareSource[] {
+  const sharedDetails = `${Number.parseInt(passengerCount, 10)}名 / ${formatCabinClassLabel(cabinClass)}`;
+
+  return [
+    {
+      id: "outbound",
+      label: "往路 near-live search",
+      provider: "Skyscanner",
+      status: "near-live",
+      statusLabel: "Near-live handoff",
+      routeLabel: `${bestOutbound.origin.code} -> ${bestOutbound.destination.code}`,
+      dateLabel: formatDateLabel(bestOutbound.travelDate),
+      detailsLabel: `${sharedDetails} / One-way`,
+      fallbackLabel: `リンク先で価格が出ない場合は ${bestOutbound.origin.code} -> ${bestOutbound.destination.code} / ${bestOutbound.travelDate} を手入力して再検索してください。`,
+      url: bestOutbound.skyscannerUrl,
+    },
+    {
+      id: "return",
+      label: "復路 near-live search",
+      provider: "Skyscanner",
+      status: "near-live",
+      statusLabel: "Near-live handoff",
+      routeLabel: `${bestInbound.origin.code} -> ${bestInbound.destination.code}`,
+      dateLabel: formatDateLabel(bestInbound.travelDate),
+      detailsLabel: `${sharedDetails} / One-way`,
+      fallbackLabel: `リンク先で価格が出ない場合は ${bestInbound.origin.code} -> ${bestInbound.destination.code} / ${bestInbound.travelDate} を手入力して再検索してください。`,
+      url: bestInbound.skyscannerUrl,
+    },
+    {
+      id: "combined",
+      label: "参考 multi-city view",
+      provider: "Skyscanner",
+      status: "reference",
+      statusLabel: "Reference handoff",
+      routeLabel: `${bestOutbound.origin.code} -> ${bestOutbound.destination.code} / ${bestInbound.origin.code} -> ${bestInbound.destination.code}`,
+      dateLabel: `${formatDateLabel(bestOutbound.travelDate)} / ${formatDateLabel(bestInbound.travelDate)}`,
+      detailsLabel: `${sharedDetails} / Multi-city`,
+      fallbackLabel: "片道2枚の最終価格は往路と復路それぞれの one-way 画面を優先し、この導線は旅程の形を見直す参考用として使ってください。",
+      url: combinedSearchUrl,
+    },
+  ];
 }
 
 function buildRouteReasons({
@@ -997,6 +1078,23 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const destinationNames = destinationCountries.map((country) => country.name).join(" / ");
   const gatewayNames = gatewayCountries.map((country) => country.name).join(" / ");
   const destinationCountryCodes = new Set(formState.destinationCountries);
+  const combinedSearchUrl = buildSkyscannerUrl("multicity", {
+    origin0: bestOutbound.origin.code.toLowerCase(),
+    date0: bestOutbound.travelDate,
+    destination0: bestOutbound.destination.code.toLowerCase(),
+    origin1: bestInbound.origin.code.toLowerCase(),
+    date1: returnDate,
+    destination1: bestInbound.destination.code.toLowerCase(),
+    adultsv2: Number.parseInt(formState.passengerCount, 10),
+    cabinclass: formState.cabinClass,
+  });
+  const liveFareSources = buildLiveFareSources({
+    bestOutbound,
+    bestInbound,
+    passengerCount: formState.passengerCount,
+    cabinClass: formState.cabinClass,
+    combinedSearchUrl,
+  });
   const differentExit =
     bestOutbound.destination.code !== bestInbound.origin.code || bestOutbound.destination.countryCode !== bestInbound.origin.countryCode;
   const usesGatewayEntry = !destinationCountryCodes.has(bestOutbound.destination.countryCode);
@@ -1055,16 +1153,8 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     ticketingSummary,
     betweenTicketsGap,
     planningNote:
-      "表示価格は2枚の片道券を別々に見積もった参考値です。ライブ在庫ではないため、往路と復路それぞれの Skyscanner 実検索で最終確認してください。",
-    combinedSearchUrl: buildSkyscannerUrl("multicity", {
-      origin0: bestOutbound.origin.code.toLowerCase(),
-      date0: bestOutbound.travelDate,
-      destination0: bestOutbound.destination.code.toLowerCase(),
-      origin1: bestInbound.origin.code.toLowerCase(),
-      date1: returnDate,
-      destination1: bestInbound.destination.code.toLowerCase(),
-      adultsv2: Number.parseInt(formState.passengerCount, 10),
-      cabinclass: formState.cabinClass,
-    }),
+      "表示価格は2枚の片道券を別々に見積もった参考値です。ライブ在庫ではないため、往路と復路それぞれの near-live handoff を優先し、リンク先で価格が出ない場合は route / date / 人数 / cabin をそのまま手入力して再検索してください。",
+    liveFareSources,
+    combinedSearchUrl,
   };
 }

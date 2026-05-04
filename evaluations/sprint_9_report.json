@@ -1,0 +1,67 @@
+{
+  "sprint": 9,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-04-28",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test",
+      "Same-process Next.js smoke server with HTTP fetch",
+      "Next.js production build"
+    ],
+    "notes": "Interactive browser automation was not available in this session. Validation focused on the planner result contract, rendered page integrity, and successful production build output."
+  },
+  "checks": [
+    {
+      "name": "Planner results now include structured near-live fare sources",
+      "result": "PASS",
+      "evidence": "travel-planner.ts now returns three liveFareSources entries for outbound, return, and combined Skyscanner handoff, and planner-smoke asserts both the three-card contract and the live/reference status split."
+    },
+    {
+      "name": "The result folio separates deterministic estimates from near-live handoff cards",
+      "result": "PASS",
+      "evidence": "page.tsx now renders a dedicated Live fare sources section with an estimate-versus-handoff trust legend, and page.module.css applies a distinct near-live visual tone so the estimate ticket cards and provider handoff cards read as separate layers."
+    },
+    {
+      "name": "The fallback is explained honestly when the provider handoff fails",
+      "result": "PASS",
+      "evidence": "Each live fare source card includes fallback copy instructing the traveler to rerun the route and date manually if the provider link fails or yields no usable fare, and the result ledger planning note now points toward the same handoff-plus-manual-fallback path."
+    },
+    {
+      "name": "The live fare cards are the single primary handoff surface",
+      "result": "PASS",
+      "evidence": "The duplicate outbound and return CTA strip has been removed from the result folio, so the outbound, return, and combined actions now live only inside the structured handoff cards."
+    },
+    {
+      "name": "The app still passes local validation after the Sprint 9 handoff-card change",
+      "result": "PASS",
+      "evidence": "npm run typecheck, npm run test:planner, npm run smoke, and npm run build all passed after the new live fare source layer was added."
+    }
+  ],
+  "acceptance_criteria_results": [
+    {
+      "criterion": "The app can show structured outbound, return, and combined near-live fare handoff cards for the suggested entry and exit routes.",
+      "status": "PASS",
+      "evidence": "generateFlightSearchResult now returns outbound, return, and combined liveFareSources entries, and the result folio renders them inside the dedicated Live fare sources section."
+    },
+    {
+      "criterion": "Deterministic estimates are clearly distinguished from near-live provider handoff cards.",
+      "status": "PASS",
+      "evidence": "The estimate ticket cards remain in the result spread and ledger, while the near-live provider handoff cards are rendered in a separate section with a dedicated trust legend, distinct labels, status badges, and a near-live tone."
+    },
+    {
+      "criterion": "If the provider link fails or returns no usable fare, the interface explains the fallback honestly and preserves the deterministic estimate as the fallback reference.",
+      "status": "PASS",
+      "evidence": "The live fare source cards now contain explicit fallback instructions, and the deterministic estimate cards remain visible above them as the planning reference."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Add browser-based verification when interactive automation is available so the live handoff cards can be exercised end to end from the planner through the rendered result folio.",
+    "Introduce a provider-backed inline freshness signal or cached fare value once a real fare contract is chosen, while preserving the current handoff cards as the safe fallback path.",
+    "Keep the provider-failure copy aligned with actual behavior if the app later adds direct API responses instead of pure search handoff links."
+  ]
+}

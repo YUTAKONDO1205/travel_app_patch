@@ -81,6 +81,23 @@ try {
     "Expected explicit internal-travel exclusion note.",
   );
   assert(result.combinedSearchUrl.includes("skyscanner"), "Expected Skyscanner combined handoff.");
+  assert(result.liveFareSources.length === 3, "Expected outbound, return, and combined live fare sources.");
+  assert(
+    result.liveFareSources.every((source) => source.provider === "Skyscanner"),
+    "Expected live fare sources to point at Skyscanner.",
+  );
+  assert(
+    result.liveFareSources.some((source) => source.id === "outbound" && source.status === "near-live"),
+    "Expected an outbound near-live fare handoff source.",
+  );
+  assert(
+    result.liveFareSources.some((source) => source.id === "combined" && source.status === "reference"),
+    "Expected a combined reference fare handoff source.",
+  );
+  assert(
+    result.planningNote.includes("near-live handoff") || result.planningNote.includes("手入力"),
+    "Expected planning note to explain near-live handoff fallback.",
+  );
 
   const gatewayResult = planner.generateFlightSearchResult({
     ...planner.INITIAL_FORM_STATE,

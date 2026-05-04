@@ -130,7 +130,6 @@
 .headerCta,
 .primaryButton,
 .secondaryButton,
-.primaryLink,
 .secondaryLink,
 .ticketLink,
 .conciergeButton {
@@ -150,7 +149,6 @@
 
 .headerCta,
 .primaryButton,
-.primaryLink,
 .ticketLink,
 .conciergeButton {
   border: 3px solid var(--ink);
@@ -162,7 +160,6 @@
 .headerCta:hover,
 .primaryButton:hover,
 .secondaryButton:hover,
-.primaryLink:hover,
 .secondaryLink:hover,
 .ticketLink:hover,
 .conciergeButton:hover,
@@ -294,8 +291,7 @@
 }
 
 .coverActions,
-.actionRow,
-.ctaStrip {
+.actionRow {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -330,6 +326,7 @@
 .ticketCard,
 .gapBand,
 .resultLedger,
+.liveSourceSection,
 .rackSection,
 .coverageSection,
 .methodCard,
@@ -530,6 +527,7 @@
 .ticketCard,
 .gapBand,
 .resultLedger,
+.liveSourceSection,
 .rackSection,
 .coverageSection,
 .methodCard,
@@ -543,6 +541,7 @@
 .emptyBoard,
 .resultDock,
 .resultLedger,
+.liveSourceSection,
 .rackSection,
 .coverageSection {
   padding: 28px;
@@ -1111,6 +1110,172 @@
   margin-bottom: 20px;
 }
 
+.liveSourceSection {
+  margin-bottom: 20px;
+}
+
+.liveSourceIntro {
+  margin: 14px 0 18px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.liveSourceLegend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.liveSourceLegendItem {
+  min-height: 100%;
+  padding: 18px;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 222, 0.96)),
+    #fffaf1;
+  box-shadow: 6px 6px 0 rgba(17, 17, 17, 0.88);
+}
+
+.liveSourceLegendItem[data-tone="estimate"] {
+  background:
+    linear-gradient(128deg, rgba(255, 213, 72, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 222, 0.96)),
+    #fffaf1;
+}
+
+.liveSourceLegendItem[data-tone="handoff"] {
+  background:
+    linear-gradient(128deg, rgba(31, 85, 255, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 222, 0.96)),
+    #fffaf1;
+}
+
+.liveSourceLegendItem span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.liveSourceLegendItem strong {
+  display: block;
+  margin: 8px 0 10px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.liveSourceLegendItem p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.liveSourceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.liveSourceCard {
+  display: grid;
+  gap: 16px;
+  height: 100%;
+  padding: 22px;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 222, 0.96)),
+    #fffaf1;
+  box-shadow: 6px 6px 0 rgba(17, 17, 17, 0.88);
+}
+
+.liveSourceCard[data-tone="near-live"] {
+  background:
+    linear-gradient(128deg, rgba(31, 85, 255, 0.12), transparent 36%),
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 222, 0.96)),
+    #fffaf1;
+}
+
+.liveSourceCard[data-tone="reference"] {
+  background:
+    linear-gradient(128deg, rgba(255, 213, 72, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(245, 237, 222, 0.96)),
+    #fffaf1;
+}
+
+.liveSourceHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.liveSourceLabel,
+.liveSourceMetaItem span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.liveSourceRoute {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-family: var(--font-numeric);
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.liveSourceStatus {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(255, 252, 244, 0.92);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.liveSourceMeta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.liveSourceMetaItem {
+  padding-top: 12px;
+  border-top: 3px solid rgba(17, 17, 17, 0.12);
+}
+
+.liveSourceMetaItem strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.liveSourceFallback {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 .ticketRack {
   display: grid;
   gap: 18px;
@@ -1325,7 +1490,10 @@
   .briefRibbon,
   .gatewayPreview,
   .compareBar,
-  .resultLedger {
+  .resultLedger,
+  .liveSourceLegend,
+  .liveSourceGrid,
+  .liveSourceMeta {
     grid-template-columns: 1fr;
   }
 
@@ -1409,6 +1577,7 @@
 
   .sheetHead,
   .ticketHead,
+  .liveSourceHead,
   .rackHead,
   .rackTop,
   .footerInner {
@@ -1440,6 +1609,7 @@
   .ticketCard,
   .gapBand,
   .resultLedger,
+  .liveSourceSection,
   .rackSection,
   .coverageSection,
   .methodCard,

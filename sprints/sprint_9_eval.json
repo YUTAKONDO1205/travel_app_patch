@@ -1,0 +1,40 @@
+{
+  "sprint": 9,
+  "implemented": [
+    "Added structured near-live fare source data to planner results for outbound, return, and combined Skyscanner handoff cards.",
+    "Rendered a Live fare sources section in the result folio so deterministic estimate cards and near-live provider handoff cards are visibly separated.",
+    "Added explicit fallback copy for provider-link failure or empty results, instructing the traveler to rerun the route and date manually while keeping the deterministic estimate as the fallback reference.",
+    "Adjusted the near-live visual tone hook and updated the planning note so the result ledger itself also points travelers toward the handoff-plus-manual-fallback path.",
+    "Added an estimate-versus-handoff trust legend and removed the duplicate CTA strip so the live fare cards become the single primary path into Skyscanner from the result folio.",
+    "Extended deterministic planner validation for the new live fare source contract and aligned the Sprint 9 spec and docs with the implemented handoff-card behavior."
+  ],
+  "known_issues": [
+    "The app still does not fetch inline live inventory; Sprint 9 currently enriches the recommendation with near-live provider handoff cards rather than embedded live fare quotes.",
+    "Interactive browser automation was unavailable in this session, so UI verification relied on typecheck, deterministic planner smoke, render smoke, and production build integrity."
+  ],
+  "source_bug_ids": [],
+  "addressed_bug_ids": [],
+  "unresolved_bug_ids": [],
+  "run_instructions": {
+    "install": "npm install",
+    "dev": "npm run dev"
+  },
+  "validation": [
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:planner",
+      "result": "passed"
+    },
+    {
+      "command": "npm run smoke",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    }
+  ]
+}

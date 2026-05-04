@@ -214,6 +214,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FlightSearchResult | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState<string>("top");
   const pendingSearchRef = useRef<number | null>(null);
 
   const validationMessage = submitted ? getFormValidationMessage(formState) : null;
@@ -352,7 +354,11 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 24);
+      const y = window.scrollY;
+      setIsScrolled(y > 24);
+      const doc = document.documentElement;
+      const max = (doc.scrollHeight - window.innerHeight) || 1;
+      setScrollProgress(Math.min(1, Math.max(0, y / max)));
     };
 
     handleScroll();
@@ -364,6 +370,34 @@ export default function HomePage() {
         window.clearTimeout(pendingSearchRef.current);
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const ids = ["top", "atelier", "folio", "method"];
+    const sections = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    if (!sections.length) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-40% 0px -50% 0px",
+        threshold: [0, 0.1, 0.5, 1],
+      },
+    );
+
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -408,35 +442,68 @@ export default function HomePage() {
 
   return (
     <main className={styles.page}>
+      <div className={styles.scrollProgress} aria-hidden="true">
+        <span style={{ transform: `scaleX(${scrollProgress})` }} />
+      </div>
+
       <header className={`${styles.header} ${isScrolled ? styles.headerSolid : ""}`}>
         <div className={styles.headerInner}>
           <a className={styles.brand} href="#top">
-            <span className={styles.brandMark}>MP</span>
+            <span className={styles.brandMark} aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="16" cy="16" r="13" />
+                <path d="M16 3v26M3 16h26" />
+                <path d="M16 5l3 11-3 3-3-3z" fill="currentColor" stroke="none" />
+              </svg>
+            </span>
             <span className={styles.brandText}>
               <strong>Maison Passage</strong>
-              <span>Gateway Pair Explorer</span>
+              <span>Gateway Pair Explorer · est. 2026</span>
             </span>
           </a>
 
           <nav className={styles.headerNav} aria-label="ページ内メニュー">
-            <a href="#atelier">Planner</a>
-            <a href="#folio">Result</a>
-            <a href="#method">Method</a>
+            <a href="#atelier" data-active={activeSection === "atelier" || undefined}>
+              <em>01</em>Planner
+            </a>
+            <a href="#folio" data-active={activeSection === "folio" || undefined}>
+              <em>02</em>Result
+            </a>
+            <a href="#method" data-active={activeSection === "method" || undefined}>
+              <em>03</em>Method
+            </a>
           </nav>
 
           <a className={styles.headerCta} href="#atelier">
-            旅の台帳を開く
+            <span>旅の台帳を開く</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </a>
         </div>
       </header>
 
       <section className={styles.coverSection} id="top" data-testid="hero">
         <div className={styles.coverBackdrop} />
+        <div className={styles.coverGrid} aria-hidden="true" />
+        <span className={`${styles.regMark} ${styles.regTL}`} aria-hidden="true" />
+        <span className={`${styles.regMark} ${styles.regTR}`} aria-hidden="true" />
+        <span className={`${styles.regMark} ${styles.regBL}`} aria-hidden="true" />
+        <span className={`${styles.regMark} ${styles.regBR}`} aria-hidden="true" />
+
         <div className={styles.shell}>
           <div className={styles.coverLayout}>
             <div className={styles.coverCopy} data-reveal style={revealStyle(0)}>
-              <p className={styles.overline}>Grand Tour Ledger</p>
-              <h1 className={styles.coverTitle}>往復ではなく、二枚の片道券として整える。</h1>
+              <p className={styles.overline}>
+                <span className={styles.dot} aria-hidden="true" />
+                Grand Tour Ledger
+                <em>· Vol. 04</em>
+              </p>
+              <h1 className={styles.coverTitle}>
+                往復ではなく、<i>二枚の</i>
+                <br />
+                <span className={styles.titleAccent}>片道券</span>として整える。
+              </h1>
               <p className={styles.coverLead}>
                 目的地を先に決めきらなくてもいい。まずは出発国、候補の国、そして季節の幅だけ。
                 Maison Passage は、複数月の往路と滞在レンジ後の復路を静かに比べ、片道2枚の輪郭だけを美しく選び出します。
@@ -444,7 +511,10 @@ export default function HomePage() {
 
               <div className={styles.coverActions}>
                 <a className={styles.primaryButton} href="#atelier">
-                  旅の条件を綴る
+                  <span>旅の条件を綴る</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
                 </a>
                 <a className={styles.secondaryButton} href="#folio">
                   結果の読み方を見る
@@ -452,33 +522,76 @@ export default function HomePage() {
               </div>
 
               <div className={styles.coverNote}>
-                <span>いま決めるのは、往復券ではなく往路1枚と復路1枚の組み合わせ。</span>
-                <span>そのあいだの列車や短距離便は、まだ余白として残します。</span>
+                <span>
+                  <strong>01.</strong> いま決めるのは、往復券ではなく往路1枚と復路1枚の組み合わせ。
+                </span>
+                <span>
+                  <strong>02.</strong> そのあいだの列車や短距離便は、まだ余白として残します。
+                </span>
               </div>
             </div>
 
             <div className={styles.coverPreview} data-reveal style={revealStyle(1)}>
               <div className={styles.previewSheet}>
-                <p className={styles.previewLabel}>Specimen route</p>
+                <div className={styles.previewSheetHead}>
+                  <p className={styles.previewLabel}>Specimen route · MP-04</p>
+                  <span className={styles.previewStamp}>
+                    <em>Filed</em>
+                    <strong>2026 · 05</strong>
+                  </span>
+                </div>
+
                 <div className={styles.previewCodes}>
                   <span>TYO</span>
                   <span>MIL</span>
                   <span>BER</span>
                   <span>TYO</span>
                 </div>
-                <div className={styles.previewArc} />
+
+                <svg className={styles.previewArc} viewBox="0 0 480 160" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="arcGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#ff4f2f" />
+                      <stop offset="50%" stopColor="#1f55ff" />
+                      <stop offset="100%" stopColor="#ffd548" />
+                    </linearGradient>
+                    <pattern id="arcDots" width="6" height="6" patternUnits="userSpaceOnUse">
+                      <circle cx="1" cy="1" r="1" fill="rgba(17,17,17,0.18)" />
+                    </pattern>
+                  </defs>
+                  <rect x="0" y="0" width="480" height="160" fill="url(#arcDots)" />
+                  <path d="M16 132 Q 120 -10 240 80 T 464 132" fill="none" stroke="rgba(17,17,17,0.18)" strokeWidth="2" strokeDasharray="4 6" />
+                  <path
+                    className={styles.arcPath}
+                    d="M16 132 Q 120 -10 240 80 T 464 132"
+                    fill="none"
+                    stroke="url(#arcGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <g className={styles.arcStations}>
+                    <circle cx="16" cy="132" r="6" fill="#fffaf1" stroke="#111" strokeWidth="2.6" />
+                    <circle cx="240" cy="80" r="6" fill="#ffd548" stroke="#111" strokeWidth="2.6" />
+                    <circle cx="464" cy="132" r="6" fill="#fffaf1" stroke="#111" strokeWidth="2.6" />
+                  </g>
+                  <g className={styles.arcPlane} aria-hidden="true">
+                    <circle r="9" fill="#fffaf1" stroke="#111" strokeWidth="2.4" />
+                    <path d="M-4 0 L4 0 M0 -3 L0 3" stroke="#111" strokeWidth="2" strokeLinecap="round" />
+                  </g>
+                </svg>
+
                 <div className={styles.previewLegend}>
                   <div>
                     <span>Entry</span>
-                    <strong>Milan</strong>
+                    <strong>Milan · MXP</strong>
                   </div>
                   <div>
                     <span>Exit</span>
-                    <strong>Berlin</strong>
+                    <strong>Berlin · BER</strong>
                   </div>
                   <div>
                     <span>Window</span>
-                    <strong>Jul-Sep / 26-36d</strong>
+                    <strong>Jul–Sep / 26-36d</strong>
                   </div>
                 </div>
               </div>
@@ -494,6 +607,16 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className={styles.tickerStrip} aria-hidden="true">
+          <div className={styles.tickerTrack}>
+            {Array.from({ length: 2 }).map((_, loop) => (
+              <span key={loop} className={styles.tickerGroup}>
+                <em>HND</em>·<em>NRT</em>·<em>KIX</em>·<em>CDG</em>·<em>LHR</em>·<em>FRA</em>·<em>FCO</em>·<em>MXP</em>·<em>BCN</em>·<em>MAD</em>·<em>AMS</em>·<em>VIE</em>·<em>PRG</em>·<em>BUD</em>·<em>BER</em>·<em>ZRH</em>·<em>CPH</em>·<em>OSL</em>·<em>HEL</em>·<em>IST</em>·
+              </span>
+            ))}
           </div>
         </div>
       </section>

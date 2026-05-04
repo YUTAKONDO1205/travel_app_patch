@@ -1,4 +1,4 @@
-import { Noto_Sans_JP, Oswald } from "next/font/google";
+import { Noto_Sans_JP, Oswald, Fraunces } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
@@ -17,6 +17,14 @@ const numericFont = Oswald({
   display: "swap",
 });
 
+const displayFont = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display-family",
+  weight: ["400", "500", "600", "700", "900"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Maison Passage Gateway Pair Explorer",
   description: "海外旅行の片道2枚と gateway 候補を静かに比較する、Maison Passage の航空路探索アプリ。",
@@ -29,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${bodyFont.variable} ${numericFont.variable}`}>{children}</body>
+      <body className={`${bodyFont.variable} ${numericFont.variable} ${displayFont.variable}`}>{children}</body>
     </html>
   );
 }

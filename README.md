@@ -1,22 +1,24 @@
 # Travel App Patch
 
-This repository contains the Maison Passage Gateway Pair Explorer and the local Codex harness that plans, generates, and evaluates it.
+開発者: 近藤悠太 (Kondo Yuta)
 
-## What This Builds
+このリポジトリには、Maison Passage Gateway Pair Explorer と、それを計画・生成・評価するためのローカル Codex ハーネスが含まれています。
 
-Maison Passage is a premium overseas travel planner that searches the trip as two one-way tickets. It compares representative airports across multiple destination countries, widens the search to nearby gateway airports when useful, and now adds Europe-only low-cost corridor gateways such as Budapest and Prague when non-direct routing is allowed. It finds a low-cost outbound one-way, then finds a low-cost return one-way while intentionally leaving internal travel out of scope.
+## このアプリで作っているもの
 
-The current result folio now adds structured near-live fare source handoff cards for outbound, return, and combined Skyscanner searches. Those cards are the single primary route into live search, deterministic estimates stay visually separate from provider-backed handoff links, and the interface explains the fallback honestly if the provider link fails or returns no usable fare.
+Maison Passage は、海外旅行を「2 枚の片道航空券」として検索するプレミアム海外旅行プランナーです。複数の渡航先国にまたがる代表的な空港を比較し、必要に応じて近隣のゲートウェイ空港まで検索範囲を広げ、さらに非直行ルートを許容する場合は、ブダペストやプラハといったヨーロッパ限定の格安コリドー・ゲートウェイも候補に加えます。まず安価な往路片道便を見つけ、続いて安価な復路片道便を探します。なお、現地内の移動は意図的に対象外としています。
 
-The current app supports flexible seasonal planning: a traveler can choose multiple outbound months such as July, August, and September, then choose an approximate stay range such as 26 to 36 days. The planner picks the cheapest outbound date first and searches return dates from that outbound date plus the selected stay range.
+現在の結果フォリオには、往路・復路・往復通しの Skyscanner 検索に向けた、ライブ運賃に近い構造化されたソース受け渡しカードが追加されています。これらのカードがライブ検索への唯一の主要導線であり、決定論的な見積もりは事業者バックの受け渡しリンクとは視覚的に明確に分離され、事業者リンクが失敗したり利用可能な運賃を返さなかった場合のフォールバックについても、UI 上で正直に説明します。
 
-The planner now also separates the selected stay countries from any automatically expanded gateway countries before search, so the traveler can see exactly how the international entry and exit pool is being widened.
+現在のアプリは、季節をまたいだ柔軟な計画にも対応しています。例えば、往路の出発月として 7 月・8 月・9 月といった複数月を選び、滞在期間の目安として 26 〜 36 日のようなレンジを指定できます。プランナーはまず最も安い往路の日付を選び、その往路日付に滞在レンジを足し合わせて復路の候補日を検索します。
 
-The current deterministic estimator is also more realistic for Europe searches with non-direct routes allowed: it can prefer higher-stop budget corridors when those corridors materially undercut the cleaner hub-first route.
+プランナーは、ユーザーが選んだ滞在対象国と、自動的に拡張されたゲートウェイ国を検索前に分けて扱うようになりました。これにより、入出国のプールがどのように広げられているかを、利用者がはっきりと確認できます。
 
-Those corridor gateways remain internal search candidates. They should appear in gateway summaries and results when they win, but not as new primary destination picker options.
+現在の決定論的見積もりエンジンは、非直行ルートを許容したヨーロッパ検索でもより現実的に振る舞います。ハブ経由のクリーンなルートに対して、乗継回数の多い格安コリドーが大きく価格を下回る場合には、そちらを優先することができます。
 
-The current approved roadmap is:
+これらのコリドー・ゲートウェイは、あくまで内部的な検索候補という位置づけです。勝ち残った場合にゲートウェイ・サマリや結果に表示されることはあっても、目的地ピッカーの新しい主要選択肢としては表示されません。
+
+現在承認されているロードマップは次のとおりです。
 
 - `Sprint 5`: Grand Tour Ledger Redesign
 - `Sprint 6`: Gateway Pair Ticketing
@@ -24,16 +26,16 @@ The current approved roadmap is:
 - `Sprint 8`: Europe Corridor Overlay
 - `Sprint 9`: Live Fare Handoff Cards
 
-## Repository Layout
+## リポジトリ構成
 
-- `build/`: the runnable Next.js app.
-- `agents/`: the local Codex planning, generation, and evaluation harness.
-- `specs/spec.json`: product source of truth.
-- `設計書.md`: human-readable design companion.
-- `sprints/`: generator self-evaluation artifacts.
-- `evaluations/`: evaluator reports.
+- `build/`: 実行可能な Next.js アプリ本体。
+- `agents/`: ローカル Codex の計画・生成・評価ハーネス。
+- `specs/spec.json`: プロダクトの真実 (Source of Truth)。
+- `設計書.md`: 人間が読むための設計コンパニオン。
+- `sprints/`: ジェネレーターの自己評価アーティファクト。
+- `evaluations/`: エバリュエーターのレポート。
 
-## Run The App
+## アプリの起動方法
 
 ```bash
 cd build
@@ -41,9 +43,9 @@ npm install
 npm run dev
 ```
 
-Then open `http://localhost:3000`.
+その後、`http://localhost:3000` を開いてください。
 
-## Validate
+## 検証
 
 ```bash
 cd build
@@ -53,9 +55,9 @@ npm run smoke
 npm run build
 ```
 
-## Harness
+## ハーネス
 
-From the repository root:
+リポジトリのルートで以下を実行します。
 
 ```bash
 python agents/orchestrator_codex.py status
@@ -64,41 +66,41 @@ python agents/orchestrator_codex.py autodev "Advance Maison Passage toward gatew
 python agents/orchestrator_codex.py sync "Describe the sync change" --dry-run
 ```
 
-The harness treats `specs/spec.json` as the product truth, updates `build/`, writes `sprints/sprint_N_eval.json`, and writes `evaluations/sprint_N_report.json`.
+ハーネスは `specs/spec.json` をプロダクトの真実として扱い、`build/` を更新し、`sprints/sprint_N_eval.json` と `evaluations/sprint_N_report.json` を書き出します。
 
-The harness is organized around three local sub-agent roles:
+ハーネスは、3 つのローカル・サブエージェント役割を中心に構成されています。
 
-- `Planner`: expands a short request into `specs/spec.json` without over-specifying implementation details.
-- `Generator`: implements one sprint at a time and leaves a self-evaluation handoff in `sprints/`.
-- `Evaluator`: validates the sprint strictly and writes a `PASS` or `FAIL` report in `evaluations/`.
+- `Planner`: 短いリクエストを `specs/spec.json` に展開します。実装の細部までは過剰に指定しません。
+- `Generator`: 1 スプリント分の実装を行い、`sprints/` に自己評価のハンドオフを残します。
+- `Evaluator`: スプリントを厳格に検証し、`PASS` か `FAIL` のレポートを `evaluations/` に書き出します。
 
-The handoff contract is now bug-aware:
+ハンドオフ契約はバグを意識した内容になっています。
 
-- `Evaluator` writes structured `bugs` entries with stable `bug_id` values when a sprint fails.
-- `Generator` copies the bug ids it is responding to into `source_bug_ids`, then classifies them with `addressed_bug_ids` and `unresolved_bug_ids` in `sprints/sprint_N_eval.json`.
-- `status` surfaces the latest bug linkage so it is obvious which findings were classified, which remain open, and whether the current report, when it is `FAIL`, still matches the generator's source bug set.
+- `Evaluator` はスプリントが失敗した場合、安定した `bug_id` を持つ構造化された `bugs` エントリを書き出します。
+- `Generator` は対応中のバグ ID を `source_bug_ids` にコピーし、`sprints/sprint_N_eval.json` の `addressed_bug_ids` と `unresolved_bug_ids` でそれらを分類します。
+- `status` は最新のバグ・リンク状況を可視化し、どの指摘が分類済みで、どれが未対応なのか、そして現在のレポートが `FAIL` の場合に、ジェネレーターの参照しているバグ集合と一致しているかどうかが一目で分かるようにします。
 
-`python agents/orchestrator_codex.py status` now returns an agent-centric JSON view of the pipeline, including planner/generator/evaluator readiness, read/write contracts, structural validation of the latest artifacts, summary metadata for the latest sprint/report, bug-linkage summaries, local git sync state, and the latest evaluation status.
+`python agents/orchestrator_codex.py status` は、エージェント中心の JSON ビューでパイプラインの状態を返します。プランナー / ジェネレーター / エバリュエーターの準備状況、読み書きコントラクト、最新アーティファクトの構造的検証、最新スプリント・レポートのサマリ、バグ・リンク集計、ローカル git の同期状態、最新の評価ステータスなどが含まれます。
 
-The sync section reports the current branch, upstream, head sha, pending-change preview, detected sync mode, whether local git can write the index, whether GitHub API fallback is possible without `.git` writes, and the current blocker when automation cannot proceed.
+sync セクションでは、現在のブランチ、アップストリーム、HEAD の sha、ペンディング変更のプレビュー、検出された sync モード、ローカル git がインデックスに書き込めるかどうか、`.git` への書き込みなしで GitHub API フォールバックが可能かどうか、そして自動化が進められない場合の現在のブロッカーが報告されます。
 
-The sync fallback order is:
+sync のフォールバック順序は次のとおりです。
 
-- `local_git`: use `git add -A`, `git commit`, and `git push` when `.git` is writable.
-- `github_api`: create a direct commit through the GitHub API when local git is blocked but API credentials are available.
-- `github_api` PR fallback: create a fallback branch and draft pull request when a direct API commit cannot be completed safely.
-- `manual`: return concrete env var names and manual steps when neither automated path can run.
+- `local_git`: `.git` に書き込み可能な場合、`git add -A`、`git commit`、`git push` を使用します。
+- `github_api`: ローカル git がブロックされていても API クレデンシャルが利用可能な場合、GitHub API を介して直接コミットを作成します。
+- `github_api` の PR フォールバック: API による直接コミットを安全に完了できない場合、フォールバック用ブランチとドラフトのプルリクエストを作成します。
+- `manual`: 自動化された経路がいずれも実行できない場合、必要な環境変数名と手動手順を返します。
 
-When `.git/index.lock: Permission denied` is detected, status switches to `sync.mode = "github_api_required"` instead of treating sync as a terminal local git failure.
+`.git/index.lock: Permission denied` が検出されると、status はローカル git の致命的失敗として扱う代わりに `sync.mode = "github_api_required"` に切り替わります。
 
-GitHub API fallback can infer `owner` and `repo` from the `origin` remote when it points at GitHub. If credentials are still missing, `status.sync.required_env_names` will call out the missing values, typically `GITHUB_TOKEN` or `GH_TOKEN`, and optionally `GITHUB_SYNC_BRANCH` when the current branch cannot be inferred cleanly.
+GitHub API フォールバックは、`origin` リモートが GitHub を指している場合、そこから `owner` と `repo` を推定できます。それでもクレデンシャルが不足している場合は、`status.sync.required_env_names` に不足している値が示されます。通常は `GITHUB_TOKEN` または `GH_TOKEN`、現在のブランチをきれいに推定できない場合は任意で `GITHUB_SYNC_BRANCH` です。
 
-`autodev` now reuses the existing `specs/spec.json` by default so Planner remains the spec-authoring role, while Generator and Evaluator iterate on the current sprint. Pass `--replan` when you intentionally want to regenerate the spec first.
+`autodev` は既定で既存の `specs/spec.json` を再利用します。これにより、Planner はスペックの著者という役割を維持しつつ、Generator と Evaluator は現在のスプリントを反復的に進められます。意図的にスペックから再生成したい場合は `--replan` を指定してください。
 
-`autodev` does not publish to GitHub by default. Pass `--auto-sync` when you want a successful `PASS` iteration to call the sync automation automatically. For safety, that auto-sync path only runs when the worktree started clean, so the harness does not sweep unrelated local changes into the commit.
+`autodev` は既定で GitHub に公開しません。`PASS` となったイテレーションを自動的に sync 自動化にかけたい場合は `--auto-sync` を指定してください。安全のため、この自動 sync 経路はワークツリーが最初からクリーンだった場合にのみ実行されます。これにより、ハーネスが無関係なローカル変更を巻き込んでコミットしてしまうことを防ぎます。
 
-## Current Design Direction
+## 現在のデザイン方針
 
-The current UI direction is a Bauhaus-leaning neo-brutalist travel atelier. The app uses `Noto Sans JP` with visible weight contrast for Japanese hierarchy, `Oswald` for numeric callouts and route codes, a warm off-white field with red, blue, yellow, and near-black accents, soft `0.3s` lift hover motion, and staggered spring-like scroll reveals.
+現在の UI 方針は、バウハウスに寄せたネオ・ブルータリズムの旅行アトリエです。日本語の階層を表現するために `Noto Sans JP` をウェイト・コントラストを効かせて使用し、数値キャプションや路線コードには `Oswald` を、フィールドカラーには温かみのあるオフホワイトを採用し、赤・青・黄・ニアブラックをアクセントとして配しています。ホバーには `0.3s` のソフトなリフトモーション、スクロール表示には段階的なスプリング風のリビールを与えています。
 
-Sprint 9 keeps that visual language while turning the results area into a clearer handoff layer: deterministic estimates remain the anchor, and outbound, return, and combined Skyscanner cards become the single explicit next step.
+Sprint 9 では、このビジュアル言語を維持したまま、結果エリアをよりクリアなハンドオフ層へと進化させます。決定論的見積もりが引き続きアンカーとなり、往路・復路・往復通しの Skyscanner カードが、唯一の明示的な次のステップとして機能します。

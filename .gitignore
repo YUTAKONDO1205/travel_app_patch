@@ -41,3 +41,8 @@ build/.env.*
 Thumbs.db
 *.swp
 *.swo
+
+# Agent/tool working directories
+.agents/
+.codex/
+agents/

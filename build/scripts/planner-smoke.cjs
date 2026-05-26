@@ -35,13 +35,32 @@ try {
   const travelData = require(path.join(tempDir, "travel-data.js"));
 
   assert(
-    travelData.COUNTRY_OPTIONS.every((option) => option.value !== "HU" && option.value !== "CZ"),
+    travelData.COUNTRY_OPTIONS.every((option) => option.value !== "HU" && option.value !== "CZ" && option.value !== "MY"),
     "Expected corridor-only countries to stay out of the primary country picker.",
   );
   assert(
-    travelData.COUNTRY_LABELS.HU && travelData.COUNTRY_LABELS.CZ,
+    travelData.COUNTRY_LABELS.HU && travelData.COUNTRY_LABELS.CZ && travelData.COUNTRY_LABELS.MY,
     "Expected corridor-only country labels to remain available for gateway summaries.",
   );
+
+  // Label integrity: catch silent Shift_JIS-as-UTF-8 mojibake in corridor entries.
+  const mojibakeMarkers = ["繝", "荳ｭ", "蛻", "縺", "ｺ", "ｼ", "ｱ", "ｭ"];
+  function assertNoMojibake(label, where) {
+    for (const marker of mojibakeMarkers) {
+      assert(!label.includes(marker), `Expected clean Japanese label in ${where}, found mojibake marker "${marker}" in "${label}".`);
+    }
+  }
+  assert(travelData.COUNTRY_LABELS.CZ === "チェコ", `Expected CZ label "チェコ", got "${travelData.COUNTRY_LABELS.CZ}".`);
+  assert(travelData.COUNTRY_LABELS.MY === "マレーシア", `Expected MY label "マレーシア", got "${travelData.COUNTRY_LABELS.MY}".`);
+  assertNoMojibake(travelData.AIRPORTS.PRG.city, "AIRPORTS.PRG.city");
+  assertNoMojibake(travelData.AIRPORTS.PRG.name, "AIRPORTS.PRG.name");
+  assertNoMojibake(travelData.AIRPORTS.PRG.countryName, "AIRPORTS.PRG.countryName");
+  assertNoMojibake(travelData.AIRPORTS.KUL.city, "AIRPORTS.KUL.city");
+  Object.values(travelData.COUNTRY_LABELS).forEach((label) => assertNoMojibake(label, `COUNTRY_LABELS["${label}"]`));
+  travelData.COUNTRY_PROFILES.forEach((country) => {
+    assertNoMojibake(country.region, `COUNTRY_PROFILES["${country.code}"].region`);
+    assertNoMojibake(country.summary, `COUNTRY_PROFILES["${country.code}"].summary`);
+  });
 
   const result = planner.generateFlightSearchResult({
     ...planner.INITIAL_FORM_STATE,
@@ -185,6 +204,54 @@ try {
   assert(
     corridorResult.bestOutbound.estimateBasis.includes("corridor"),
     "Expected the outbound estimate basis to call out corridor pricing.",
+  );
+
+  const seaCorridorResult = planner.generateFlightSearchResult({
+    ...planner.INITIAL_FORM_STATE,
+    departureCountry: "JP",
+    destinationCountries: ["TH", "SG"],
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-09"],
+    stayLengthMin: "14",
+    stayLengthMax: "21",
+    passengerCount: "2",
+    cabinClass: "economy",
+    preferDirect: false,
+  });
+
+  assert(seaCorridorResult, "Expected a result for the Southeast Asia corridor scenario.");
+  assert(
+    seaCorridorResult.gatewayCountries.some((country) => country.code === "MY"),
+    "Expected Malaysia to appear in the SEA corridor gateway country pool when non-direct is allowed.",
+  );
+  assert(
+    seaCorridorResult.gatewayAirports.some((airport) => airport.code === "KUL"),
+    "Expected Kuala Lumpur (KUL) to appear in the SEA corridor airport pool when non-direct is allowed.",
+  );
+
+  const seaDirectResult = planner.generateFlightSearchResult({
+    ...planner.INITIAL_FORM_STATE,
+    departureCountry: "JP",
+    destinationCountries: ["TH", "SG"],
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-09"],
+    stayLengthMin: "14",
+    stayLengthMax: "21",
+    passengerCount: "2",
+    cabinClass: "economy",
+    preferDirect: true,
+  });
+
+  assert(seaDirectResult, "Expected a result for the Southeast Asia direct-first scenario.");
+  assert(
+    seaDirectResult.gatewayCountries.every((country) => country.code !== "MY"),
+    "Expected Malaysia to stay out of the SEA gateway pool when direct-first is enabled.",
+  );
+  assert(
+    seaDirectResult.gatewayAirports.every((airport) => airport.code !== "KUL"),
+    "Expected Kuala Lumpur to stay out of the SEA gateway pool when direct-first is enabled.",
   );
 
   console.log("[planner-smoke] PASS deterministic gateway-pair planner result");

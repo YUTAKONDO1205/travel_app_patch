@@ -128,6 +128,7 @@
         "The UI explains how many airports are being compared.",
         "Before search, the planner distinguishes selected stay countries from automatically expanded gateway countries.",
         "For Europe searches with non-direct routes allowed, the pool may add dedicated low-cost corridor gateways such as Hungary / Budapest and Czech Republic / Prague.",
+        "For Southeast Asia searches with non-direct routes allowed, the pool may add dedicated low-cost corridor gateways such as Malaysia / Kuala Lumpur.",
         "Corridor-only gateway countries remain internal search candidates and do not appear as primary destination picker options."
       ]
     },
@@ -195,7 +196,8 @@
     "The user cannot compare routes until departure country, valid date mode inputs, stay length or stay range, and at least one destination country are set.",
     "For a normal input such as Japan departure plus France, United Kingdom, and Germany as destination countries, the app shows a cheapest outbound one-way, a cheapest return one-way, and a combined estimated total.",
     "For Europe searches with non-direct routes allowed, the gateway pool may widen beyond the headline stay countries to include curated corridor gateways such as Hungary / Budapest and Czech Republic / Prague.",
-    "Corridor-only gateway countries such as Hungary and Czech Republic remain internal auto-gateway candidates rather than user-selectable headline destinations.",
+    "For Southeast Asia searches with non-direct routes allowed, the gateway pool may widen beyond the headline stay countries to include curated corridor gateways such as Malaysia / Kuala Lumpur.",
+    "Corridor-only gateway countries such as Hungary, Czech Republic, and Malaysia remain internal auto-gateway candidates rather than user-selectable headline destinations.",
     "For flexible planning, the user can choose multiple target months such as July, August, and September, choose a stay range such as 26 to 36 days, and receive a best outbound date plus a best return date from the derived return window.",
     "Exact-date mode remains available for users with fixed outbound dates and fixed stay lengths.",
     "The flexible result states the compared outbound window, return window, stay range, and compared date counts.",
@@ -371,6 +373,27 @@
         "The app can show structured outbound, return, and combined near-live fare handoff cards for the suggested entry and exit routes.",
         "Deterministic estimates are clearly distinguished from near-live provider handoff cards.",
         "If the provider link fails or returns no usable fare, the interface explains the fallback honestly and preserves the deterministic estimate as the fallback reference."
+      ]
+    },
+    {
+      "sprint": 10,
+      "name": "Multiregion Corridor Realism And Label Integrity",
+      "goal": "Extend the deterministic corridor overlay beyond Europe, harden the label data against silent mojibake, and finish the section-nav coverage so the full required section order is reachable from the header.",
+      "scope": [
+        "Add a Southeast Asia low-cost corridor overlay so non-direct searches with destinations such as Thailand or Singapore can expand the gateway pool to curated corridor gateways such as Malaysia / Kuala Lumpur.",
+        "Extend corridor-aware estimator pricing to the Southeast Asia corridor pool at appropriate route distances, while preserving the existing Europe corridor regression behavior.",
+        "Repair the Czech Republic country profile and Prague airport entries so their Japanese labels render correctly across the planner preview, gateway summaries, and the result folio.",
+        "Add a label-integrity guard to the deterministic planner smoke test so future Shift_JIS-as-UTF-8 mojibake in country and airport labels fails CI rather than leaking into the UI.",
+        "Wire fragment anchors and IntersectionObserver tracking for the archetypes and concierge sections so every required section in the Grand Tour Ledger order can be reached and highlighted from the header nav."
+      ],
+      "acceptance_criteria": [
+        "A Southeast Asia search with non-direct routes allowed can expand the gateway pool to curated corridor gateways such as Malaysia / Kuala Lumpur, while keeping the headline stay countries legible.",
+        "Corridor-only Southeast Asia gateway countries such as Malaysia remain internal auto-gateway candidates rather than user-selectable headline destinations.",
+        "The Europe corridor regression scenario still resolves to an outbound through London Gatwick and a return from Budapest with higher-stop corridor pricing.",
+        "Czech Republic and Prague labels render as clean Japanese (チェコ, プラハ, プラハ空港) rather than mojibake across the planner preview, gateway summaries, and result folio.",
+        "The deterministic planner smoke test fails fast if a country or airport label contains Shift_JIS-as-UTF-8 mojibake markers, and passes for the current label set.",
+        "Header navigation exposes Archetypes and Concierge entries in addition to Planner, Result, and Method, and the active-section highlight updates as the user scrolls through every required section.",
+        "Typecheck, deterministic planner smoke, and production build still pass after the corridor expansion and label-integrity changes."
       ]
     }
   ]

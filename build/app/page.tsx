@@ -373,7 +373,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const ids = ["top", "atelier", "folio", "method"];
+    const ids = ["top", "atelier", "folio", "method", "archetypes", "concierge"];
     const sections = ids
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => Boolean(el));
@@ -471,6 +471,12 @@ export default function HomePage() {
             </a>
             <a href="#method" data-active={activeSection === "method" || undefined}>
               <em>03</em>Method
+            </a>
+            <a href="#archetypes" data-active={activeSection === "archetypes" || undefined}>
+              <em>04</em>Archetypes
+            </a>
+            <a href="#concierge" data-active={activeSection === "concierge" || undefined}>
+              <em>05</em>Concierge
             </a>
           </nav>
 
@@ -1215,7 +1221,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.archetypeSection}>
+      <section className={styles.archetypeSection} id="archetypes">
         <div className={styles.shell}>
           <div className={styles.sectionIntro} data-reveal style={revealStyle(0)}>
             <p className={styles.sectionLabel}>Trip archetypes</p>
@@ -1240,7 +1246,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.conciergeSection}>
+      <section className={styles.conciergeSection} id="concierge">
         <div className={styles.conciergeInner} data-reveal style={revealStyle(0)}>
           <p className={styles.sectionLabel}>Concierge brief</p>
           <h2>次の海外旅行は、日付ではなく季節から始めてもいい。</h2>

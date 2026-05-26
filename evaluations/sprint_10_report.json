@@ -1,0 +1,86 @@
+{
+  "sprint": 10,
+  "target_url": "http://localhost:3000",
+  "status": "PASS",
+  "checked_at": "2026-05-26",
+  "validation_method": {
+    "playwright_mcp_available": false,
+    "agent_browser_available": false,
+    "fallback_used": [
+      "TypeScript compile check in build/",
+      "Deterministic planner smoke test (including new label-integrity and SEA corridor assertions)",
+      "Next.js production build"
+    ],
+    "notes": "Interactive browser automation was not available in this session. Validation focused on the planner contract for the new Southeast Asia corridor, label integrity for the Czech Republic and Prague entries, and successful production build output."
+  },
+  "checks": [
+    {
+      "name": "Southeast Asia corridor overlay expands the gateway pool when non-direct search is allowed",
+      "result": "PASS",
+      "evidence": "travel-data.ts now separates Asian destination detection (KR, TW, TH, SG) from the curated Asian corridor pool (MY), and planner-smoke verifies that Malaysia and Kuala Lumpur appear in the gateway pool for a non-direct JP -> TH/SG search and stay out when direct-first is enabled."
+    },
+    {
+      "name": "Europe corridor regression still resolves to LGW outbound and BUD return",
+      "result": "PASS",
+      "evidence": "The existing Western Europe corridor smoke scenario continues to resolve to an outbound FUK -> LGW and a return BUD -> FUK, both with stopCount >= 2 and corridor-flagged estimateBasis."
+    },
+    {
+      "name": "Czech Republic and Prague labels render as clean Japanese",
+      "result": "PASS",
+      "evidence": "COUNTRY_LABELS.CZ now equals チェコ, AIRPORTS.PRG.city equals プラハ, AIRPORTS.PRG.name equals プラハ空港, and AIRPORTS.PRG.countryName equals チェコ. The planner-smoke mojibake guard sweeps every country label, region, summary, and key airport name and confirms no Shift_JIS-as-UTF-8 markers remain."
+    },
+    {
+      "name": "Header navigation covers every required section in the Grand Tour Ledger order",
+      "result": "PASS",
+      "evidence": "page.tsx adds Archetypes (id=archetypes) and Concierge (id=concierge) anchors to the header nav and the IntersectionObserver id list, so the active-section highlight now tracks all six tracked sections (top, atelier, folio, method, archetypes, concierge)."
+    },
+    {
+      "name": "App still passes local validation after the Sprint 10 changes",
+      "result": "PASS",
+      "evidence": "npm run typecheck, npm run test:planner (including the new label-integrity and SEA corridor assertions), and npm run build all passed after the multiregion corridor and label-integrity changes."
+    }
+  ],
+  "acceptance_criteria_results": [
+    {
+      "criterion": "A Southeast Asia search with non-direct routes allowed can expand the gateway pool to curated corridor gateways such as Malaysia / Kuala Lumpur, while keeping the headline stay countries legible.",
+      "status": "PASS",
+      "evidence": "getGatewayCountriesForDestinationCodes now adds MY to the gateway pool when at least one selected destination is an Asian destination and includeBudgetCorridors is true, and the planner-smoke seaCorridorResult scenario asserts MY and KUL appear in the pool."
+    },
+    {
+      "criterion": "Corridor-only Southeast Asia gateway countries such as Malaysia remain internal auto-gateway candidates rather than user-selectable headline destinations.",
+      "status": "PASS",
+      "evidence": "TRAVELER_SELECTABLE_COUNTRY_CODES intentionally excludes MY, and the planner-smoke contract now asserts that COUNTRY_OPTIONS does not expose MY while COUNTRY_LABELS.MY remains available for gateway summaries."
+    },
+    {
+      "criterion": "The Europe corridor regression scenario still resolves to an outbound through London Gatwick and a return from Budapest with higher-stop corridor pricing.",
+      "status": "PASS",
+      "evidence": "The existing Western Europe corridor planner-smoke scenario continues to resolve to outbound destination LGW and return origin BUD, both with stopCount >= 2 and corridor-flagged estimateBasis."
+    },
+    {
+      "criterion": "Czech Republic and Prague labels render as clean Japanese (チェコ, プラハ, プラハ空港) rather than mojibake across the planner preview, gateway summaries, and result folio.",
+      "status": "PASS",
+      "evidence": "The CZ country profile and PRG airport entries in travel-data.ts now contain clean Japanese strings, and the planner-smoke mojibake guard confirms no Shift_JIS-as-UTF-8 markers remain in any user-visible label."
+    },
+    {
+      "criterion": "The deterministic planner smoke test fails fast if a country or airport label contains Shift_JIS-as-UTF-8 mojibake markers, and passes for the current label set.",
+      "status": "PASS",
+      "evidence": "planner-smoke.cjs sweeps COUNTRY_LABELS, COUNTRY_PROFILES.region, COUNTRY_PROFILES.summary, and key airport city / name / countryName values against a mojibake marker list and passes for the current label set."
+    },
+    {
+      "criterion": "Header navigation exposes Archetypes and Concierge entries in addition to Planner, Result, and Method, and the active-section highlight updates as the user scrolls through every required section.",
+      "status": "PASS",
+      "evidence": "page.tsx now renders Archetypes and Concierge anchor links in the header nav, adds id=archetypes and id=concierge to the corresponding sections, and includes both ids in the IntersectionObserver id list."
+    },
+    {
+      "criterion": "Typecheck, deterministic planner smoke, and production build still pass after the corridor expansion and label-integrity changes.",
+      "status": "PASS",
+      "evidence": "npm run typecheck, npm run test:planner, and npm run build all passed in build/ after the Sprint 10 changes."
+    }
+  ],
+  "bugs": [],
+  "next_actions": [
+    "Add interactive browser-based verification once Playwright MCP or an equivalent automation surface is available, so the new Archetypes / Concierge anchors, corridor previews, and Japanese label rendering can be exercised visually end to end.",
+    "Expand the curated Asian corridor pool beyond Malaysia once more real-market evidence is gathered, while keeping the existing Europe and Southeast Asia regressions green.",
+    "Begin scoping a future sprint that introduces a real fare provider integration so the near-live handoff cards can become inline live quotes without losing the deterministic estimate as the fallback reference."
+  ]
+}

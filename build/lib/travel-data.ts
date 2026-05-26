@@ -13,6 +13,7 @@ export type CountryCode =
   | "TW"
   | "TH"
   | "SG"
+  | "MY"
   | "AU";
 
 export type CabinClassKey = "economy" | "premiumeconomy" | "business";
@@ -70,6 +71,9 @@ type GatewayExpansionOptions = {
 const EUROPE_COUNTRY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL", "HU", "CZ"];
 const EUROPE_GATEWAY_CODES: CountryCode[] = ["FR", "GB", "DE", "IT", "ES", "NL"];
 const EUROPE_BUDGET_CORRIDOR_CODES: CountryCode[] = ["HU", "CZ"];
+const ASIA_DESTINATION_CODES: CountryCode[] = ["KR", "TW", "TH", "SG"];
+const ASIA_BUDGET_CORRIDOR_CODES: CountryCode[] = ["MY"];
+const ASIA_CORRIDOR_PRICING_CODES: CountryCode[] = ["KR", "TW", "TH", "SG", "MY"];
 const TRAVELER_SELECTABLE_COUNTRY_CODES: CountryCode[] = ["JP", "FR", "GB", "DE", "IT", "ES", "NL", "US", "KR", "TW", "TH", "SG", "AU"];
 
 export const CABIN_CLASS_OPTIONS: Array<{ value: CabinClassKey; label: string; hint: string }> = [
@@ -179,10 +183,10 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
   },
   {
     code: "CZ",
-    name: "繝√ぉ繧ｳ",
-    region: "荳ｭ螟ｮ繝ｨ繝ｼ繝ｭ繝・ヱ",
+    name: "チェコ",
+    region: "中央ヨーロッパ",
     airportCodes: ["PRG"],
-    summary: "荳ｭ谺ｧ縺ｮ蛻･ corridor 繧定ｶｳ縺・ｽ・gateway 縺ｨ縺励※蜉縺医ｋ",
+    summary: "中欧の価格重視 corridor を足す gateway として加える",
   },
   {
     code: "US",
@@ -218,6 +222,13 @@ export const COUNTRY_PROFILES: CountryProfile[] = [
     region: "東南アジア",
     airportCodes: ["SIN"],
     summary: "単一ハブで扱いやすい国として代表採用",
+  },
+  {
+    code: "MY",
+    name: "マレーシア",
+    region: "東南アジア",
+    airportCodes: ["KUL"],
+    summary: "東南アジアの価格重視 corridor として比較に加える",
   },
   {
     code: "AU",
@@ -484,10 +495,10 @@ export const AIRPORTS: Record<string, Airport> = {
   },
   PRG: {
     code: "PRG",
-    city: "繝励Λ繝上",
-    name: "繝励Λ繝上遨ｺ貂ｯ",
+    city: "プラハ",
+    name: "プラハ空港",
     countryCode: "CZ",
-    countryName: "繝√ぉ繧ｳ",
+    countryName: "チェコ",
     latitude: 50.1008,
     longitude: 14.26,
     hubScore: 3,
@@ -623,6 +634,17 @@ export const AIRPORTS: Record<string, Airport> = {
     longitude: 103.9915,
     hubScore: 5,
   },
+  KUL: {
+    code: "KUL",
+    city: "クアラルンプール",
+    name: "クアラルンプール国際空港",
+    countryCode: "MY",
+    countryName: "マレーシア",
+    latitude: 2.7456,
+    longitude: 101.7099,
+    hubScore: 4,
+    corridorScore: 5,
+  },
   SYD: {
     code: "SYD",
     city: "シドニー",
@@ -667,12 +689,21 @@ export function isEuropeanCountryCode(countryCode: CountryCode): boolean {
   return EUROPE_COUNTRY_CODES.includes(countryCode);
 }
 
+export function isAsianDestinationCountryCode(countryCode: CountryCode): boolean {
+  return ASIA_DESTINATION_CODES.includes(countryCode);
+}
+
+export function isAsianCorridorCountryCode(countryCode: CountryCode): boolean {
+  return ASIA_CORRIDOR_PRICING_CODES.includes(countryCode);
+}
+
 export function getGatewayCountriesForDestinationCodes(
   countryCodes: CountryCode[],
   options: GatewayExpansionOptions = {},
 ): CountryProfile[] {
   const expandedCountryCodes = new Set<CountryCode>(countryCodes);
   const shouldExpandToEurope = countryCodes.some((countryCode) => isEuropeanCountryCode(countryCode));
+  const shouldExpandToAsia = countryCodes.some((countryCode) => isAsianDestinationCountryCode(countryCode));
 
   if (shouldExpandToEurope) {
     EUROPE_GATEWAY_CODES.forEach((countryCode) => expandedCountryCodes.add(countryCode));
@@ -680,6 +711,10 @@ export function getGatewayCountriesForDestinationCodes(
     if (options.includeBudgetCorridors) {
       EUROPE_BUDGET_CORRIDOR_CODES.forEach((countryCode) => expandedCountryCodes.add(countryCode));
     }
+  }
+
+  if (shouldExpandToAsia && options.includeBudgetCorridors) {
+    ASIA_BUDGET_CORRIDOR_CODES.forEach((countryCode) => expandedCountryCodes.add(countryCode));
   }
 
   return COUNTRY_PROFILES.filter((country) => expandedCountryCodes.has(country.code));

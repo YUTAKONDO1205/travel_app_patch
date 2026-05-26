@@ -1,0 +1,37 @@
+{
+  "sprint": 10,
+  "implemented": [
+    "Extended the deterministic corridor overlay to Southeast Asia so non-direct searches with destinations such as Thailand or Singapore can widen the gateway pool to curated corridor gateways such as Malaysia / Kuala Lumpur.",
+    "Added a corridor-aware pricing path for Southeast Asia routes (distance >= 4500km with an Asia corridor endpoint and corridor score >= 3) while preserving the existing Europe corridor regression behavior.",
+    "Repaired the Czech Republic country profile and Prague airport entries so their Japanese labels (チェコ, 中央ヨーロッパ, プラハ, プラハ空港) render correctly across the planner preview, gateway summaries, and result folio.",
+    "Added a label-integrity guard to the deterministic planner smoke test that scans every country label, region, summary, and key airport name for Shift_JIS-as-UTF-8 mojibake markers and fails fast if any reappear.",
+    "Wired fragment anchors and IntersectionObserver tracking for the archetypes and concierge sections so every required section in the Grand Tour Ledger order can be reached and highlighted from the header nav.",
+    "Updated the Sprint 10 spec, design document, and README files so the corridor coverage, label integrity, and nav completion changes are part of the documented contract."
+  ],
+  "known_issues": [
+    "Fare outputs remain deterministic estimates; live provider integration is still out of scope.",
+    "The Asian corridor overlay currently surfaces a single curated gateway (Malaysia / Kuala Lumpur); broader curated coverage such as Vietnam or Indonesia is intentionally left for a later sprint.",
+    "Interactive browser automation was unavailable in this session, so verification relied on typecheck, deterministic planner smoke, and production build integrity."
+  ],
+  "source_bug_ids": [],
+  "addressed_bug_ids": [],
+  "unresolved_bug_ids": [],
+  "run_instructions": {
+    "install": "npm install",
+    "dev": "npm run dev"
+  },
+  "validation": [
+    {
+      "command": "npm run typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:planner",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed"
+    }
+  ]
+}

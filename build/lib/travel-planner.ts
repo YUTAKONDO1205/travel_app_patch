@@ -7,6 +7,7 @@ import {
   getGatewayAirportsForDestinationCodes,
   getGatewayCountriesForDestinationCodes,
   getCountryProfile,
+  isAsianCorridorCountryCode,
   isEuropeanCountryCode,
   type Airport,
   type CabinClassKey,
@@ -373,11 +374,14 @@ function buildPricingRouteProfiles({
   });
 
   const corridorScore = getRouteCorridorScore(origin, destination);
-  const corridorEligible =
-    cabinClass !== "business" &&
+  const europeCorridorEligible =
     distanceKm >= 7000 &&
-    (isEuropeanCountryCode(origin.countryCode) || isEuropeanCountryCode(destination.countryCode)) &&
-    corridorScore >= 3;
+    (isEuropeanCountryCode(origin.countryCode) || isEuropeanCountryCode(destination.countryCode));
+  const asiaCorridorEligible =
+    distanceKm >= 4500 &&
+    (isAsianCorridorCountryCode(origin.countryCode) || isAsianCorridorCountryCode(destination.countryCode));
+  const corridorEligible =
+    cabinClass !== "business" && corridorScore >= 3 && (europeCorridorEligible || asiaCorridorEligible);
 
   if (corridorEligible) {
     const stopCount = corridorScore >= 5 ? 3 : 2;

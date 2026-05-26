@@ -25,6 +25,7 @@ Maison Passage は、海外旅行を「2 枚の片道航空券」として検索
 - `Sprint 7`: Bauhaus Motion Refresh
 - `Sprint 8`: Europe Corridor Overlay
 - `Sprint 9`: Live Fare Handoff Cards
+- `Sprint 10`: Multiregion Corridor Realism & Label Integrity
 
 ## リポジトリ構成
 

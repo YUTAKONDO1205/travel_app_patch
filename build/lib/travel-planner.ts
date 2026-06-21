@@ -118,6 +118,7 @@ export type FlightSearchResult = {
   planningNote: string;
   liveFareSources: LiveFareSource[];
   combinedSearchUrl: string;
+  fallbackNotice: string | null;
 };
 
 type PricingRouteProfile = {
@@ -517,43 +518,43 @@ function buildLiveFareSources({
   cabinClass: CabinClassKey;
   combinedSearchUrl: string;
 }): LiveFareSource[] {
-  const sharedDetails = `${Number.parseInt(passengerCount, 10)}名 / ${formatCabinClassLabel(cabinClass)}`;
+  const sharedDetails = `${Number.parseInt(passengerCount, 10)}名・${formatCabinClassLabel(cabinClass)}`;
 
   return [
     {
       id: "outbound",
-      label: "往路 near-live search",
+      label: "往路の検索",
       provider: "Skyscanner",
       status: "near-live",
-      statusLabel: "Near-live handoff",
-      routeLabel: `${bestOutbound.origin.code} -> ${bestOutbound.destination.code}`,
+      statusLabel: "実検索へ",
+      routeLabel: `${bestOutbound.origin.code} → ${bestOutbound.destination.code}`,
       dateLabel: formatDateLabel(bestOutbound.travelDate),
-      detailsLabel: `${sharedDetails} / One-way`,
-      fallbackLabel: `リンク先で価格が出ない場合は ${bestOutbound.origin.code} -> ${bestOutbound.destination.code} / ${bestOutbound.travelDate} を手入力して再検索してください。`,
+      detailsLabel: `${sharedDetails}・片道`,
+      fallbackLabel: `価格が出ないときは、${bestOutbound.origin.code} → ${bestOutbound.destination.code}・${bestOutbound.travelDate} を手入力して調べ直してください。`,
       url: bestOutbound.skyscannerUrl,
     },
     {
       id: "return",
-      label: "復路 near-live search",
+      label: "復路の検索",
       provider: "Skyscanner",
       status: "near-live",
-      statusLabel: "Near-live handoff",
-      routeLabel: `${bestInbound.origin.code} -> ${bestInbound.destination.code}`,
+      statusLabel: "実検索へ",
+      routeLabel: `${bestInbound.origin.code} → ${bestInbound.destination.code}`,
       dateLabel: formatDateLabel(bestInbound.travelDate),
-      detailsLabel: `${sharedDetails} / One-way`,
-      fallbackLabel: `リンク先で価格が出ない場合は ${bestInbound.origin.code} -> ${bestInbound.destination.code} / ${bestInbound.travelDate} を手入力して再検索してください。`,
+      detailsLabel: `${sharedDetails}・片道`,
+      fallbackLabel: `価格が出ないときは、${bestInbound.origin.code} → ${bestInbound.destination.code}・${bestInbound.travelDate} を手入力して調べ直してください。`,
       url: bestInbound.skyscannerUrl,
     },
     {
       id: "combined",
-      label: "参考 multi-city view",
+      label: "参考：まとめて検索",
       provider: "Skyscanner",
       status: "reference",
-      statusLabel: "Reference handoff",
-      routeLabel: `${bestOutbound.origin.code} -> ${bestOutbound.destination.code} / ${bestInbound.origin.code} -> ${bestInbound.destination.code}`,
-      dateLabel: `${formatDateLabel(bestOutbound.travelDate)} / ${formatDateLabel(bestInbound.travelDate)}`,
-      detailsLabel: `${sharedDetails} / Multi-city`,
-      fallbackLabel: "片道2枚の最終価格は往路と復路それぞれの one-way 画面を優先し、この導線は旅程の形を見直す参考用として使ってください。",
+      statusLabel: "参考",
+      routeLabel: `${bestOutbound.origin.code} → ${bestOutbound.destination.code}・${bestInbound.origin.code} → ${bestInbound.destination.code}`,
+      dateLabel: `${formatDateLabel(bestOutbound.travelDate)}・${formatDateLabel(bestInbound.travelDate)}`,
+      detailsLabel: `${sharedDetails}・複数区間`,
+      fallbackLabel: "最終的な値段は、往路と復路それぞれの片道の画面で確かめてください。これは旅程の形を見直すための参考です。",
       url: combinedSearchUrl,
     },
   ];
@@ -603,17 +604,17 @@ function buildPlannerReasons({
   const usesGatewayCountry = !selectedStayCountryCodes.includes(routeCountryCode);
   const stopReason =
     stopCount === 0
-      ? "直行便の成立を優先し、移動時間と乗り換え負荷を抑えています。"
+      ? "直行を優先して、移動時間と乗り換えの手間を抑えています。"
       : stopCount === 1
-        ? "1回乗継を許容し、価格と移動時間の均衡を見ています。"
-        : `${stopCount}回乗継まで含む価格重視の corridor を織り込み、長時間でも安さが出やすい組み合わせを残しています。`;
+        ? "乗継1回まで認めて、値段と時間のバランスを見ています。"
+        : `乗継${stopCount}回まで含めて、時間はかかっても安く済む組み合わせを残しています。`;
 
   return [
-    `${origin.city}(${origin.code}) と ${destination.city}(${destination.code}) を代表空港として比較しています。`,
+    `${origin.city}（${origin.code}）と ${destination.city}（${destination.code}）を代表の空港として比べています。`,
     usesGatewayCountry
-      ? `${stopReason} 滞在国の外側にある gateway も入口・出口候補として比較しています。`
+      ? `${stopReason} 行きたい国の外にある都市も、入口や出口の候補として比べています。`
       : stopReason,
-    `${season.label}の参考運賃です。実勢価格は Skyscanner 側で再確認してください。`,
+    `${season.label}の参考運賃です。実際の値段は Skyscanner で確かめてください。`,
   ];
 }
 
@@ -935,15 +936,15 @@ export function buildNoRouteGuidance(formState: PlannerFormState): string[] {
   const guidance: string[] = [];
 
   if (formState.preferDirect) {
-    guidance.push("直行優先を外すと、1回乗継を許容した安い候補が出やすくなります。");
+    guidance.push("直行優先を外すと、乗継1回ありの安い候補が出やすくなります。");
   }
 
   if (formState.destinationCountries.length <= 1) {
-    guidance.push("候補国を2〜3か国に広げると、入口と出口の最適化余地が増えます。");
+    guidance.push("候補の国を2〜3か国に増やすと、入口と出口の選びかたが広がります。");
   }
 
-  guidance.push("日付指定から月単位のフレックス探索に切り替えると、候補が見つかりやすくなります。");
-  guidance.push("代表空港の比較結果なので、最終確認は Skyscanner の実検索に進んでください。");
+  guidance.push("日付を決めて探しているなら、月をまたぐ探し方に切り替えると候補が見つかりやすくなります。");
+  guidance.push("代表的な空港で比べた結果です。最後は Skyscanner の実際の検索で確かめてください。");
 
   return guidance.slice(0, 3);
 }
@@ -990,7 +991,7 @@ export function buildSearchSummary(formState: PlannerFormState): string {
   return `${departure}発 / ${destinations} / ${formState.passengerCount}名 / ${formState.cabinClass}`;
 }
 
-export function generateFlightSearchResult(formState: PlannerFormState): FlightSearchResult | null {
+function buildSearchResult(formState: PlannerFormState): FlightSearchResult | null {
   if (!isFormValid(formState) || !formState.departureCountry) {
     return null;
   }
@@ -1067,8 +1068,8 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
   const stayLengthRangeLabel = getStayRangeLabel(formState);
   const flexibilitySummary =
     formState.dateSearchMode === "flexible"
-      ? `${formState.targetMonths.map((monthKey) => formatTargetMonthLabel(monthKey)).join(" / ")}の全日から往路最安日を選び、そこから${stayLengthRangeLabel}後の復路候補を比較しました。`
-      : `${formatDateLabel(bestOutbound.travelDate)}出発、${formatDateLabel(bestInbound.travelDate)}帰国の固定日程で比較しました。`;
+      ? `${formState.targetMonths.map((monthKey) => formatTargetMonthLabel(monthKey)).join(" / ")}のすべての日から往路がいちばん安い日を選んで、そこから${stayLengthRangeLabel}後の復路を比べました。`
+      : `${formatDateLabel(bestOutbound.travelDate)}出発、${formatDateLabel(bestInbound.travelDate)}帰国の決まった日程で比べました。`;
   const totalPricePerPerson = bestOutbound.pricePerPerson + bestInbound.pricePerPerson;
   const totalPrice = bestOutbound.totalPrice + bestInbound.totalPrice;
   const totalPriceRangePerPerson = {
@@ -1109,24 +1110,24 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
         arrivalLabel: `${bestOutbound.destination.city} (${bestOutbound.destination.code})`,
         departureLabel: `${bestInbound.origin.city} (${bestInbound.origin.code})`,
         distanceKm: betweenTicketsDistanceKm,
-        summary: `片道1枚目の到着地と片道2枚目の出発地の間には約${distanceFormatter.format(betweenTicketsDistanceKm)}kmの現地移動があります。`,
-        note: "この区間の列車・短距離便・車移動は見積もりに含めず、国際線の片道2枚だけを比較しています。",
+        summary: `1枚目で着く場所と2枚目で出る場所は離れていて、その間に約${distanceFormatter.format(betweenTicketsDistanceKm)}kmの移動があります。`,
+        note: "この区間の電車や近距離の便、車での移動は見積もりに入れず、国際線の片道2枚だけを比べています。",
       }
     : {
         arrivalLabel: `${bestOutbound.destination.city} (${bestOutbound.destination.code})`,
         departureLabel: `${bestInbound.origin.city} (${bestInbound.origin.code})`,
         distanceKm: 0,
-        summary: "片道1枚目の到着地と片道2枚目の出発地は同じ空港です。",
-        note: "この場合も現地移動費用の計算は含めず、国際線の片道2枚だけを比較しています。",
+        summary: "1枚目で着く空港と2枚目で出る空港は同じです。",
+        note: "この場合も現地の移動費は入れず、国際線の片道2枚だけを比べています。",
       };
   const gatewaySummary =
     gatewayCountries.length > destinationCountries.length
-      ? `${destinationNames} を主目的地にしつつ、検索プールは ${gatewayNames} の ${gatewayAirports.length} 空港まで広げています。`
-      : `${destinationNames} の代表空港 ${destinationAirports.length} 件をそのまま検索プールとして使っています。`;
+      ? `${destinationNames} を主な目的地にして、入口と出口の候補は ${gatewayNames} の ${gatewayAirports.length} 空港まで広げています。`
+      : `${destinationNames} の代表的な空港 ${destinationAirports.length} 件だけで比べています。`;
   const ticketingSummary =
     usesGatewayEntry || usesGatewayExit
-      ? `往路と復路は別々の片道券として見積もっています。主目的地が ${destinationNames} でも、入口は ${bestOutbound.destination.city}、出口は ${bestInbound.origin.city} のように周辺 gateway 都市が選ばれることがあります。`
-      : `往路と復路は別々の片道券として見積もっています。今回は ${destinationNames} の代表空港どうしで最安の組み合わせが見つかりました。`;
+      ? `往路と復路は、別々の片道券として見積もっています。目的地が ${destinationNames} でも、入口は ${bestOutbound.destination.city}、帰りは ${bestInbound.origin.city} のように、周りの都市が選ばれることがあります。`
+      : `往路と復路は、別々の片道券として見積もっています。今回は ${destinationNames} の代表的な空港どうしで、いちばん安い組み合わせが見つかりました。`;
 
   return {
     departureCountry,
@@ -1152,13 +1153,40 @@ export function generateFlightSearchResult(formState: PlannerFormState): FlightS
     totalPrice,
     totalPriceRangePerPerson,
     totalPriceRange,
-    planHeadline: `${departureCountry.name}発で ${destinationNames} を回るなら、片道2枚の組み合わせは ${bestOutbound.origin.code}→${bestOutbound.destination.code} と ${bestInbound.origin.code}→${bestInbound.destination.code} が現時点の推定最安です。`,
+    planHeadline: `${departureCountry.name}発で ${destinationNames} へ行くなら、いまのところ ${bestOutbound.origin.code}→${bestOutbound.destination.code} と ${bestInbound.origin.code}→${bestInbound.destination.code} の片道2枚がいちばん安そうです。`,
     gatewaySummary,
     ticketingSummary,
     betweenTicketsGap,
     planningNote:
-      "表示価格は2枚の片道券を別々に見積もった参考値です。ライブ在庫ではないため、往路と復路それぞれの near-live handoff を優先し、リンク先で価格が出ない場合は route / date / 人数 / cabin をそのまま手入力して再検索してください。",
+      "表示価格は、片道2枚をそれぞれ別に見積もった参考値です。実際の空席ではないので、まず往路と復路それぞれの検索を開いて、価格が出ないときは区間や日付、人数、クラスをそのまま手入力して調べ直してください。",
     liveFareSources,
     combinedSearchUrl,
+    fallbackNotice: null,
   };
+}
+
+export function generateFlightSearchResult(formState: PlannerFormState): FlightSearchResult | null {
+  const primary = buildSearchResult(formState);
+
+  if (primary) {
+    return primary;
+  }
+
+  // Graceful direct-first fallback: if "直行優先" leaves no viable pairing
+  // (distant pairs with low-hub airports yield zero direct candidates), retry
+  // automatically with connections allowed and surface a transparent notice
+  // instead of silently returning "no route".
+  if (formState.preferDirect && isFormValid(formState)) {
+    const relaxed = buildSearchResult({ ...formState, preferDirect: false });
+
+    if (relaxed) {
+      return {
+        ...relaxed,
+        fallbackNotice:
+          "直行優先では条件に合う片道2枚が見つからなかったため、自動的に1回以上の乗継を含めて再探索しました。直行にこだわる場合は、出発月や候補国の幅を広げてお試しください。",
+      };
+    }
+  }
+
+  return null;
 }

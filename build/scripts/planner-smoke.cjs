@@ -254,6 +254,36 @@ try {
     "Expected Kuala Lumpur to stay out of the SEA gateway pool when direct-first is enabled.",
   );
 
+  // Normal searches must not carry a fallback notice.
+  assert(result.fallbackNotice === null, "Expected no fallback notice on a normally satisfiable search.");
+
+  // Direct-first graceful fallback: Sydney -> Paris is ~17,000km, so no direct
+  // pairing exists. With 直行優先 the planner must auto-retry with connections
+  // and surface a transparent fallback notice instead of returning null.
+  const fallbackResult = planner.generateFlightSearchResult({
+    ...planner.INITIAL_FORM_STATE,
+    departureCountry: "AU",
+    destinationCountries: ["FR"],
+    dateSearchMode: "flexible",
+    outboundDate: "",
+    targetMonths: ["2026-09"],
+    stayLengthMin: "10",
+    stayLengthMax: "14",
+    passengerCount: "1",
+    cabinClass: "economy",
+    preferDirect: true,
+  });
+
+  assert(fallbackResult, "Expected a graceful fallback result for the no-direct Australia -> France search.");
+  assert(
+    typeof fallbackResult.fallbackNotice === "string" && fallbackResult.fallbackNotice.includes("乗継"),
+    "Expected the direct-first fallback to surface a connection-based fallback notice.",
+  );
+  assert(
+    fallbackResult.bestOutbound.stopCount >= 1 && fallbackResult.bestInbound.stopCount >= 1,
+    "Expected the fallback pairing to use at least one connection on each leg.",
+  );
+
   console.log("[planner-smoke] PASS deterministic gateway-pair planner result");
 } finally {
   fs.rmSync(tempDir, { force: true, recursive: true });

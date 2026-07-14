@@ -4,8 +4,11 @@ build/node_modules/
 
 # Next.js and generated build output
 build/.next/
-build/.next-smoke/
+# every alternate dist dir (NEXT_DIST_DIR): .next-smoke, .next-probe, .next-lab, …
+build/.next-*/
 build/out/
+build/.playwright-mcp/
+.playwright-mcp/
 build/tsconfig.tsbuildinfo
 
 # Local caches
@@ -46,3 +49,6 @@ Thumbs.db
 .agents/
 .codex/
 agents/
+
+# Local reference material (not part of the app)
+/デザイン.jpeg

@@ -1,0 +1,285 @@
+/* skin 03 — Glassmorphism (id=glass)
+   Frosted white panels floating over a soft colored light field.
+   SIGNATURE: the header is a permanently frosted bar — blur(18px) saturate(1.8)
+   translucent white over the navy hero photo, identical before and after scroll,
+   with the text locked to dark ink so it never depends on .headerSolid. */
+
+/* ============================================================
+   1. Scope root — light base, glassy surface tokens
+   ============================================================ */
+[data-skin-scope="glass"] {
+  background:
+    radial-gradient(620px 420px at 12% 8%, rgba(0, 98, 227, 0.22), transparent 62%),
+    radial-gradient(520px 420px at 88% 18%, rgba(255, 183, 0, 0.20), transparent 60%),
+    radial-gradient(720px 520px at 50% 85%, rgba(16, 154, 134, 0.16), transparent 60%),
+    linear-gradient(180deg, #eef3fb, #e6ecf6);
+
+  --surface: rgba(255, 255, 255, 0.55);
+  --line: rgba(255, 255, 255, 0.65);
+  --line-strong: rgba(190, 205, 228, 0.9);
+  --bg-soft: rgba(255, 255, 255, 0.42);
+  --bg-soft-2: rgba(255, 255, 255, 0.55);
+  --shadow-sm: 0 2px 8px rgba(31, 54, 90, 0.08);
+  --shadow-md: 0 8px 28px rgba(31, 54, 90, 0.12);
+  --shadow-lg: 0 16px 48px rgba(31, 54, 90, 0.16);
+}
+
+/* ============================================================
+   2. Generic surfaces — the shared glass-panel recipe
+   ============================================================ */
+[data-skin-scope="glass"] [data-ui="search-panel"],
+[data-skin-scope="glass"] [data-ui="trust-item"],
+[data-skin-scope="glass"] [data-ui="state-card"],
+[data-skin-scope="glass"] [data-ui="flight-card"],
+[data-skin-scope="glass"] [data-ui="gap-card"],
+[data-skin-scope="glass"] [data-ui="stat-cell"],
+[data-skin-scope="glass"] [data-ui="handoff-section"],
+[data-skin-scope="glass"] [data-ui="alt-section"],
+[data-skin-scope="glass"] [data-ui="coverage-section"],
+[data-skin-scope="glass"] [data-ui="how-card"],
+[data-skin-scope="glass"] [data-ui="dest-card"],
+[data-skin-scope="glass"] [data-ui="footer"],
+[data-skin-scope="glass"] [data-ui="pool-card"]:not([data-tone="total"]) {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow:
+    0 8px 32px rgba(31, 54, 90, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+}
+
+/* The gold top edge is the search panel's landmark — keep it on the glass. */
+[data-skin-scope="glass"] [data-ui="search-panel"] {
+  border-top: 4px solid var(--gold);
+}
+
+/* Footer keeps a flat top edge against the page. */
+[data-skin-scope="glass"] [data-ui="footer"] {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* Dest card keeps its photo clipped and its selected ring. */
+[data-skin-scope="glass"] [data-ui="dest-card"] {
+  overflow: hidden;
+}
+
+[data-skin-scope="glass"] [data-ui="dest-card"][data-active] {
+  border-color: var(--brand);
+  box-shadow:
+    0 0 0 2px var(--brand),
+    0 8px 32px rgba(31, 54, 90, 0.12);
+}
+
+/* Inner cards sit one step lighter so they read as nested glass. */
+[data-skin-scope="glass"] [data-ui="handoff-card"][data-ui],
+[data-skin-scope="glass"] [data-ui="alt-card"][data-ui],
+[data-skin-scope="glass"] [data-ui="coverage-card"][data-ui] {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+}
+
+/* Keep the near-live handoff tone legible as a teal-tinted pane. */
+[data-skin-scope="glass"] [data-ui="handoff-card"][data-tone="near-live"] {
+  background: rgba(16, 154, 134, 0.14);
+  border: 1px solid rgba(16, 154, 134, 0.38);
+}
+
+/* Inputs */
+[data-skin-scope="glass"] [data-ui="select"],
+[data-skin-scope="glass"] [data-ui="input"] {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+[data-skin-scope="glass"] [data-ui="select"]:focus,
+[data-skin-scope="glass"] [data-ui="input"]:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(0, 98, 227, 0.25);
+}
+
+[data-skin-scope="glass"] [data-ui="segmented"] {
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Chips — inactive only; the active state keeps the module's brand fill
+   (white on #0062e3 is already past 4.5:1). */
+[data-skin-scope="glass"] [data-ui="month-chip"]:not([data-active]),
+[data-skin-scope="glass"] [data-ui="country-chip"]:not([data-active]),
+[data-skin-scope="glass"] [data-ui="cabin-card"]:not([data-active]) {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+[data-skin-scope="glass"] [data-ui="btn-ghost"] {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+[data-skin-scope="glass"] [data-ui="btn-ghost"]:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--brand);
+}
+
+/* btn-search stays a solid brand slab — the primary action should not dissolve. */
+
+/* ============================================================
+   3. SIGNATURE — the always-frosted header bar
+   In mix mode the scope lands on <header> itself, so both shapes are needed.
+   ============================================================ */
+[data-skin-scope="glass"][data-ui="header"],
+[data-skin-scope="glass"] [data-ui="header"] {
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  backdrop-filter: blur(18px) saturate(1.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 4px 24px rgba(10, 30, 60, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Beat .headerSolid (which also repaints the bar on scroll). */
+[data-skin-scope="glass"][data-ui="header"][data-ui],
+[data-skin-scope="glass"] [data-ui="header"][data-ui] {
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(18px) saturate(1.8);
+  backdrop-filter: blur(18px) saturate(1.8);
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 4px 24px rgba(10, 30, 60, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Header text is dark at all times — the frost never gets dark enough to
+   carry white type, so the pre-scroll white default is overridden outright.
+   The (0,3,0) boost outranks `.headerSolid .navLink`. */
+[data-skin-scope="glass"][data-ui="header"] [data-ui="brand"][data-ui],
+[data-skin-scope="glass"] [data-ui="header"] [data-ui="brand"][data-ui] {
+  color: #10233f;
+}
+
+[data-skin-scope="glass"][data-ui="header"] [data-ui="nav-link"][data-ui],
+[data-skin-scope="glass"] [data-ui="header"] [data-ui="nav-link"][data-ui] {
+  color: #2b3446;
+  background: transparent;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+[data-skin-scope="glass"][data-ui="header"] [data-ui="nav-link"][data-ui]:hover,
+[data-skin-scope="glass"] [data-ui="header"] [data-ui="nav-link"][data-ui]:hover,
+[data-skin-scope="glass"][data-ui="header"] [data-ui="nav-link"][data-ui][data-active],
+[data-skin-scope="glass"] [data-ui="header"] [data-ui="nav-link"][data-ui][data-active] {
+  color: var(--brand);
+  background: rgba(0, 98, 227, 0.12);
+}
+
+[data-skin-scope="glass"][data-ui="header"] [data-ui="header-cta"][data-ui],
+[data-skin-scope="glass"] [data-ui="header"] [data-ui="header-cta"][data-ui] {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--brand);
+  border: 1px solid rgba(0, 98, 227, 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+[data-skin-scope="glass"][data-ui="header"] [data-ui="header-cta"][data-ui]:hover,
+[data-skin-scope="glass"] [data-ui="header"] [data-ui="header-cta"][data-ui]:hover {
+  background: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="glass"][data-ui="header"],
+  [data-skin-scope="glass"] [data-ui="header"],
+  [data-skin-scope="glass"][data-ui="header"] [data-ui="nav-link"][data-ui],
+  [data-skin-scope="glass"] [data-ui="header"] [data-ui="nav-link"][data-ui],
+  [data-skin-scope="glass"][data-ui="header"] [data-ui="header-cta"][data-ui],
+  [data-skin-scope="glass"] [data-ui="header"] [data-ui="header-cta"][data-ui],
+  [data-skin-scope="glass"] [data-ui="btn-ghost"],
+  [data-skin-scope="glass"] [data-ui="select"],
+  [data-skin-scope="glass"] [data-ui="input"] {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   4. Fallback — no backdrop-filter: swap frost for opaque white
+   ============================================================ */
+@supports not (backdrop-filter: blur(1px)) {
+  [data-skin-scope="glass"][data-ui="header"],
+  [data-skin-scope="glass"] [data-ui="header"],
+  [data-skin-scope="glass"][data-ui="header"][data-ui],
+  [data-skin-scope="glass"] [data-ui="header"][data-ui] {
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  [data-skin-scope="glass"] [data-ui="search-panel"],
+  [data-skin-scope="glass"] [data-ui="trust-item"],
+  [data-skin-scope="glass"] [data-ui="state-card"],
+  [data-skin-scope="glass"] [data-ui="flight-card"],
+  [data-skin-scope="glass"] [data-ui="gap-card"],
+  [data-skin-scope="glass"] [data-ui="stat-cell"],
+  [data-skin-scope="glass"] [data-ui="handoff-section"],
+  [data-skin-scope="glass"] [data-ui="alt-section"],
+  [data-skin-scope="glass"] [data-ui="coverage-section"],
+  [data-skin-scope="glass"] [data-ui="how-card"],
+  [data-skin-scope="glass"] [data-ui="dest-card"],
+  [data-skin-scope="glass"] [data-ui="footer"],
+  [data-skin-scope="glass"] [data-ui="pool-card"]:not([data-tone="total"]),
+  [data-skin-scope="glass"] [data-ui="handoff-card"][data-ui],
+  [data-skin-scope="glass"] [data-ui="alt-card"][data-ui],
+  [data-skin-scope="glass"] [data-ui="coverage-card"][data-ui],
+  [data-skin-scope="glass"] [data-ui="select"],
+  [data-skin-scope="glass"] [data-ui="input"],
+  [data-skin-scope="glass"] [data-ui="segmented"],
+  [data-skin-scope="glass"] [data-ui="btn-ghost"],
+  [data-skin-scope="glass"] [data-ui="month-chip"]:not([data-active]),
+  [data-skin-scope="glass"] [data-ui="country-chip"]:not([data-active]),
+  [data-skin-scope="glass"] [data-ui="cabin-card"]:not([data-active]) {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  [data-skin-scope="glass"] [data-ui="handoff-card"][data-tone="near-live"] {
+    background: rgba(222, 242, 238, 0.96);
+  }
+
+  [data-skin-scope="glass"][data-ui="header"] [data-ui="header-cta"][data-ui],
+  [data-skin-scope="glass"] [data-ui="header"] [data-ui="header-cta"][data-ui] {
+    background: #fff;
+  }
+}
+
+/* ============================================================
+   5. Narrow screens — effects only, no layout width added
+   ============================================================ */
+@media (max-width: 640px) {
+  [data-skin-scope="glass"] [data-ui="search-panel"],
+  [data-skin-scope="glass"] [data-ui="state-card"],
+  [data-skin-scope="glass"] [data-ui="flight-card"],
+  [data-skin-scope="glass"] [data-ui="gap-card"],
+  [data-skin-scope="glass"] [data-ui="handoff-section"],
+  [data-skin-scope="glass"] [data-ui="alt-section"],
+  [data-skin-scope="glass"] [data-ui="coverage-section"],
+  [data-skin-scope="glass"] [data-ui="how-card"],
+  [data-skin-scope="glass"] [data-ui="dest-card"] {
+    border-radius: 14px;
+  }
+}

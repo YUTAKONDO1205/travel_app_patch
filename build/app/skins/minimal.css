@@ -1,0 +1,449 @@
+/* skin: minimal — Minimalism (05). Line and whitespace only; every fill, shadow and radius is removed.
+ * Signature zone (全部盛り): how — 使い方3ステップ + アーキタイプ.
+ * The how cards lose their surface entirely: a single 1px hairline on top, then a hairline-thin
+ * font-weight 200 step numeral at clamp(3.5rem, 6vw, 5rem) standing alone on paper-white.
+ */
+
+/* ============================================================
+   1. Scope root — redeclare the palette as black-on-white
+   ============================================================ */
+[data-skin-scope="minimal"] {
+  background: #fff;
+  color: #111;
+
+  --bg: #fff;
+  --bg-soft: #fff;
+  --bg-soft-2: #fff;
+  --surface: #fff;
+
+  --ink: #111;
+  --ink-soft: #3b4150;
+  --muted: #595959;
+  --faint: #767676;
+
+  --brand: #111;
+  --brand-dark: #000;
+  --brand-soft: #f2f2f2;
+
+  --navy: #0a0a0a;
+  --navy-2: #161616;
+
+  /* gold drives the searchPanel top bar and the gold tints — bleach it out.
+     resultKicker sits on the navy block, so gold=white stays readable there. */
+  --gold: #ffffff;
+  --gold-soft: #ffffff;
+
+  --teal: #111;
+  --teal-soft: #f2f2f2;
+  --return: #111;
+  --return-soft: #fdeae0; /* validationText has no hook: keep its red on the existing tint */
+
+  --line: #e5e5e5;
+  --line-strong: #c9c9c9;
+
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-pill: 0;
+}
+
+/* ============================================================
+   2. Generic surfaces — a card is a rule, not a box
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="search-panel"],
+[data-skin-scope="minimal"] [data-ui="flight-card"],
+[data-skin-scope="minimal"] [data-ui="gap-card"],
+[data-skin-scope="minimal"] [data-ui="stat-cell"],
+[data-skin-scope="minimal"] [data-ui="alt-card"],
+[data-skin-scope="minimal"] [data-ui="coverage-card"],
+[data-skin-scope="minimal"] [data-ui="pool-card"],
+[data-skin-scope="minimal"] [data-ui="trust-item"],
+[data-skin-scope="minimal"] [data-ui="state-card"],
+[data-skin-scope="minimal"] [data-ui="handoff-section"],
+[data-skin-scope="minimal"] [data-ui="alt-section"],
+[data-skin-scope="minimal"] [data-ui="coverage-section"],
+[data-skin-scope="minimal"] [data-ui="handoff-card"][data-ui] {
+  background: #fff;
+  border: none;
+  border-top: 1px solid #111;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* result-hero and pool-card[data-tone="total"] intentionally stay as the one black block:
+   white text on #0a0a0a reads at ~19:1 and gives the sheet its single anchor. */
+[data-skin-scope="minimal"] [data-ui="result-hero"] {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-skin-scope="minimal"] [data-ui="pool-card"][data-tone="total"] {
+  background: #0a0a0a;
+  border: none;
+  border-top: 1px solid #0a0a0a;
+  border-radius: 0;
+  color: #fff;
+}
+
+[data-skin-scope="minimal"] [data-ui="result-price"] {
+  border-radius: 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="result-hero"] [data-ui="kicker"] {
+  color: #fff;
+}
+
+/* ============================================================
+   3. Buttons
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="btn-search"],
+[data-skin-scope="minimal"] [data-ui="flight-link"],
+[data-skin-scope="minimal"] [data-ui="handoff-link"],
+[data-skin-scope="minimal"] [data-ui="hero-search-btn"] {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-skin-scope="minimal"] [data-ui="btn-search"]:hover,
+[data-skin-scope="minimal"] [data-ui="flight-link"]:hover,
+[data-skin-scope="minimal"] [data-ui="handoff-link"]:hover,
+[data-skin-scope="minimal"] [data-ui="hero-search-btn"]:hover {
+  background: #000;
+}
+
+[data-skin-scope="minimal"] [data-ui="btn-search"]:disabled,
+[data-skin-scope="minimal"] [data-ui="hero-search-btn"]:disabled {
+  background: #c9c9c9;
+  color: #fff;
+}
+
+[data-skin-scope="minimal"] [data-ui="btn-ghost"] {
+  background: transparent;
+  border: 1px solid #111;
+  border-radius: 0;
+  color: #111;
+}
+
+[data-skin-scope="minimal"] [data-ui="btn-ghost"]:hover {
+  background: #f2f2f2;
+  border-color: #000;
+  color: #111;
+}
+
+[data-skin-scope="minimal"] [data-ui="btn-search-light"] {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ============================================================
+   4. Inputs — underline instead of a box
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="select"],
+[data-skin-scope="minimal"] [data-ui="input"] {
+  border: none;
+  border-bottom: 1px solid #111;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 4px;
+  box-shadow: none;
+  color: #111;
+}
+
+[data-skin-scope="minimal"] [data-ui="select"]:focus,
+[data-skin-scope="minimal"] [data-ui="input"]:focus {
+  box-shadow: none;
+  border-bottom: 2px solid #111;
+}
+
+/* ============================================================
+   5. Chips / segments — square, hairline, black when on
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="month-chip"],
+[data-skin-scope="minimal"] [data-ui="country-chip"] {
+  border-radius: 0;
+  border: 1px solid #c9c9c9;
+  background: #fff;
+  color: #3b4150;
+  box-shadow: none;
+}
+
+[data-skin-scope="minimal"] [data-ui="month-chip"][data-active],
+[data-skin-scope="minimal"] [data-ui="country-chip"][data-active] {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+[data-skin-scope="minimal"] [data-ui="segmented"] {
+  border-radius: 0;
+  background: #fff;
+  border: 1px solid #c9c9c9;
+}
+
+/* The segmented / cabin container is now white, so an active pill painted white would vanish. */
+[data-skin-scope="minimal"] [data-ui="segment"][data-active],
+[data-skin-scope="minimal"] [data-ui="cabin-card"][data-active] {
+  background: #111;
+  color: #fff;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-skin-scope="minimal"] [data-ui="tone-badge"],
+[data-skin-scope="minimal"] [data-ui="dest-tag"],
+[data-skin-scope="minimal"] [data-ui="dest-card"] {
+  border-radius: 0;
+}
+
+/* ============================================================
+   6. Notes and banners — a left rule, no tint
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="corridor-note"],
+[data-skin-scope="minimal"] [data-ui="fallback-banner"] {
+  background: #fff;
+  border: none;
+  border-left: 2px solid #111;
+  border-radius: 0;
+  color: #3b4150;
+}
+
+[data-skin-scope="minimal"] [data-ui="corridor-note"] strong,
+[data-skin-scope="minimal"] [data-ui="fallback-banner"] p {
+  color: #3b4150;
+}
+
+[data-skin-scope="minimal"] [data-ui="fallback-banner"] span {
+  color: #111;
+  background: transparent;
+  border-radius: 0;
+}
+
+/* ============================================================
+   7. Kickers / eyebrows — tracked-out grey capitals
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="kicker"],
+[data-skin-scope="minimal"] .mp-kicker {
+  color: #595959;
+  letter-spacing: 0.2em;
+}
+
+[data-skin-scope="minimal"] [data-ui="section-title"] {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
+   8. SIGNATURE — the how zone
+   In mix mode the scope lands on the section itself, so both the compound
+   and the descendant form are needed for anything targeting a zone element.
+   ============================================================ */
+[data-skin-scope="minimal"][data-ui="how-section"],
+[data-skin-scope="minimal"] [data-ui="how-section"] {
+  background: #fff;
+}
+
+[data-skin-scope="minimal"] [data-ui="how-grid"] {
+  gap: clamp(28px, 4vw, 48px);
+  margin-bottom: 72px;
+}
+
+[data-skin-scope="minimal"] [data-ui="how-card"] {
+  background: transparent;
+  border: none;
+  border-top: 1px solid #111;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 28px 0 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="how-card"]:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* The decisive move: the 42px blue rounded badge becomes a bare hairline numeral. */
+[data-skin-scope="minimal"] [data-ui="how-step"] {
+  display: block;
+  width: auto;
+  height: auto;
+  padding: 0;
+  background: transparent;
+  color: #111;
+  font-family: var(--font-latin);
+  font-weight: 200;
+  font-size: clamp(3.5rem, 6vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-skin-scope="minimal"] [data-ui="how-card"] h3 {
+  font-weight: 600;
+  color: #111;
+}
+
+[data-skin-scope="minimal"] [data-ui="how-card"] p {
+  color: #595959;
+}
+
+[data-skin-scope="minimal"] [data-ui="arch-grid"] {
+  gap: clamp(28px, 4vw, 48px);
+}
+
+[data-skin-scope="minimal"] [data-ui="arch-card"] {
+  background: transparent;
+  color: #111;
+  border: none;
+  border-top: 1px solid #111;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 28px 0 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="arch-card"] h3 {
+  color: #111;
+  font-weight: 600;
+}
+
+[data-skin-scope="minimal"] [data-ui="arch-card"] p {
+  color: #595959;
+}
+
+/* (0,3,0) beats .archLabel (0,1,0), whose colour is --gold (now white). */
+[data-skin-scope="minimal"] [data-ui="arch-card"] [data-ui="kicker"] {
+  color: #595959;
+}
+
+/* ============================================================
+   9. Single-skin mode — hero and header need re-inking
+   ============================================================ */
+[data-skin-scope="minimal"] [data-ui="hero-media"],
+[data-skin-scope="minimal"] [data-ui="hero-overlay"] {
+  display: none;
+}
+
+[data-skin-scope="minimal"][data-ui="hero"],
+[data-skin-scope="minimal"] [data-ui="hero"] {
+  background: #fff;
+}
+
+[data-skin-scope="minimal"] [data-ui="eyebrow"] {
+  color: #595959;
+}
+
+[data-skin-scope="minimal"] [data-ui="hero-badge"] {
+  background: transparent;
+  color: #111;
+  border: 1px solid #111;
+  border-radius: 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="hero-title"] {
+  color: #111;
+  font-weight: 400;
+}
+
+[data-skin-scope="minimal"] [data-ui="hero-lead"] {
+  color: #3b4150;
+}
+
+[data-skin-scope="minimal"] [data-ui="hero-chips"] span {
+  color: #3b4150;
+  background: transparent;
+  border: 1px solid #c9c9c9;
+  border-radius: 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="hero-search"] {
+  box-shadow: none;
+  border: 1px solid #111;
+  border-radius: 0;
+  background: #fff;
+}
+
+[data-skin-scope="minimal"] [data-ui="hero-field"] {
+  border-radius: 0;
+}
+
+/* The un-scrolled header paints itself white for the navy hero; on paper it must be ink.
+   .headerSolid .brand etc. are (0,2,0), so these are lifted to (0,3,0) / (0,4,0). */
+[data-skin-scope="minimal"] [data-ui="brand"][data-ui] {
+  color: #111;
+}
+
+[data-skin-scope="minimal"] [data-ui="nav-link"][data-ui] {
+  color: #3b4150;
+  border-radius: 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="nav-link"][data-ui]:hover {
+  color: #111;
+  background: transparent;
+}
+
+[data-skin-scope="minimal"] [data-ui="nav-link"][data-active][data-ui] {
+  color: #111;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+[data-skin-scope="minimal"] [data-ui="header-cta"][data-ui] {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 0;
+}
+
+[data-skin-scope="minimal"] [data-ui="header-cta"][data-ui]:hover {
+  background: #000;
+  transform: none;
+}
+
+[data-skin-scope="minimal"] [data-ui="cta-inner"] {
+  border-radius: 0;
+}
+
+/* ============================================================
+   10. Motion / responsive
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="minimal"] [data-ui="how-card"],
+  [data-skin-scope="minimal"] [data-ui="arch-card"],
+  [data-skin-scope="minimal"] [data-ui="btn-search"],
+  [data-skin-scope="minimal"] [data-ui="btn-ghost"],
+  [data-skin-scope="minimal"] [data-ui="nav-link"],
+  [data-skin-scope="minimal"] [data-ui="header-cta"] {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-skin-scope="minimal"] [data-ui="how-grid"] {
+    gap: 28px;
+    margin-bottom: 48px;
+  }
+
+  [data-skin-scope="minimal"] [data-ui="arch-grid"] {
+    gap: 28px;
+  }
+
+  [data-skin-scope="minimal"] [data-ui="how-step"] {
+    font-size: 3.5rem;
+  }
+
+  [data-skin-scope="minimal"] [data-ui="how-card"],
+  [data-skin-scope="minimal"] [data-ui="arch-card"] {
+    padding: 22px 0 0;
+  }
+}

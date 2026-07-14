@@ -1,0 +1,455 @@
+/* skin 10 — Spatial UI (visionOS): a dark volumetric sky, frosted glass panels, pill controls.
+   Signature = the hero: `perspective` on the hero band + the hero-search bar re-cast as a
+   floating, blue-glowing glass slab tilted rotateX(8deg) and drifting on a slow float loop.
+   Selectors are scoped to [data-skin-scope="spatial"]; the hero root is written in both the
+   self form (mix mode: hero IS the scope) and the descendant form (solo mode: main is the scope). */
+
+/* ============================================================
+   1. Scope root — the sky + inverted design tokens
+   ============================================================ */
+[data-skin-scope="spatial"] {
+  color-scheme: dark;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(64, 97, 255, 0.22), transparent 60%),
+    radial-gradient(800px 600px at 88% 100%, rgba(140, 80, 255, 0.14), transparent 60%),
+    #05070d;
+  color: #f0f4ff;
+
+  --ink: #f0f4ff;
+  --ink-soft: #ccd6f0;
+  --muted: #b3bfda;
+  --faint: #a2afce;
+  --surface: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.16);
+  --line-strong: rgba(255, 255, 255, 0.32);
+  --bg-soft: rgba(255, 255, 255, 0.07);
+  --bg-soft-2: rgba(255, 255, 255, 0.11);
+  --brand-soft: rgba(0, 98, 227, 0.30);
+  --navy: #0d1526;
+  --navy-2: #131d33;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 14px 36px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================
+   2. Generic surfaces — the shared visionOS panel recipe
+   ============================================================ */
+[data-skin-scope="spatial"] [data-ui="search-panel"],
+[data-skin-scope="spatial"] [data-ui="trust-item"],
+[data-skin-scope="spatial"] [data-ui="dest-card"],
+[data-skin-scope="spatial"] [data-ui="state-card"],
+[data-skin-scope="spatial"] [data-ui="flight-card"],
+[data-skin-scope="spatial"] [data-ui="gap-card"],
+[data-skin-scope="spatial"] [data-ui="stat-cell"],
+[data-skin-scope="spatial"] [data-ui="handoff-section"],
+[data-skin-scope="spatial"] [data-ui="handoff-card"],
+[data-skin-scope="spatial"] [data-ui="alt-section"],
+[data-skin-scope="spatial"] [data-ui="alt-card"],
+[data-skin-scope="spatial"] [data-ui="coverage-section"],
+[data-skin-scope="spatial"] [data-ui="coverage-card"],
+[data-skin-scope="spatial"] [data-ui="how-card"],
+[data-skin-scope="spatial"] [data-ui="pool-card"],
+[data-skin-scope="spatial"] [data-ui="footer"] {
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  backdrop-filter: blur(28px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 26px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+[data-skin-scope="spatial"] [data-ui="footer"] {
+  border-radius: 26px 26px 0 0;
+  border-bottom: none;
+}
+
+/* The total pool card and the archetype cards sink back into the deep-space navy. */
+[data-skin-scope="spatial"] [data-ui="pool-card"][data-tone="total"] {
+  background: var(--navy);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Handoff "near-live" keeps its teal read, restated for the dark plate. */
+[data-skin-scope="spatial"] [data-ui="handoff-card"][data-tone="near-live"] {
+  background: rgba(16, 154, 134, 0.18);
+  border-color: rgba(16, 154, 134, 0.45);
+}
+
+/* Status chip: a solid light pill so its text never rides translucent glass. */
+[data-skin-scope="spatial"] [data-ui="handoff-card"] > header > span:first-child {
+  background: rgba(240, 244, 255, 0.94);
+  color: #0a1428;
+}
+
+/* Pills: ghost buttons, chips, cabin cards, segments */
+[data-skin-scope="spatial"] [data-ui="btn-ghost"],
+[data-skin-scope="spatial"] [data-ui="month-chip"],
+[data-skin-scope="spatial"] [data-ui="country-chip"],
+[data-skin-scope="spatial"] [data-ui="cabin-card"],
+[data-skin-scope="spatial"] [data-ui="segment"],
+[data-skin-scope="spatial"] [data-ui="handoff-link"][data-ui] {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: var(--ink);
+}
+
+[data-skin-scope="spatial"] [data-ui="handoff-link"][data-ui] {
+  background: rgba(16, 154, 134, 0.85);
+  border-color: rgba(120, 240, 214, 0.45);
+  color: #eafffb;
+}
+
+[data-skin-scope="spatial"] [data-ui="segmented"],
+[data-skin-scope="spatial"] [data-ui="toggle-row"] {
+  border-radius: 999px;
+}
+
+[data-skin-scope="spatial"] [data-ui="segment"][data-active],
+[data-skin-scope="spatial"] [data-ui="cabin-card"][data-active],
+[data-skin-scope="spatial"] [data-ui="month-chip"][data-active] {
+  background: rgba(240, 244, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #0a1428;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* The active country chip keeps the module's solid brand fill. */
+[data-skin-scope="spatial"] [data-ui="country-chip"][data-active] {
+  background: var(--brand);
+  border-color: rgba(140, 180, 255, 0.7);
+  color: #fff;
+}
+
+[data-skin-scope="spatial"] [data-ui="btn-ghost"]:hover,
+[data-skin-scope="spatial"] [data-ui="country-chip"]:hover:not(:disabled),
+[data-skin-scope="spatial"] [data-ui="month-chip"]:hover:not(:disabled) {
+  border-color: rgba(140, 180, 255, 0.75);
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--ink);
+}
+
+/* Fields */
+[data-skin-scope="spatial"] [data-ui="select"],
+[data-skin-scope="spatial"] [data-ui="input"] {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 14px;
+  color: var(--ink);
+}
+
+[data-skin-scope="spatial"] [data-ui="select"] option {
+  background: #10162a;
+  color: #f0f4ff;
+}
+
+/* Glowing actions */
+[data-skin-scope="spatial"] [data-ui="btn-search"],
+[data-skin-scope="spatial"] [data-ui="flight-link"],
+[data-skin-scope="spatial"] [data-ui="header-cta"][data-ui],
+[data-skin-scope="spatial"] [data-ui="hero-search-btn"] {
+  background: linear-gradient(180deg, #3b82f6, #0062e3);
+  border: 1px solid rgba(160, 195, 255, 0.55);
+  border-radius: 999px;
+  color: #fff;
+  box-shadow:
+    0 0 24px rgba(59, 130, 246, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-skin-scope="spatial"] [data-ui="btn-search"]:hover,
+[data-skin-scope="spatial"] [data-ui="flight-link"]:hover,
+[data-skin-scope="spatial"] [data-ui="header-cta"][data-ui]:hover,
+[data-skin-scope="spatial"] [data-ui="hero-search-btn"]:hover {
+  background: linear-gradient(180deg, #5b9bff, #1f77ff);
+  box-shadow:
+    0 0 34px rgba(90, 155, 255, 0.7),
+    0 10px 28px rgba(0, 0, 0, 0.55);
+}
+
+[data-skin-scope="spatial"] [data-ui="btn-search"]:disabled,
+[data-skin-scope="spatial"] [data-ui="hero-search-btn"]:disabled {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+  color: #ccd6f0;
+}
+
+/* The light CTA button: force the dark ink back, or the inverted --ink paints white on white. */
+[data-skin-scope="spatial"] [data-ui="btn-search-light"] {
+  background: #f0f4ff;
+  color: #0a1428;
+  border-radius: 999px;
+  box-shadow: 0 0 30px rgba(180, 205, 255, 0.35), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+[data-skin-scope="spatial"] [data-ui="btn-search-light"]:hover {
+  background: #fff;
+  color: #0a1428;
+}
+
+/* The ghost handoff link sits on glass, not on white. */
+[data-skin-scope="spatial"] [data-ui="handoff-card"][data-tone="reference"] [data-ui="handoff-link"] {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #f0f4ff;
+  box-shadow: none;
+}
+
+/* Dest tag rides a photo — keep it an opaque dark plate. */
+[data-skin-scope="spatial"] [data-ui="dest-tag"] {
+  background: rgba(10, 16, 32, 0.72);
+  color: #f0f4ff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-skin-scope="spatial"] [data-ui="dest-card"][data-active] [data-ui="dest-tag"] {
+  background: var(--brand);
+  color: #fff;
+}
+
+[data-skin-scope="spatial"] [data-ui="dest-card"][data-active] {
+  border-color: rgba(120, 165, 255, 0.9);
+  box-shadow: 0 0 0 2px rgba(120, 165, 255, 0.75), 0 0 40px rgba(59, 130, 246, 0.35);
+}
+
+/* Price temperature badges: bright ink on solid dark chips. */
+[data-skin-scope="spatial"] [data-ui="tone-badge"][data-tone="low"] {
+  color: #34d399;
+  background: rgba(8, 46, 36, 0.9);
+}
+
+[data-skin-scope="spatial"] [data-ui="tone-badge"][data-tone="mid"] {
+  color: #ccd6f0;
+  background: rgba(18, 26, 46, 0.9);
+}
+
+[data-skin-scope="spatial"] [data-ui="tone-badge"][data-tone="high"] {
+  color: #ff8f8f;
+  background: rgba(58, 18, 22, 0.9);
+}
+
+[data-skin-scope="spatial"] [data-ui="alt-card"] strong[data-tone="low"] {
+  color: #34d399;
+}
+
+[data-skin-scope="spatial"] [data-ui="alt-card"] strong[data-tone="high"] {
+  color: #ff8f8f;
+}
+
+[data-skin-scope="spatial"] [data-ui="alt-card"] > div:first-child > span {
+  background: rgba(0, 98, 227, 0.45);
+  color: #cfe0ff;
+}
+
+/* Kickers / eyebrows read as cool starlight. */
+[data-skin-scope="spatial"] [data-ui="kicker"] {
+  color: #8ab4ff;
+}
+
+/* ============================================================
+   3. SIGNATURE — the hero as a dark room with a floating panel
+   ============================================================ */
+
+/* Mix mode: the hero element IS the scope, so it paints the sky itself. */
+[data-skin-scope="spatial"][data-ui="hero"] {
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(64, 97, 255, 0.22), transparent 60%),
+    radial-gradient(800px 600px at 88% 100%, rgba(140, 80, 255, 0.14), transparent 60%),
+    #05070d;
+}
+
+/* Solo mode: <main> already holds the sky, so the hero band just lets it through. */
+[data-skin-scope="spatial"] [data-ui="hero"] {
+  background: transparent;
+}
+
+[data-skin-scope="spatial"][data-ui="hero"],
+[data-skin-scope="spatial"] [data-ui="hero"] {
+  perspective: 1400px;
+}
+
+/* (a) The photo falls back to a distant nebula. */
+[data-skin-scope="spatial"] [data-ui="hero-media"] {
+  opacity: 0.32;
+  filter: saturate(1.3) brightness(0.65);
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-overlay"] {
+  background:
+    radial-gradient(120% 90% at 50% 0%, transparent 30%, rgba(5, 7, 13, 0.92) 100%),
+    linear-gradient(180deg, rgba(5, 7, 13, 0.35), rgba(5, 7, 13, 0.95));
+}
+
+/* (b) The search bar becomes a floating glass slab.
+   The perspective() is carried inside the transform as well as on the hero root: the panel is a
+   grandchild of the hero, so the ancestor `perspective` alone would not reach it. */
+[data-skin-scope="spatial"] [data-ui="hero-search"] {
+  transform: perspective(1400px) rotateX(8deg);
+  transform-origin: 50% 0%;
+  background: rgba(18, 24, 44, 0.55);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  backdrop-filter: blur(30px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 26px;
+  box-shadow:
+    0 40px 90px -20px rgba(0, 0, 0, 0.8),
+    0 0 60px rgba(80, 130, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-skin-scope="spatial"] [data-ui="hero-search"] {
+    animation: sp-float 7s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes sp-float {
+  from {
+    transform: perspective(1400px) rotateX(8deg) translateY(0);
+  }
+  to {
+    transform: perspective(1400px) rotateX(8deg) translateY(-8px);
+  }
+}
+
+/* (c) The hero fields inside the slab. */
+[data-skin-scope="spatial"] [data-ui="hero-field"] {
+  border-right-color: rgba(255, 255, 255, 0.14);
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-field"] > span {
+  color: #9fb0d8;
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-field"] > strong,
+[data-skin-scope="spatial"] [data-ui="hero-field"] select {
+  color: #f0f4ff;
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-field"]:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-search-btn"] {
+  border-radius: 20px;
+}
+
+/* (d) Copy block. */
+[data-skin-scope="spatial"] [data-ui="hero-badge"] {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-title"] {
+  text-shadow: 0 0 44px rgba(120, 160, 255, 0.35);
+}
+
+[data-skin-scope="spatial"] [data-ui="hero-chips"] span {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+[data-skin-scope="spatial"] [data-ui="eyebrow"] {
+  color: #8ab4ff;
+  letter-spacing: 0.2em;
+}
+
+/* The tilt breaks apart once the bar reflows into two columns. */
+@media (max-width: 860px) {
+  [data-skin-scope="spatial"] [data-ui="hero-search"] {
+    transform: none;
+    animation: none;
+  }
+}
+
+/* ============================================================
+   4. Solo-mode repaint of the hardcoded-#fff chrome
+   ============================================================ */
+[data-skin-scope="spatial"] [data-ui="header"][data-ui] {
+  background: rgba(8, 12, 24, 0.62);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+[data-skin-scope="spatial"] [data-ui="brand"][data-ui] {
+  color: #f0f4ff;
+}
+
+[data-skin-scope="spatial"] [data-ui="nav-link"][data-ui] {
+  color: #ccd6f0;
+}
+
+[data-skin-scope="spatial"] [data-ui="nav-link"][data-ui]:hover {
+  background: rgba(255, 255, 255, 0.10);
+  color: #fff;
+}
+
+[data-skin-scope="spatial"] [data-ui="nav-link"][data-ui][data-active] {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+/* ============================================================
+   5. Motion + no-backdrop-filter fallbacks
+   ============================================================ */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  [data-skin-scope="spatial"] [data-ui="search-panel"],
+  [data-skin-scope="spatial"] [data-ui="trust-item"],
+  [data-skin-scope="spatial"] [data-ui="dest-card"],
+  [data-skin-scope="spatial"] [data-ui="state-card"],
+  [data-skin-scope="spatial"] [data-ui="flight-card"],
+  [data-skin-scope="spatial"] [data-ui="gap-card"],
+  [data-skin-scope="spatial"] [data-ui="stat-cell"],
+  [data-skin-scope="spatial"] [data-ui="handoff-section"],
+  [data-skin-scope="spatial"] [data-ui="handoff-card"],
+  [data-skin-scope="spatial"] [data-ui="alt-section"],
+  [data-skin-scope="spatial"] [data-ui="alt-card"],
+  [data-skin-scope="spatial"] [data-ui="coverage-section"],
+  [data-skin-scope="spatial"] [data-ui="coverage-card"],
+  [data-skin-scope="spatial"] [data-ui="how-card"],
+  [data-skin-scope="spatial"] [data-ui="pool-card"],
+  [data-skin-scope="spatial"] [data-ui="footer"] {
+    background: #10162a;
+  }
+
+  [data-skin-scope="spatial"] [data-ui="hero-search"] {
+    background: #131c33;
+  }
+
+  [data-skin-scope="spatial"] [data-ui="header"][data-ui] {
+    background: rgba(8, 12, 24, 0.96);
+  }
+
+  [data-skin-scope="spatial"] [data-ui="dest-tag"] {
+    background: #0a1020;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="spatial"] [data-ui="hero-search"],
+  [data-skin-scope="spatial"] [data-ui="hero-field"],
+  [data-skin-scope="spatial"] [data-ui="btn-search"],
+  [data-skin-scope="spatial"] [data-ui="btn-ghost"],
+  [data-skin-scope="spatial"] [data-ui="btn-search-light"],
+  [data-skin-scope="spatial"] [data-ui="flight-link"],
+  [data-skin-scope="spatial"] [data-ui="hero-search-btn"],
+  [data-skin-scope="spatial"] [data-ui="header-cta"],
+  [data-skin-scope="spatial"] [data-ui="dest-card"],
+  [data-skin-scope="spatial"] [data-ui="how-card"],
+  [data-skin-scope="spatial"] [data-ui="month-chip"],
+  [data-skin-scope="spatial"] [data-ui="country-chip"],
+  [data-skin-scope="spatial"] [data-ui="cabin-card"],
+  [data-skin-scope="spatial"] [data-ui="segment"] {
+    transition: none;
+    animation: none;
+  }
+}

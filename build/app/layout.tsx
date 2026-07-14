@@ -2,6 +2,17 @@ import { Noto_Sans_JP, Plus_Jakarta_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import "./skins/base.css";
+import "./skins/skeuo.css";
+import "./skins/neo.css";
+import "./skins/glass.css";
+import "./skins/clay.css";
+import "./skins/minimal.css";
+import "./skins/maximal.css";
+import "./skins/brutal.css";
+import "./skins/liquid.css";
+import "./skins/bento.css";
+import "./skins/spatial.css";
 
 const bodyFont = Noto_Sans_JP({
   subsets: ["latin"],

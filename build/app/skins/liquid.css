@@ -1,0 +1,462 @@
+/* skin 08 — Liquid Glass.
+ * Wet glass in a pitch-black room: every surface is a refracted slab with a bright
+ * top edge, a specular pool of light bleeding in from the upper-left, and a deep drop shadow.
+ * Signature (zones resultIntro / resultCore): flight-card's specular ::before + refraction rim,
+ * and result-hero's diagonal sheen sweeping across a near-black glass panel.
+ */
+
+/* ============================================================
+   1. Scope root — ground colour + inverted tokens
+   ============================================================ */
+[data-skin-scope="liquid"] {
+  --lq-bg:
+    radial-gradient(900px 520px at 72% -10%, rgba(56, 126, 255, 0.26), transparent 60%),
+    radial-gradient(700px 520px at 8% 110%, rgba(16, 154, 134, 0.16), transparent 60%),
+    linear-gradient(180deg, #0b1120, #070b16);
+
+  /* the wet-glass recipe, reused by every surface below */
+  --lq-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.02));
+  --lq-glass-inner: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.02));
+  --lq-rim: rgba(255, 255, 255, 0.22);
+  --lq-rim-top: rgba(255, 255, 255, 0.48);
+  --lq-depth:
+    0 24px 48px -12px rgba(0, 0, 0, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -12px 24px -12px rgba(0, 0, 0, 0.35);
+  --lq-accent: #8ab4ff;
+
+  background: var(--lq-bg);
+  color: #f4f7fd;
+
+  /* inverted tokens — this is what flips page.module.css wholesale */
+  --ink: #f4f7fd;
+  --ink-soft: #d5deec;
+  --muted: #b7c3d7;
+  --faint: #a8b5cb;
+  --surface: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.14);
+  --line-strong: rgba(255, 255, 255, 0.3);
+  --bg-soft: rgba(255, 255, 255, 0.06);
+  --bg-soft-2: rgba(255, 255, 255, 0.1);
+  --brand-soft: rgba(0, 98, 227, 0.3);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+
+/* Zone roots. In 全部盛り the scope sits ON the zone div, in single mode it sits on
+   <main> and the zone is a descendant — so both forms are needed. */
+[data-skin-scope="liquid"][data-ui="result-intro"],
+[data-skin-scope="liquid"] [data-ui="result-intro"],
+[data-skin-scope="liquid"][data-ui="result-core"],
+[data-skin-scope="liquid"] [data-ui="result-core"] {
+  background: var(--lq-bg);
+  padding: clamp(20px, 3vw, 32px);
+  border-radius: 28px;
+  box-shadow: 0 30px 70px -20px rgba(4, 8, 18, 0.6);
+}
+
+[data-skin-scope="liquid"][data-ui="result-intro"],
+[data-skin-scope="liquid"] [data-ui="result-intro"] {
+  margin-bottom: 22px;
+}
+
+/* ============================================================
+   2. Generic wet-glass surfaces
+   ============================================================ */
+[data-skin-scope="liquid"] [data-ui="state-card"],
+[data-skin-scope="liquid"] [data-ui="flight-card"],
+[data-skin-scope="liquid"] [data-ui="gap-card"],
+[data-skin-scope="liquid"] [data-ui="search-panel"],
+[data-skin-scope="liquid"] [data-ui="hero-search"],
+[data-skin-scope="liquid"] [data-ui="trust-item"],
+[data-skin-scope="liquid"] [data-ui="handoff-section"],
+[data-skin-scope="liquid"] [data-ui="alt-section"],
+[data-skin-scope="liquid"] [data-ui="coverage-section"],
+[data-skin-scope="liquid"] [data-ui="how-card"],
+[data-skin-scope="liquid"] [data-ui="dest-card"],
+[data-skin-scope="liquid"] [data-ui="footer"] {
+  background: var(--lq-glass);
+  border: 1px solid var(--lq-rim);
+  border-top-color: var(--lq-rim-top);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: var(--lq-depth);
+  border-radius: 24px;
+}
+
+/* nested cards sit on a thinner pane so --faint labels keep their contrast */
+[data-skin-scope="liquid"] [data-ui="stat-cell"],
+[data-skin-scope="liquid"] [data-ui="handoff-card"],
+[data-skin-scope="liquid"] [data-ui="alt-card"],
+[data-skin-scope="liquid"] [data-ui="coverage-card"],
+[data-skin-scope="liquid"] [data-ui="pool-card"] {
+  background: var(--lq-glass-inner);
+  border: 1px solid var(--lq-rim);
+  border-top-color: rgba(255, 255, 255, 0.36);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.28);
+  border-radius: 18px;
+}
+
+[data-skin-scope="liquid"] [data-ui="state-card"] {
+  border-style: solid;
+}
+
+[data-skin-scope="liquid"] [data-ui="gap-card"] {
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  border-top-color: var(--lq-rim-top);
+}
+
+[data-skin-scope="liquid"] [data-ui="footer"] {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+[data-skin-scope="liquid"] [data-ui="pool-card"][data-tone="total"] {
+  background: linear-gradient(180deg, rgba(0, 62, 150, 0.6), rgba(4, 14, 34, 0.75));
+  border-color: rgba(140, 185, 255, 0.4);
+}
+
+/* --- inputs / chips / ghost buttons --------------------------------------- */
+[data-skin-scope="liquid"] [data-ui="select"],
+[data-skin-scope="liquid"] [data-ui="input"],
+[data-skin-scope="liquid"] [data-ui="segmented"],
+[data-skin-scope="liquid"] [data-ui="month-chip"],
+[data-skin-scope="liquid"] [data-ui="country-chip"],
+[data-skin-scope="liquid"] [data-ui="cabin-card"],
+[data-skin-scope="liquid"] [data-ui="btn-ghost"] {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: var(--ink);
+  border-radius: 12px;
+}
+
+/* native dropdown panes still paint on the OS surface */
+[data-skin-scope="liquid"] [data-ui="select"] option {
+  color: #10182a;
+  background: #fff;
+}
+
+[data-skin-scope="liquid"] [data-ui="segment"] {
+  color: var(--ink-soft);
+  background: transparent;
+}
+
+[data-skin-scope="liquid"] [data-ui="segment"][data-active][data-ui],
+[data-skin-scope="liquid"] [data-ui="cabin-card"][data-active][data-ui],
+[data-skin-scope="liquid"] [data-ui="month-chip"][data-active][data-ui] {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.92);
+  color: var(--brand-dark);
+  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.6);
+}
+
+[data-skin-scope="liquid"] [data-ui="country-chip"][data-active][data-ui] {
+  background: var(--brand);
+  border-color: rgba(140, 185, 255, 0.7);
+  color: #fff;
+}
+
+[data-skin-scope="liquid"] [data-ui="btn-ghost"]:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: var(--lq-accent);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-skin-scope="liquid"] [data-ui="toggle-switch"] {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   3. Signature — result hero + the round-trip pair cards
+   ============================================================ */
+
+/* (a) result-hero: a black glass slab with a diagonal sheen sliding across it */
+[data-skin-scope="liquid"] [data-ui="result-hero"] {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgba(30, 58, 102, 0.85), rgba(9, 16, 32, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-top-color: rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  box-shadow: 0 40px 80px -24px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+[data-skin-scope="liquid"] [data-ui="result-hero"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.06) 16%,
+    transparent 32%
+  );
+}
+
+/* keep the copy above the sheen so white text never sits under the white wash */
+[data-skin-scope="liquid"] [data-ui="result-hero"] > div {
+  position: relative;
+  z-index: 1;
+}
+
+[data-skin-scope="liquid"] [data-ui="result-hero"] [data-ui="kicker"] {
+  color: var(--gold);
+}
+
+[data-skin-scope="liquid"] [data-ui="result-price"] {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* (b) flight-card: the refraction rim (top border) plus a specular pool of light */
+[data-skin-scope="liquid"] [data-ui="flight-card"] {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-skin-scope="liquid"] [data-ui="flight-card"]::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -10%;
+  width: 65%;
+  height: 60%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.28), transparent 70%);
+  filter: blur(6px);
+}
+
+[data-skin-scope="liquid"] [data-ui="flight-card"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* directional glow: outbound reads blue, inbound reads ember */
+[data-skin-scope="liquid"] [data-ui="flight-card"][data-accent="out"] {
+  box-shadow:
+    0 24px 48px -12px rgba(0, 40, 120, 0.65),
+    0 0 40px -8px rgba(0, 116, 255, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+[data-skin-scope="liquid"] [data-ui="flight-card"][data-accent="in"] {
+  box-shadow:
+    0 24px 48px -12px rgba(60, 20, 0, 0.65),
+    0 0 40px -8px rgba(232, 100, 47, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+[data-skin-scope="liquid"] [data-ui="flight-price"] {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+}
+
+/* (c) kickers: brand blue is unreadable on #0b1120, lift it to a light azure */
+[data-skin-scope="liquid"] [data-ui="kicker"] {
+  color: var(--lq-accent);
+}
+
+[data-skin-scope="liquid"] [data-ui="gap-card"] svg {
+  color: var(--lq-accent);
+}
+
+/* (d) fallback banner: amber glass, and its hard-coded dark text must be repainted */
+[data-skin-scope="liquid"] [data-ui="fallback-banner"] {
+  background: rgba(255, 183, 0, 0.14);
+  border: 1px solid rgba(255, 183, 0, 0.45);
+  border-radius: 16px;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+[data-skin-scope="liquid"] [data-ui="fallback-banner"] p {
+  color: #ffdf9e;
+}
+
+[data-skin-scope="liquid"] [data-ui="fallback-banner"] > span {
+  color: #ffd268;
+  background: rgba(255, 183, 0, 0.18);
+}
+
+/* loading / empty state: the module paints these in brand blue on white */
+[data-skin-scope="liquid"] [data-ui="state-card"] > div {
+  color: var(--lq-accent);
+}
+
+[data-skin-scope="liquid"] [data-ui="state-card"] ul li::before {
+  color: var(--lq-accent);
+}
+
+/* ============================================================
+   4. Single-skin repaint — every hard-coded #fff surface in the module
+   ============================================================ */
+[data-skin-scope="liquid"] [data-ui="header"][data-ui] {
+  background: rgba(11, 17, 32, 0.7);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-skin-scope="liquid"] [data-ui="brand"][data-ui],
+[data-skin-scope="liquid"] [data-ui="nav-link"][data-ui] {
+  color: #f4f7fd;
+}
+
+[data-skin-scope="liquid"] [data-ui="nav-link"][data-active][data-ui] {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+[data-skin-scope="liquid"] [data-ui="nav-link"][data-ui]:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+[data-skin-scope="liquid"] [data-ui="header-cta"][data-ui] {
+  background: var(--brand);
+  border-color: rgba(140, 185, 255, 0.5);
+  color: #fff;
+}
+
+[data-skin-scope="liquid"] [data-ui="hero-field"] {
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+[data-skin-scope="liquid"] [data-ui="hero-field"]:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-skin-scope="liquid"] [data-ui="hero-field"] [data-ui="select"] {
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* white-on-white traps once --ink flips light */
+[data-skin-scope="liquid"] [data-ui="btn-search-light"] {
+  color: #10182a;
+  background: #fff;
+}
+
+[data-skin-scope="liquid"] [data-ui="dest-tag"][data-ui] {
+  color: #10182a;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-skin-scope="liquid"] [data-ui="dest-card"][data-active] [data-ui="dest-tag"][data-ui] {
+  color: #fff;
+  background: var(--brand);
+}
+
+[data-skin-scope="liquid"] [data-ui="dest-card"][data-active] {
+  border-color: rgba(140, 185, 255, 0.85);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(140, 185, 255, 0.85);
+}
+
+/* handoff: teal-soft + white chips are light plates under light ink */
+[data-skin-scope="liquid"] [data-ui="handoff-card"][data-tone="near-live"] {
+  background: linear-gradient(180deg, rgba(16, 154, 134, 0.22), rgba(16, 154, 134, 0.08));
+  border-color: rgba(16, 154, 134, 0.5);
+}
+
+[data-skin-scope="liquid"] [data-ui="handoff-card"] header > span:first-child {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--ink-soft);
+}
+
+[data-skin-scope="liquid"] [data-ui="handoff-card"][data-tone="near-live"] header > span:first-child {
+  color: #6fe3cd;
+}
+
+[data-skin-scope="liquid"] [data-ui="handoff-card"][data-tone="reference"] [data-ui="handoff-link"] {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+/* alt badge: brand-dark on translucent blue is unreadable over the ground */
+[data-skin-scope="liquid"] [data-ui="alt-card"] > div > span {
+  background: rgba(255, 255, 255, 0.16);
+  color: #cfe0ff;
+}
+
+/* ============================================================
+   5. Fallbacks / motion / small screens
+   ============================================================ */
+@supports not (backdrop-filter: blur(1px)) {
+  [data-skin-scope="liquid"] [data-ui="state-card"],
+  [data-skin-scope="liquid"] [data-ui="flight-card"],
+  [data-skin-scope="liquid"] [data-ui="gap-card"],
+  [data-skin-scope="liquid"] [data-ui="search-panel"],
+  [data-skin-scope="liquid"] [data-ui="hero-search"],
+  [data-skin-scope="liquid"] [data-ui="trust-item"],
+  [data-skin-scope="liquid"] [data-ui="handoff-section"],
+  [data-skin-scope="liquid"] [data-ui="alt-section"],
+  [data-skin-scope="liquid"] [data-ui="coverage-section"],
+  [data-skin-scope="liquid"] [data-ui="how-card"],
+  [data-skin-scope="liquid"] [data-ui="dest-card"],
+  [data-skin-scope="liquid"] [data-ui="footer"],
+  [data-skin-scope="liquid"] [data-ui="stat-cell"],
+  [data-skin-scope="liquid"] [data-ui="handoff-card"],
+  [data-skin-scope="liquid"] [data-ui="alt-card"],
+  [data-skin-scope="liquid"] [data-ui="coverage-card"],
+  [data-skin-scope="liquid"] [data-ui="pool-card"] {
+    background: #131a2c;
+  }
+
+  [data-skin-scope="liquid"] [data-ui="header"][data-ui] {
+    background: #0b1120;
+  }
+
+  [data-skin-scope="liquid"] [data-ui="fallback-banner"] {
+    background: #3a2f11;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="liquid"] [data-ui="dest-card"],
+  [data-skin-scope="liquid"] [data-ui="how-card"],
+  [data-skin-scope="liquid"] [data-ui="btn-ghost"],
+  [data-skin-scope="liquid"] [data-ui="segment"],
+  [data-skin-scope="liquid"] [data-ui="month-chip"],
+  [data-skin-scope="liquid"] [data-ui="country-chip"],
+  [data-skin-scope="liquid"] [data-ui="cabin-card"],
+  [data-skin-scope="liquid"] [data-ui="nav-link"] {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-skin-scope="liquid"][data-ui="result-intro"],
+  [data-skin-scope="liquid"] [data-ui="result-intro"],
+  [data-skin-scope="liquid"][data-ui="result-core"],
+  [data-skin-scope="liquid"] [data-ui="result-core"] {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  [data-skin-scope="liquid"] [data-ui="result-hero"],
+  [data-skin-scope="liquid"] [data-ui="flight-card"],
+  [data-skin-scope="liquid"] [data-ui="gap-card"],
+  [data-skin-scope="liquid"] [data-ui="state-card"] {
+    border-radius: 20px;
+  }
+
+  /* the specular pool would otherwise wash out a narrow card */
+  [data-skin-scope="liquid"] [data-ui="flight-card"]::before {
+    width: 80%;
+    height: 45%;
+  }
+}

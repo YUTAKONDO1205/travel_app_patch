@@ -1577,7 +1577,9 @@
 /* Alternatives */
 .altWrap {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr): without it each column floors at the alt row's min-content
+     and the pair overflows the shell. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 26px;
 }

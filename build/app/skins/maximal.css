@@ -1,0 +1,554 @@
+/* skin: maximal — Maximalism. 水玉のパステル地 + 黒3pxの太枠 + ハードシャドウ + 蛍光マーカー。
+ * signature (coverage ゾーン): レインボーの極太ストライプ上枠の下に、4色ローテのパステル地・黒枠・ハード影の
+ * カバレッジカードが1枚ずつ傾いて「貼られたステッカーの束」になる。地域名は黒いピルチップ、右上に ✶。
+ * 注: 上帯は仕様の border-image ではなく背景レイヤ2枚で実装（border-image は border-radius を無視して
+ * 角が四角く欠けるため）。見た目（16px のレインボー帯 + 3px の黒罫）は仕様どおり。
+ */
+
+/* ============================================================
+   1. スコープルート
+   ============================================================ */
+[data-skin-scope="maximal"] {
+  background-color: #fff7ec;
+  background-image:
+    radial-gradient(#ffd9e8 1.5px, transparent 1.5px),
+    radial-gradient(#cfe9ff 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+  background-position: 0 0, 14px 14px;
+
+  --bg: #fff7ec;
+  --bg-soft: #ffe8f2;
+  --bg-soft-2: #e5f4ff;
+  --surface: #fffdf7;
+
+  --ink: #1a1037;
+  --ink-soft: #3d2c52;
+  --muted: #5c5264;
+  --faint: #6f647c;
+
+  --brand: #c2185b;
+  --brand-dark: #8e0f42;
+  --brand-soft: #ffd9e8;
+
+  --navy: #2d1b69;
+  --navy-2: #3a2483;
+
+  --gold: #ffb700;
+  --gold-soft: #fff3c4;
+  --teal: #0a7d6b;
+  --teal-soft: #dff5ef;
+  --return: #ff6d00;
+  --return-soft: #ffe3d1;
+
+  --line: #f0c6d9;
+  --line-strong: #1a1037;
+
+  --shadow-sm: 3px 3px 0 rgba(26, 16, 55, 0.9);
+  --shadow-md: 5px 6px 0 rgba(26, 16, 55, 0.9);
+  --shadow-lg: 7px 8px 0 rgba(26, 16, 55, 0.9);
+
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+}
+
+/* ============================================================
+   2. 汎用サーフェス
+   ============================================================ */
+[data-skin-scope="maximal"] [data-ui="search-panel"],
+[data-skin-scope="maximal"] [data-ui="flight-card"],
+[data-skin-scope="maximal"] [data-ui="gap-card"],
+[data-skin-scope="maximal"] [data-ui="stat-cell"],
+[data-skin-scope="maximal"] [data-ui="handoff-card"],
+[data-skin-scope="maximal"] [data-ui="alt-card"],
+[data-skin-scope="maximal"] [data-ui="pool-card"],
+[data-skin-scope="maximal"] [data-ui="trust-item"],
+[data-skin-scope="maximal"] [data-ui="state-card"],
+[data-skin-scope="maximal"] [data-ui="dest-card"],
+[data-skin-scope="maximal"] [data-ui="how-card"],
+[data-skin-scope="maximal"] [data-ui="handoff-section"],
+[data-skin-scope="maximal"] [data-ui="alt-section"] {
+  background: #fffdf7; /* 不透明 — 水玉の上に文字を直置きしない */
+  border: 3px solid #1a1037;
+  border-radius: 20px;
+  box-shadow: 5px 6px 0 #1a1037;
+}
+
+/* 元がトーン付きだったカードは色を維持したまま枠だけ太くする（同詳細度の打ち消し事故を防ぐ） */
+[data-skin-scope="maximal"] [data-ui="pool-card"][data-tone="total"] {
+  background: #2d1b69;
+  border-color: #1a1037;
+  color: #fff;
+}
+
+[data-skin-scope="maximal"] [data-ui="handoff-card"][data-tone="near-live"] {
+  background: #dff5ef;
+}
+
+[data-skin-scope="maximal"] [data-ui="search-panel"] {
+  border-top: 10px solid #ffb700;
+}
+
+[data-skin-scope="maximal"] [data-ui="dest-card"] {
+  overflow: hidden;
+}
+
+[data-skin-scope="maximal"] [data-ui="dest-card"][data-active] {
+  border-color: #1a1037;
+  box-shadow: 5px 6px 0 #c2185b;
+}
+
+[data-skin-scope="maximal"] [data-ui="dest-tag"] {
+  color: #1a1037;
+  background: #ffe14d;
+  border: 2px solid #1a1037;
+  font-weight: 800;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+[data-skin-scope="maximal"] [data-ui="dest-card"][data-active] [data-ui="dest-tag"] {
+  color: #fff;
+  background: #c2185b;
+}
+
+[data-skin-scope="maximal"] [data-ui="result-hero"] {
+  border: 3px solid #1a1037;
+  border-radius: 26px;
+  box-shadow: 7px 8px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="arch-card"] {
+  border: 3px solid #1a1037;
+  border-radius: 20px;
+  box-shadow: 5px 6px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="cta-inner"] {
+  border: 4px solid #1a1037;
+  border-radius: 26px;
+  box-shadow: 8px 9px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="how-step"] {
+  border: 3px solid #1a1037;
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 #1a1037;
+  background: #c2185b;
+  color: #fff;
+}
+
+/* ---- ボタン ---- */
+[data-skin-scope="maximal"] [data-ui="btn-search"],
+[data-skin-scope="maximal"] [data-ui="hero-search-btn"],
+[data-skin-scope="maximal"] [data-ui="flight-link"],
+[data-skin-scope="maximal"] [data-ui="handoff-link"] {
+  background: linear-gradient(135deg, #c2185b, #7b1fa2);
+  color: #fff;
+  border: 3px solid #1a1037;
+  border-radius: 999px;
+  box-shadow: 0 5px 0 #1a1037;
+  font-weight: 900;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
+}
+
+[data-skin-scope="maximal"] [data-ui="btn-search"]:hover,
+[data-skin-scope="maximal"] [data-ui="hero-search-btn"]:hover,
+[data-skin-scope="maximal"] [data-ui="flight-link"]:hover,
+[data-skin-scope="maximal"] [data-ui="handoff-link"]:hover {
+  background: linear-gradient(135deg, #8e0f42, #5e1580);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="btn-search"]:active,
+[data-skin-scope="maximal"] [data-ui="hero-search-btn"]:active,
+[data-skin-scope="maximal"] [data-ui="flight-link"]:active,
+[data-skin-scope="maximal"] [data-ui="handoff-link"]:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="btn-search"]:disabled,
+[data-skin-scope="maximal"] [data-ui="hero-search-btn"]:disabled {
+  background: #6f647c;
+  color: #fff;
+  transform: none;
+  box-shadow: 0 5px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="btn-ghost"],
+[data-skin-scope="maximal"] [data-ui="btn-search-light"] {
+  background: #fff;
+  color: #1a1037;
+  border: 3px solid #1a1037;
+  border-radius: 999px;
+  box-shadow: 0 5px 0 #1a1037;
+  font-weight: 900;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+[data-skin-scope="maximal"] [data-ui="btn-ghost"]:hover,
+[data-skin-scope="maximal"] [data-ui="btn-search-light"]:hover {
+  background: #ffe14d;
+  color: #1a1037;
+  border-color: #1a1037;
+}
+
+/* ---- 入力 ---- */
+[data-skin-scope="maximal"] [data-ui="select"],
+[data-skin-scope="maximal"] [data-ui="input"] {
+  border: 3px solid #1a1037;
+  border-radius: 14px;
+  background: #fff;
+  color: #1a1037;
+  font-weight: 700;
+}
+
+[data-skin-scope="maximal"] [data-ui="select"]:focus,
+[data-skin-scope="maximal"] [data-ui="input"]:focus {
+  outline: none;
+  border-color: #1a1037;
+  box-shadow: 0 0 0 4px #ffd9e8;
+}
+
+[data-skin-scope="maximal"] [data-ui="field-label"] {
+  font-weight: 800;
+  color: #1a1037;
+  letter-spacing: 0.02em;
+}
+
+/* ---- チップ / セグメント ---- */
+[data-skin-scope="maximal"] [data-ui="month-chip"],
+[data-skin-scope="maximal"] [data-ui="country-chip"] {
+  border: 2px solid #1a1037;
+  background: #fff;
+  border-radius: 999px;
+  color: #1a1037;
+  font-weight: 800;
+}
+
+[data-skin-scope="maximal"] [data-ui="month-chip"][data-active],
+[data-skin-scope="maximal"] [data-ui="country-chip"][data-active] {
+  background: #c2185b;
+  color: #fff;
+  border-color: #1a1037;
+  box-shadow: 2px 3px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="segmented"] {
+  background: #fff;
+  border: 3px solid #1a1037;
+  border-radius: 14px;
+}
+
+[data-skin-scope="maximal"] [data-ui="segment"] {
+  color: #3d2c52;
+  font-weight: 800;
+  border-radius: 9px;
+}
+
+[data-skin-scope="maximal"] [data-ui="cabin-card"] {
+  color: #3d2c52;
+  font-weight: 800;
+  border-radius: 999px;
+}
+
+[data-skin-scope="maximal"] [data-ui="segment"][data-active],
+[data-skin-scope="maximal"] [data-ui="cabin-card"][data-active] {
+  background: #ffe14d;
+  color: #1a1037;
+  border: 2px solid #1a1037;
+  box-shadow: none;
+}
+
+[data-skin-scope="maximal"] [data-ui="toggle-switch"] {
+  border: 2px solid #1a1037;
+}
+
+/* ---- 見出し ---- */
+[data-skin-scope="maximal"] [data-ui="section-title"] {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="sub-head"] h3 {
+  display: inline-block;
+  padding: 0 4px;
+  font-weight: 900;
+  color: #1a1037;
+  background: linear-gradient(transparent 58%, #ffe14d 58%); /* 蛍光マーカー */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* (5-a) 柄の上に文字を直置きしない — section-head / sub-lead を不透明ステッカー化 */
+[data-skin-scope="maximal"] [data-ui="section-head"],
+[data-skin-scope="maximal"] [data-ui="sub-lead"] {
+  display: inline-block;
+  max-width: 680px;
+  padding: 18px 22px;
+  background: #fffdf7;
+  border: 3px solid #1a1037;
+  border-radius: 16px;
+  box-shadow: 4px 5px 0 #1a1037;
+}
+
+/* (5-b) hero */
+[data-skin-scope="maximal"] [data-ui="hero-overlay"] {
+  background: linear-gradient(
+    100deg,
+    rgba(123, 31, 162, 0.94) 0%,
+    rgba(194, 24, 91, 0.78) 50%,
+    rgba(255, 183, 0, 0.35) 100%
+  );
+}
+
+[data-skin-scope="maximal"] [data-ui="hero-badge"] {
+  border: 3px solid #1a1037;
+  box-shadow: 3px 3px 0 #1a1037;
+  font-weight: 900;
+}
+
+[data-skin-scope="maximal"] [data-ui="hero-title"] {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+[data-skin-scope="maximal"] [data-ui="hero-search"] {
+  background: #fffdf7;
+  border: 3px solid #1a1037;
+  border-radius: 20px;
+  box-shadow: 7px 8px 0 #1a1037;
+}
+
+[data-skin-scope="maximal"] [data-ui="hero-chips"] span {
+  border: 2px solid #fff;
+  font-weight: 800;
+}
+
+/* (5-d) corridor-note / fallback-banner — 文字色 #7a5a00 はそのまま、枠だけ強化 */
+[data-skin-scope="maximal"] [data-ui="corridor-note"],
+[data-skin-scope="maximal"] [data-ui="fallback-banner"] {
+  border: 3px solid #1a1037;
+  border-radius: 14px;
+  background: #fff3c4;
+}
+
+[data-skin-scope="maximal"] [data-ui="kicker"] {
+  font-weight: 800;
+}
+
+[data-skin-scope="maximal"] [data-ui="footer"] {
+  background: #fffdf7;
+  border-top: 5px solid #1a1037;
+}
+
+/* ============================================================
+   3. シグネチャ — coverage ゾーン（貼られたステッカーの束）
+   mix では scope が coverage-section 自身に付くため複合形と子孫形を併記する。
+   ============================================================ */
+
+/* 決定打1: レインボーの極太上帯（16px ストライプ + 3px 黒罫）。背景レイヤなので radius でクリップされる。 */
+[data-skin-scope="maximal"][data-ui="coverage-section"],
+[data-skin-scope="maximal"] [data-ui="coverage-section"] {
+  position: relative;
+  overflow: visible;
+  padding: clamp(38px, 4.5vw, 50px) clamp(20px, 3vw, 30px) clamp(22px, 3vw, 32px);
+  border: 4px solid #1a1037;
+  border-radius: 26px;
+  box-shadow: 8px 9px 0 #1a1037;
+  background-color: #fffdf7;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      #ffb700 0 28px,
+      #e8437f 28px 56px,
+      #00a8cc 56px 84px,
+      #7b1fa2 84px 112px
+    ),
+    linear-gradient(#1a1037, #1a1037);
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 16px, 100% 19px;
+  background-position: top left, top left;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-grid"],
+[data-skin-scope="maximal"] [data-ui="coverage-grid"] {
+  gap: 20px;
+}
+
+/* 決定打2: 傾いたステッカー */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"],
+[data-skin-scope="maximal"] [data-ui="coverage-card"] {
+  position: relative;
+  padding: 18px;
+  border: 3px solid #1a1037;
+  border-radius: 18px;
+  box-shadow: 5px 6px 0 #1a1037;
+  transform: rotate(-1.4deg);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(even),
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(even) {
+  transform: rotate(1.2deg);
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(3n),
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(3n) {
+  transform: rotate(-0.6deg);
+}
+
+/* 地色4色ローテ */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(4n + 1),
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(4n + 1) {
+  background: #fff3c4;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(4n + 2),
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(4n + 2) {
+  background: #ffe0ec;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(4n + 3),
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(4n + 3) {
+  background: #e0f3ff;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(4n + 4),
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(4n + 4) {
+  background: #e6ffe0;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:hover,
+[data-skin-scope="maximal"] [data-ui="coverage-card"]:hover {
+  transform: rotate(0deg) translateY(-4px);
+  box-shadow: 7px 9px 0 #1a1037;
+}
+
+/* 右上の ✶（base.css のゾーンバッジは coverage-section 側の ::after なので衝突しない） */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]::after,
+[data-skin-scope="maximal"] [data-ui="coverage-card"]::after {
+  content: "✶";
+  position: absolute;
+  top: -14px;
+  right: -6px;
+  font-size: 30px;
+  line-height: 1;
+  color: #e8437f;
+  text-shadow: 2px 2px 0 #1a1037;
+  pointer-events: none;
+}
+
+/* 地域名 → 黒いステッカーチップ */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"] header span,
+[data-skin-scope="maximal"] [data-ui="coverage-card"] header span {
+  display: inline-block;
+  align-self: flex-start;
+  margin-bottom: 6px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #1a1037;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: rotate(-3deg);
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"] header strong,
+[data-skin-scope="maximal"] [data-ui="coverage-card"] header strong {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #1a1037;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"] p,
+[data-skin-scope="maximal"] [data-ui="coverage-card"] p {
+  color: #3d2c52;
+}
+
+/* 空港コード（.coverageCodes 相当 = 2つ目の p）。
+   モジュール側が `color: var(--ink-soft) !important` を持つため、色だけは !important でしか勝てない。 */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"] p:nth-of-type(2),
+[data-skin-scope="maximal"] [data-ui="coverage-card"] p:nth-of-type(2) {
+  display: inline-block;
+  margin-top: 9px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #1a1037;
+  color: #ffe14d !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
+}
+
+/* 入口 / 出口（.coverageLegs 相当） */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"] > div,
+[data-skin-scope="maximal"] [data-ui="coverage-card"] > div {
+  border-top: 3px dotted #1a1037;
+}
+
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"] > div small,
+[data-skin-scope="maximal"] [data-ui="coverage-card"] > div small {
+  color: #1a1037;
+  font-weight: 700;
+}
+
+/* sub-head の「○か国」ピル */
+[data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="sub-head"] span,
+[data-skin-scope="maximal"] [data-ui="sub-head"] span {
+  display: inline-block;
+  padding: 2px 12px;
+  border: 2px solid #1a1037;
+  border-radius: 999px;
+  background: #e8437f;
+  color: #fff;
+  font-weight: 900;
+  transform: rotate(2deg);
+}
+
+/* ============================================================
+   4. レスポンシブ / reduced motion
+   ============================================================ */
+@media (max-width: 640px) {
+  [data-skin-scope="maximal"][data-ui="coverage-section"],
+  [data-skin-scope="maximal"] [data-ui="coverage-section"] {
+    box-shadow: 5px 6px 0 #1a1037;
+  }
+
+  [data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"],
+  [data-skin-scope="maximal"] [data-ui="coverage-card"] {
+    transform: rotate(-0.8deg);
+  }
+
+  [data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(even),
+  [data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(even) {
+    transform: rotate(0.8deg);
+  }
+
+  [data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"]:nth-child(3n),
+  [data-skin-scope="maximal"] [data-ui="coverage-card"]:nth-child(3n) {
+    transform: rotate(-0.4deg);
+  }
+
+  [data-skin-scope="maximal"] [data-ui="section-head"],
+  [data-skin-scope="maximal"] [data-ui="sub-lead"] {
+    padding: 14px 16px;
+    box-shadow: 3px 4px 0 #1a1037;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="maximal"][data-ui="coverage-section"] [data-ui="coverage-card"],
+  [data-skin-scope="maximal"] [data-ui="coverage-card"],
+  [data-skin-scope="maximal"] [data-ui="btn-search"],
+  [data-skin-scope="maximal"] [data-ui="hero-search-btn"],
+  [data-skin-scope="maximal"] [data-ui="flight-link"],
+  [data-skin-scope="maximal"] [data-ui="handoff-link"],
+  [data-skin-scope="maximal"] [data-ui="btn-ghost"],
+  [data-skin-scope="maximal"] [data-ui="btn-search-light"] {
+    transition: none;
+  }
+}

@@ -1,0 +1,376 @@
+/* skin: clay — Claymorphism。巨大radius + 二重シャドウ（外影 + 上下inset）+ パステル。
+   シグネチャは dest ゾーン: 目的地カード4枚が radius 34px の粘土のかたまりになり、
+   写真が白い粘土フレームに丸くはめ込まれ、カードごとに nth-child でピンク/ブルー/バター/ミントの下半分が付く。 */
+
+/* ============================================================
+   1. スコープルート（単独=main / mix=dest-section）
+   ============================================================ */
+[data-skin-scope="clay"] {
+  background-color: #f4f1fb;
+  background-image:
+    radial-gradient(420px 320px at 12% 8%, #ffe3ec 0%, transparent 65%),
+    radial-gradient(480px 360px at 88% 90%, #dff1ff 0%, transparent 65%),
+    radial-gradient(380px 300px at 78% 6%, #e5f8ea 0%, transparent 60%);
+  background-repeat: no-repeat;
+
+  --bg: #f4f1fb;
+  --bg-soft: #ece7f8;
+  --bg-soft-2: #e3ddf3;
+  --surface: #ffffff;
+
+  --ink: #3d3654;
+  --ink-soft: #524a6e;
+  --muted: #6a6288;
+  --faint: #6f6790;
+
+  --brand: #6b4de6;
+  --brand-dark: #5a3fd0;
+  --brand-soft: #e9e3ff;
+
+  --navy: #4a3f78;
+  --navy-2: #574b8a;
+
+  --gold: #ffd166;
+  --gold-soft: #fff1cc;
+  --teal: #14937e;
+  --teal-soft: #d8f3ec;
+  --return: #e0532f;
+  --return-soft: #ffe4d6;
+
+  --line: #e6e0f4;
+  --line-strong: #cfc6ea;
+
+  --shadow-sm: 0 4px 10px rgba(90, 63, 208, 0.1);
+  --shadow-md: 0 12px 28px rgba(90, 63, 208, 0.14);
+  --shadow-lg: 0 24px 48px rgba(90, 63, 208, 0.18);
+
+  --radius-sm: 16px;
+  --radius-md: 22px;
+  --radius-lg: 30px;
+  --radius-xl: 38px;
+
+  /* clay 固有 */
+  --clay-out: 0 18px 36px rgba(90, 63, 208, 0.16);
+  --clay-in-dark: inset 0 -6px 12px rgba(90, 63, 208, 0.1);
+  --clay-in-light: inset 0 4px 8px rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================================
+   2. 汎用サーフェス
+   ============================================================ */
+
+/* (a) カード / パネル */
+[data-skin-scope="clay"] [data-ui="search-panel"],
+[data-skin-scope="clay"] [data-ui="state-card"],
+[data-skin-scope="clay"] [data-ui="trust-item"],
+[data-skin-scope="clay"] [data-ui="flight-card"],
+[data-skin-scope="clay"] [data-ui="gap-card"],
+[data-skin-scope="clay"] [data-ui="stat-cell"],
+[data-skin-scope="clay"] [data-ui="handoff-card"],
+[data-skin-scope="clay"] [data-ui="alt-card"],
+[data-skin-scope="clay"] [data-ui="coverage-card"],
+[data-skin-scope="clay"] [data-ui="how-card"],
+[data-skin-scope="clay"] [data-ui="pool-card"] {
+  background: #fff;
+  border-color: transparent;
+  border-radius: 30px;
+  box-shadow: var(--clay-out), var(--clay-in-dark), var(--clay-in-light);
+}
+
+/* モジュール側の (0,2,0) 装飾ボーダーを潰す */
+[data-skin-scope="clay"] [data-ui="handoff-card"][data-tone],
+[data-skin-scope="clay"] [data-ui="flight-card"][data-accent] {
+  border-color: transparent;
+}
+
+[data-skin-scope="clay"] [data-ui="search-panel"] {
+  border-top-color: transparent;
+  border-radius: 38px;
+}
+
+[data-skin-scope="clay"] [data-ui="how-card"]:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 48px rgba(90, 63, 208, 0.22), var(--clay-in-dark), var(--clay-in-light);
+}
+
+/* 合計プールは --navy 再宣言でプラム粘土に。角丸とシャドウだけ寄せる */
+[data-skin-scope="clay"] [data-ui="pool-card"][data-tone="total"] {
+  border-color: transparent;
+  box-shadow: 0 18px 36px rgba(74, 63, 120, 0.28), inset 0 -6px 12px rgba(0, 0, 0, 0.16), inset 0 4px 8px rgba(255, 255, 255, 0.18);
+}
+
+/* (b) ボタン */
+[data-skin-scope="clay"] [data-ui="btn-search"],
+[data-skin-scope="clay"] [data-ui="hero-search-btn"],
+[data-skin-scope="clay"] [data-ui="flight-link"],
+[data-skin-scope="clay"] [data-ui="handoff-link"],
+[data-skin-scope="clay"] [data-ui="header-cta"] {
+  background: #6b4de6;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  box-shadow:
+    0 12px 24px rgba(107, 77, 230, 0.35),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.18),
+    inset 0 4px 8px rgba(255, 255, 255, 0.35);
+  transition: transform 0.16s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+[data-skin-scope="clay"] [data-ui="btn-search"]:hover,
+[data-skin-scope="clay"] [data-ui="hero-search-btn"]:hover,
+[data-skin-scope="clay"] [data-ui="flight-link"]:hover,
+[data-skin-scope="clay"] [data-ui="handoff-link"]:hover,
+[data-skin-scope="clay"] [data-ui="header-cta"]:hover {
+  background: #6b4de6;
+  transform: translateY(-2px);
+}
+
+[data-skin-scope="clay"] [data-ui="btn-search"]:active,
+[data-skin-scope="clay"] [data-ui="hero-search-btn"]:active,
+[data-skin-scope="clay"] [data-ui="flight-link"]:active,
+[data-skin-scope="clay"] [data-ui="handoff-link"]:active,
+[data-skin-scope="clay"] [data-ui="header-cta"]:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 6px 12px rgba(107, 77, 230, 0.35),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.18),
+    inset 0 4px 8px rgba(255, 255, 255, 0.35);
+}
+
+[data-skin-scope="clay"] [data-ui="btn-search"]:disabled {
+  background: #c9bfe8;
+  color: #4a3f78;
+  box-shadow: inset 0 -4px 8px rgba(90, 63, 208, 0.12), inset 0 3px 6px rgba(255, 255, 255, 0.8);
+  transform: none;
+}
+
+[data-skin-scope="clay"] [data-ui="btn-ghost"],
+[data-skin-scope="clay"] [data-ui="btn-search-light"] {
+  background: #fff;
+  color: #5a3fd0;
+  border: none;
+  border-radius: 999px;
+  box-shadow:
+    0 10px 20px rgba(90, 63, 208, 0.18),
+    inset 0 -4px 8px rgba(90, 63, 208, 0.1),
+    inset 0 4px 8px rgba(255, 255, 255, 0.9);
+  transition: transform 0.16s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+[data-skin-scope="clay"] [data-ui="btn-ghost"]:hover,
+[data-skin-scope="clay"] [data-ui="btn-search-light"]:hover {
+  background: #fff;
+  color: #5a3fd0;
+  transform: translateY(-2px);
+}
+
+[data-skin-scope="clay"] [data-ui="btn-ghost"]:active,
+[data-skin-scope="clay"] [data-ui="btn-search-light"]:active {
+  transform: translateY(1px);
+  box-shadow:
+    0 6px 12px rgba(90, 63, 208, 0.18),
+    inset 0 -4px 8px rgba(90, 63, 208, 0.1),
+    inset 0 4px 8px rgba(255, 255, 255, 0.9);
+}
+
+/* (c) 入力 */
+[data-skin-scope="clay"] [data-ui="select"],
+[data-skin-scope="clay"] [data-ui="input"] {
+  background: #f2eefc;
+  color: var(--ink);
+  border: 2px solid transparent;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 3px 8px rgba(90, 63, 208, 0.12),
+    inset 0 -2px 4px rgba(255, 255, 255, 0.8);
+}
+
+[data-skin-scope="clay"] [data-ui="select"]:focus,
+[data-skin-scope="clay"] [data-ui="input"]:focus {
+  outline: none;
+  border-color: #b7a6ff;
+  box-shadow:
+    inset 0 3px 8px rgba(90, 63, 208, 0.12),
+    inset 0 -2px 4px rgba(255, 255, 255, 0.8),
+    0 0 0 3px rgba(107, 77, 230, 0.18);
+}
+
+/* (d) チップ */
+[data-skin-scope="clay"] [data-ui="month-chip"],
+[data-skin-scope="clay"] [data-ui="country-chip"],
+[data-skin-scope="clay"] [data-ui="cabin-card"],
+[data-skin-scope="clay"] [data-ui="segment"] {
+  background: #efeafd;
+  color: var(--ink-soft);
+  border: none;
+  border-radius: 999px;
+  box-shadow:
+    0 4px 10px rgba(90, 63, 208, 0.14),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+[data-skin-scope="clay"] [data-ui="month-chip"][data-active],
+[data-skin-scope="clay"] [data-ui="country-chip"][data-active],
+[data-skin-scope="clay"] [data-ui="cabin-card"][data-active],
+[data-skin-scope="clay"] [data-ui="segment"][data-active] {
+  background: #6b4de6;
+  color: #fff;
+  box-shadow:
+    0 8px 16px rgba(107, 77, 230, 0.3),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.16),
+    inset 0 3px 6px rgba(255, 255, 255, 0.3);
+}
+
+[data-skin-scope="clay"] [data-ui="segmented"] {
+  background: #f2eefc;
+  border-color: transparent;
+  border-radius: 999px;
+  box-shadow: inset 0 3px 7px rgba(90, 63, 208, 0.1);
+}
+
+[data-skin-scope="clay"] [data-ui="toggle-switch"] {
+  background: #d5cbf2;
+  box-shadow: inset 0 2px 5px rgba(90, 63, 208, 0.22);
+}
+
+/* ============================================================
+   3. シグネチャ — dest ゾーン（目的地カード4枚 = 粘土のかたまり）
+   ============================================================ */
+[data-skin-scope="clay"] [data-ui="dest-card"] {
+  border: none;
+  border-radius: 34px;
+  background: #fff;
+  box-shadow:
+    0 24px 44px rgba(90, 63, 208, 0.2),
+    inset 0 -8px 14px rgba(90, 63, 208, 0.12),
+    inset 0 6px 10px rgba(255, 255, 255, 0.95);
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"]:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 32px 56px rgba(90, 63, 208, 0.26),
+    inset 0 -8px 14px rgba(90, 63, 208, 0.12),
+    inset 0 6px 10px rgba(255, 255, 255, 0.95);
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"][data-active] {
+  border-color: transparent;
+  box-shadow:
+    0 0 0 4px #cabcff,
+    0 24px 44px rgba(90, 63, 208, 0.24),
+    inset 0 -8px 14px rgba(90, 63, 208, 0.12),
+    inset 0 6px 10px rgba(255, 255, 255, 0.95);
+}
+
+/* はめ込み写真: 白い粘土フレームに丸く沈む（aspect-ratio 4/3 は維持＝画像は歪めない） */
+[data-skin-scope="clay"] [data-ui="dest-img"] {
+  margin: 12px 12px 0;
+  width: calc(100% - 24px);
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 1px rgba(90, 63, 208, 0.08);
+}
+
+/* パステル4色の下半分 */
+[data-skin-scope="clay"] [data-ui="dest-body"] {
+  padding: 16px 18px 18px;
+  border-radius: 0 0 30px 30px;
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"]:nth-child(1) [data-ui="dest-body"] {
+  background: #ffe9f0;
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"]:nth-child(2) [data-ui="dest-body"] {
+  background: #e7f0ff;
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"]:nth-child(3) [data-ui="dest-body"] {
+  background: #fff3d9;
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"]:nth-child(4) [data-ui="dest-body"] {
+  background: #e4f7ea;
+}
+
+[data-skin-scope="clay"] [data-ui="dest-tag"] {
+  top: 22px;
+  right: 22px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: #5a3fd0;
+  background: #fff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 6px 14px rgba(90, 63, 208, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+[data-skin-scope="clay"] [data-ui="dest-card"][data-active] [data-ui="dest-tag"] {
+  color: #fff;
+  background: #6b4de6;
+}
+
+[data-skin-scope="clay"] [data-ui="dest-price"] {
+  color: #5a3fd0;
+  font-size: 1.25rem;
+}
+
+/* tone-badge は形だけ candy 化。色はモジュールの緑/赤のまま（コントラスト確保済み） */
+[data-skin-scope="clay"] [data-ui="tone-badge"] {
+  padding: 4px 12px;
+  box-shadow: 0 3px 8px rgba(90, 63, 208, 0.15);
+}
+
+/* ============================================================
+   4. 単独モードの崩れ手当て（ハードコード色の上書き）
+   ============================================================ */
+[data-skin-scope="clay"] [data-ui="hero-overlay"] {
+  background: linear-gradient(
+    100deg,
+    rgba(74, 63, 120, 0.92) 0%,
+    rgba(74, 63, 120, 0.68) 46%,
+    rgba(74, 63, 120, 0.35) 100%
+  );
+}
+
+[data-skin-scope="clay"] [data-ui="hero-search"] {
+  background: #fff;
+  border-radius: 32px;
+  box-shadow:
+    0 24px 48px rgba(74, 63, 120, 0.35),
+    inset 0 4px 8px rgba(255, 255, 255, 0.9);
+}
+
+[data-skin-scope="clay"] [data-ui="result-hero"] {
+  border-radius: 38px;
+  box-shadow: 0 24px 48px rgba(74, 63, 120, 0.24), inset 0 -6px 12px rgba(0, 0, 0, 0.14);
+}
+
+[data-skin-scope="clay"] [data-ui="arch-card"] {
+  border-radius: 30px;
+  box-shadow: 0 18px 36px rgba(74, 63, 120, 0.24), inset 0 -6px 12px rgba(0, 0, 0, 0.14);
+}
+
+[data-skin-scope="clay"] [data-ui="cta-inner"] {
+  border-radius: 38px;
+  box-shadow:
+    0 24px 48px rgba(107, 77, 230, 0.32),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.16),
+    inset 0 6px 10px rgba(255, 255, 255, 0.24);
+}
+
+[data-skin-scope="clay"] [data-ui="footer"] {
+  background: transparent;
+  border-top: 1px solid #e6e0f4;
+}
+
+/* ============================================================
+   5. モーション
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="clay"] * {
+    transition: none;
+  }
+}

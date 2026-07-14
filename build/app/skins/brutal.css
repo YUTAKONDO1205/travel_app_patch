@@ -1,0 +1,545 @@
+/* skin: brutal — Brutalism. Raw black rules, zero radius, offset hard shadows, monospace numerals.
+   Signature zone = alt (往路/復路の代替案): the whole alt-section is a flat #ffe600 slab with a
+   3px black frame and a 6–8px hard shadow, and the cheapest alt-card (first) is inverted to black-on-white. */
+
+/* ============================================================
+   1. Scope root — ground color + variable re-declaration
+   ============================================================ */
+[data-skin-scope="brutal"] {
+  background: #f4f4f0;
+  color: #000;
+
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --bg: #f4f4f0;
+  --bg-soft: #ffffff;
+  --bg-soft-2: #eaeae4;
+  --surface: #ffffff;
+
+  --ink: #000000;
+  --ink-soft: #000000;
+  --muted: #1a1a1a;
+  --faint: #333333;
+
+  --brand: #000000;
+  --brand-dark: #000000;
+  --brand-soft: #ffe600;
+
+  --navy: #000000;
+  --navy-2: #111111;
+  --gold: #ffe600;
+  --gold-soft: #ffe600;
+  --teal: #000000;
+  --teal-soft: #ffe600;
+  --return: #000000;
+  --return-soft: #ffe600;
+
+  --line: #000000;
+  --line-strong: #000000;
+
+  --shadow-sm: 3px 3px 0 #000;
+  --shadow-md: 6px 6px 0 #000;
+  --shadow-lg: 8px 8px 0 #000;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-pill: 0;
+}
+
+/* Monospace for every number / code / label that carries data. */
+[data-skin-scope="brutal"] [data-ui="kicker"],
+[data-skin-scope="brutal"] .mp-eyebrow,
+[data-skin-scope="brutal"] .mp-en,
+[data-skin-scope="brutal"] [data-ui="flight-route"] strong,
+[data-skin-scope="brutal"] [data-ui="flight-price"] strong,
+[data-skin-scope="brutal"] [data-ui="result-price"] strong,
+[data-skin-scope="brutal"] [data-ui="dest-price"],
+[data-skin-scope="brutal"] [data-ui="stat-cell"] strong,
+[data-skin-scope="brutal"] [data-ui="handoff-route"],
+[data-skin-scope="brutal"] [data-ui="alt-card"] h4 {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: 0;
+}
+
+/* ============================================================
+   2. Generic surfaces
+   ============================================================ */
+[data-skin-scope="brutal"] [data-ui="search-panel"] {
+  background: #fff;
+  border: 4px solid #000;
+  border-top: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="trust-item"],
+[data-skin-scope="brutal"] [data-ui="pool-card"],
+[data-skin-scope="brutal"] [data-ui="flight-card"],
+[data-skin-scope="brutal"] [data-ui="stat-cell"],
+[data-skin-scope="brutal"] [data-ui="handoff-section"],
+[data-skin-scope="brutal"] [data-ui="handoff-card"],
+[data-skin-scope="brutal"] [data-ui="coverage-section"],
+[data-skin-scope="brutal"] [data-ui="coverage-card"],
+[data-skin-scope="brutal"] [data-ui="how-card"],
+[data-skin-scope="brutal"] [data-ui="arch-card"],
+[data-skin-scope="brutal"] [data-ui="result-hero"],
+[data-skin-scope="brutal"] [data-ui="dest-card"] {
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="gap-card"],
+[data-skin-scope="brutal"] [data-ui="state-card"] {
+  border: 3px dashed #000;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 6px 6px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="flight-price"] {
+  background: #ffe600;
+  border: 3px solid #000;
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="flight-tag"] > span {
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="result-price"] {
+  background: #111;
+  border: 2px solid #fff;
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="how-step"] {
+  border-radius: 0;
+  border: 3px solid #000;
+  color: #fff;
+  background: #000;
+}
+
+/* Buttons */
+[data-skin-scope="brutal"] [data-ui="btn-search"],
+[data-skin-scope="brutal"] [data-ui="hero-search-btn"] {
+  background: #ffe600;
+  color: #000;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
+  font-weight: 800;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+[data-skin-scope="brutal"] [data-ui="btn-search"]:hover:not(:disabled),
+[data-skin-scope="brutal"] [data-ui="hero-search-btn"]:hover:not(:disabled) {
+  background: #ffe600;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="btn-search"]:active:not(:disabled),
+[data-skin-scope="brutal"] [data-ui="hero-search-btn"]:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* Disabled must stay legible: --line-strong is #000 here, so the module default would go solid black. */
+[data-skin-scope="brutal"] [data-ui="btn-search"]:disabled,
+[data-skin-scope="brutal"] [data-ui="hero-search-btn"]:disabled {
+  background: #fff;
+  color: #000;
+  border: 3px dashed #000;
+  box-shadow: none;
+  transform: none;
+}
+
+[data-skin-scope="brutal"] [data-ui="btn-ghost"] {
+  background: #fff;
+  color: #000;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="btn-ghost"]:hover {
+  color: #000;
+  border-color: #000;
+  background: #ffe600;
+}
+
+[data-skin-scope="brutal"] [data-ui="flight-link"],
+[data-skin-scope="brutal"] [data-ui="handoff-link"] {
+  background: #000;
+  color: #fff;
+  border: 3px solid #000;
+  border-radius: 0;
+  font-weight: 800;
+}
+
+[data-skin-scope="brutal"] [data-ui="flight-link"]:hover,
+[data-skin-scope="brutal"] [data-ui="handoff-link"]:hover {
+  background: #ffe600;
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="btn-search-light"] {
+  background: #ffe600;
+  color: #000;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #fff;
+  font-weight: 800;
+}
+
+/* Inputs */
+[data-skin-scope="brutal"] [data-ui="select"],
+[data-skin-scope="brutal"] [data-ui="input"] {
+  border: 3px solid #000;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 600;
+}
+
+[data-skin-scope="brutal"] [data-ui="select"]:focus,
+[data-skin-scope="brutal"] [data-ui="input"]:focus {
+  border-color: #000;
+  box-shadow: 4px 4px 0 #ffe600;
+}
+
+/* Chips + segments */
+[data-skin-scope="brutal"] [data-ui="segmented"] {
+  border: 2px solid #000;
+  border-radius: 0;
+  background: #fff;
+}
+
+[data-skin-scope="brutal"] [data-ui="month-chip"],
+[data-skin-scope="brutal"] [data-ui="country-chip"] {
+  border: 2px solid #000;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-weight: 700;
+}
+
+[data-skin-scope="brutal"] [data-ui="month-chip"][data-active],
+[data-skin-scope="brutal"] [data-ui="country-chip"][data-active] {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+/* The module's active state is white-on-white here — force the yellow slab instead. */
+[data-skin-scope="brutal"] [data-ui="segment"][data-active],
+[data-skin-scope="brutal"] [data-ui="cabin-card"][data-active] {
+  background: #ffe600;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-skin-scope="brutal"] [data-ui="segment"],
+[data-skin-scope="brutal"] [data-ui="cabin-card"] {
+  color: #000;
+  border-radius: 0;
+}
+
+/* Toggle: the module paints the track with --line-strong (black) and the knob white. */
+[data-skin-scope="brutal"] [data-ui="toggle-switch"] {
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="toggle-switch"]::after {
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 0;
+  background: #000;
+  box-shadow: none;
+}
+
+[data-skin-scope="brutal"] [data-ui="toggle-row"] input:checked + [data-ui="toggle-switch"] {
+  background: #ffe600;
+}
+
+/* Destination tag: drop the blur, go opaque. */
+[data-skin-scope="brutal"] [data-ui="dest-tag"] {
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+[data-skin-scope="brutal"] [data-ui="dest-img"] {
+  border-bottom: 3px solid #000;
+}
+
+/* Notes / banners: the module hardcodes #7a5a00 on a yellow field. */
+[data-skin-scope="brutal"] [data-ui="corridor-note"],
+[data-skin-scope="brutal"] [data-ui="fallback-banner"] {
+  border: 3px solid #000;
+  border-radius: 0;
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="corridor-note"] strong,
+[data-skin-scope="brutal"] [data-ui="fallback-banner"] p {
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="fallback-banner"] > span {
+  background: #000;
+  color: #ffe600;
+  border-radius: 0;
+}
+
+/* ============================================================
+   3. Header / hero — single-skin mode only (mix hands these zones to others)
+   ============================================================ */
+[data-skin-scope="brutal"] [data-ui="hero"] {
+  background: #ffe600;
+}
+
+[data-skin-scope="brutal"] [data-ui="hero-media"],
+[data-skin-scope="brutal"] [data-ui="hero-overlay"] {
+  display: none;
+}
+
+[data-skin-scope="brutal"] [data-ui="eyebrow"],
+[data-skin-scope="brutal"] [data-ui="hero-title"],
+[data-skin-scope="brutal"] [data-ui="hero-lead"] {
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="hero-badge"] {
+  background: #000;
+  color: #ffe600;
+  border-radius: 0;
+  font-weight: 800;
+}
+
+[data-skin-scope="brutal"] [data-ui="hero-chips"] span {
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="hero-search"] {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="hero-field"] > span {
+  color: #333;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+[data-skin-scope="brutal"] [data-ui="hero-field"]:hover {
+  background: #ffe600;
+  border-radius: 0;
+}
+
+/* Header — the .headerSolid rules are (0,2,0), so double the attribute to outrank them. */
+[data-skin-scope="brutal"] [data-ui="brand"][data-ui] {
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="nav-link"][data-ui] {
+  color: #000;
+  border-radius: 0;
+  font-weight: 700;
+}
+
+[data-skin-scope="brutal"] [data-ui="nav-link"][data-ui]:hover {
+  background: #ffe600;
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="nav-link"][data-active][data-ui] {
+  background: #000;
+  color: #fff;
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="header-cta"][data-ui] {
+  background: #000;
+  color: #fff;
+  border: 3px solid #000;
+  border-radius: 0;
+}
+
+[data-skin-scope="brutal"] [data-ui="header-cta"][data-ui]:hover {
+  background: #ffe600;
+  color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="cta-inner"] {
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #ffe600;
+}
+
+[data-skin-scope="brutal"] [data-ui="footer"] {
+  border-top: 3px solid #000;
+  background: #fff;
+}
+
+/* ============================================================
+   4. SIGNATURE — alt zone
+   In mix the scope lands on each alt-section itself, so both the compound
+   and the descendant form are needed.
+   ============================================================ */
+[data-skin-scope="brutal"][data-ui="alt-section"],
+[data-skin-scope="brutal"] [data-ui="alt-section"] {
+  background: #ffe600;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #000;
+  padding: 22px;
+  color: #000;
+}
+
+[data-skin-scope="brutal"][data-ui="alt-section"] [data-ui="sub-head"] h3,
+[data-skin-scope="brutal"] [data-ui="alt-section"] [data-ui="sub-head"] h3 {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #000;
+}
+
+[data-skin-scope="brutal"][data-ui="alt-section"] [data-ui="sub-head"] h3::before,
+[data-skin-scope="brutal"] [data-ui="alt-section"] [data-ui="sub-head"] h3::before {
+  content: ">> ";
+}
+
+[data-skin-scope="brutal"][data-ui="alt-section"] [data-ui="sub-head"] span,
+[data-skin-scope="brutal"] [data-ui="alt-section"] [data-ui="sub-head"] span {
+  background: #000;
+  color: #ffe600;
+  padding: 2px 10px;
+  border-radius: 0;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 800;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-row"] {
+  padding-bottom: 10px;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"] {
+  flex: 0 0 190px;
+  background: #fff;
+  color: #000;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 #000;
+  padding: 14px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"]:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"] h4 {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"] p {
+  color: #1a1a1a;
+}
+
+/* Badge chip inside every card (the module paints it --brand-soft). */
+[data-skin-scope="brutal"] [data-ui="alt-card"] > div:first-child > span {
+  background: #000;
+  color: #ffe600;
+  border-radius: 0;
+  padding: 3px 8px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Kill the module's green/red price tint on the non-cheapest cards: .altTop strong[data-tone] is (0,2,1). */
+[data-skin-scope="brutal"] [data-ui="alt-card"] strong[data-tone] {
+  color: #000;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+
+/* The cheapest alternative (index 0 = 最安) is the one inverted slab. */
+[data-skin-scope="brutal"] [data-ui="alt-card"]:first-child {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"]:first-child h4,
+[data-skin-scope="brutal"] [data-ui="alt-card"]:first-child p {
+  color: #fff;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"]:first-child strong[data-tone] {
+  color: #fff;
+}
+
+[data-skin-scope="brutal"] [data-ui="alt-card"]:first-child > div:first-child > span {
+  background: #ffe600;
+  color: #000;
+}
+
+/* ============================================================
+   5. Motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="brutal"] [data-ui="btn-search"],
+  [data-skin-scope="brutal"] [data-ui="hero-search-btn"],
+  [data-skin-scope="brutal"] [data-ui="alt-card"] {
+    transition: none;
+  }
+
+  [data-skin-scope="brutal"] [data-ui="alt-card"]:hover,
+  [data-skin-scope="brutal"] [data-ui="btn-search"]:hover:not(:disabled),
+  [data-skin-scope="brutal"] [data-ui="btn-search"]:active:not(:disabled),
+  [data-skin-scope="brutal"] [data-ui="hero-search-btn"]:hover:not(:disabled),
+  [data-skin-scope="brutal"] [data-ui="hero-search-btn"]:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   6. Narrow screens — keep the hard shadows from pushing layout
+   ============================================================ */
+@media (max-width: 640px) {
+  [data-skin-scope="brutal"][data-ui="alt-section"],
+  [data-skin-scope="brutal"] [data-ui="alt-section"] {
+    padding: 16px;
+    box-shadow: 5px 5px 0 #000;
+  }
+
+  [data-skin-scope="brutal"] [data-ui="alt-card"] {
+    flex: 0 0 170px;
+  }
+
+  [data-skin-scope="brutal"] [data-ui="search-panel"],
+  [data-skin-scope="brutal"] [data-ui="hero-search"] {
+    box-shadow: 5px 5px 0 #000;
+  }
+}

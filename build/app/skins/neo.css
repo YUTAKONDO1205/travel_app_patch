@@ -1,0 +1,481 @@
+/* skin: neo — Neomorphism。単一マテリアル #e4e9f2 だけで組む。
+   境界線を捨て、二方向の影（暗 #c3cad7 / 明 #ffffff）だけで凹凸を出す。
+   シグネチャは search パネル: 地色と同色の巨大スラブに、凹んだ入力・浮いたボタン/チップ。
+   押すと影が inset に反転して物理的に沈む。 */
+
+/* ============================================================
+   1. スコープルート — 地色と変数の再宣言
+   ============================================================ */
+[data-skin-scope="neo"] {
+  /* 単一マテリアル: サーフェスも地色と同じにする */
+  --bg: #e4e9f2;
+  --bg-soft: #e4e9f2;
+  --bg-soft-2: #dde3ee;
+  --surface: #e4e9f2;
+
+  /* 文字は濃いまま（Neomorphism の失敗＝文字まで薄くすること） */
+  --ink: #232a35;
+  --ink-soft: #3a4354;
+  --muted: #57627a;
+  --faint: #626e86;
+
+  --brand: #0062e3;
+  --brand-dark: #0050bd;
+  --brand-soft: rgba(0, 98, 227, 0.12);
+
+  --navy: #3c4a63;
+  --navy-2: #485875;
+  --gold: #e8b93e;
+  --gold-soft: #eee8d8;
+  --teal: #0e8371;
+  --teal-soft: #dcebe7;
+  --return: #d05a2a;
+  --return-soft: #f0e0d6;
+
+  /* 既存の border:1px solid var(--line) を「ハイライト線」に無害化する */
+  --line: rgba(255, 255, 255, 0.55);
+  --line-strong: #cdd5e4;
+
+  --shadow-sm: 3px 3px 6px #c3cad7, -3px -3px 6px #ffffff;
+  --shadow-md: 6px 6px 12px #c3cad7, -6px -6px 12px #ffffff;
+  --shadow-lg: 10px 10px 24px #bcc4d3, -10px -10px 24px #ffffff;
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  /* このスキン専用 */
+  --neo-dn: #c3cad7;
+  --neo-up: #ffffff;
+  --neo-base: #e4e9f2;
+
+  background: #e4e9f2;
+  color: var(--ink);
+}
+
+/* ============================================================
+   2. 汎用サーフェス
+   ============================================================ */
+
+/* (a) 凸カード */
+[data-skin-scope="neo"] [data-ui="search-panel"],
+[data-skin-scope="neo"] [data-ui="trust-item"],
+[data-skin-scope="neo"] [data-ui="state-card"],
+[data-skin-scope="neo"] [data-ui="flight-card"],
+[data-skin-scope="neo"] [data-ui="gap-card"],
+[data-skin-scope="neo"] [data-ui="stat-cell"],
+[data-skin-scope="neo"] [data-ui="handoff-card"],
+[data-skin-scope="neo"] [data-ui="alt-card"],
+[data-skin-scope="neo"] [data-ui="coverage-card"],
+[data-skin-scope="neo"] [data-ui="how-card"],
+[data-skin-scope="neo"] [data-ui="dest-card"] {
+  background: var(--neo-base);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  box-shadow: 8px 8px 16px var(--neo-dn), -8px -8px 16px var(--neo-up);
+}
+
+/* カードを載せる「箱」は素材に溶かす（凸の入れ子で影が濁るのを防ぐ） */
+[data-skin-scope="neo"] [data-ui="handoff-section"],
+[data-skin-scope="neo"] [data-ui="alt-section"],
+[data-skin-scope="neo"] [data-ui="coverage-section"] {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding-inline: 0;
+}
+
+/* (b) 凹入力 */
+[data-skin-scope="neo"] [data-ui="select"],
+[data-skin-scope="neo"] [data-ui="input"] {
+  background: var(--neo-base);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: var(--ink);
+  box-shadow: inset 4px 4px 8px var(--neo-dn), inset -4px -4px 8px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="select"]:focus,
+[data-skin-scope="neo"] [data-ui="input"]:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow:
+    inset 4px 4px 8px var(--neo-dn),
+    inset -4px -4px 8px var(--neo-up),
+    0 0 0 3px rgba(0, 98, 227, 0.28);
+}
+
+/* (c) 凸ボタン — 押すと沈む */
+[data-skin-scope="neo"] [data-ui="btn-search"],
+[data-skin-scope="neo"] [data-ui="btn-ghost"],
+[data-skin-scope="neo"] [data-ui="hero-search-btn"],
+[data-skin-scope="neo"] [data-ui="flight-link"],
+[data-skin-scope="neo"] [data-ui="handoff-link"],
+[data-skin-scope="neo"] [data-ui="header-cta"],
+[data-skin-scope="neo"] [data-ui="btn-search-light"] {
+  background: var(--neo-base);
+  color: #0050bd;
+  font-weight: 800;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 6px 6px 12px var(--neo-dn), -6px -6px 12px var(--neo-up);
+  transition: box-shadow 0.18s ease, color 0.18s ease;
+}
+
+[data-skin-scope="neo"] [data-ui="btn-search"]:hover:not(:disabled),
+[data-skin-scope="neo"] [data-ui="btn-ghost"]:hover,
+[data-skin-scope="neo"] [data-ui="hero-search-btn"]:hover:not(:disabled),
+[data-skin-scope="neo"] [data-ui="flight-link"]:hover,
+[data-skin-scope="neo"] [data-ui="handoff-link"]:hover,
+[data-skin-scope="neo"] [data-ui="btn-search-light"]:hover {
+  background: var(--neo-base);
+  color: #0050bd;
+  border-color: transparent;
+  box-shadow: 8px 8px 16px var(--neo-dn), -8px -8px 16px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="btn-search"]:active,
+[data-skin-scope="neo"] [data-ui="btn-ghost"]:active,
+[data-skin-scope="neo"] [data-ui="hero-search-btn"]:active,
+[data-skin-scope="neo"] [data-ui="flight-link"]:active,
+[data-skin-scope="neo"] [data-ui="handoff-link"]:active,
+[data-skin-scope="neo"] [data-ui="header-cta"]:active,
+[data-skin-scope="neo"] [data-ui="btn-search-light"]:active {
+  transform: none;
+  box-shadow: inset 4px 4px 8px var(--neo-dn), inset -4px -4px 8px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="btn-search"]:disabled,
+[data-skin-scope="neo"] [data-ui="hero-search-btn"]:disabled {
+  background: var(--neo-base);
+  color: #626e86;
+  box-shadow: inset 2px 2px 4px var(--neo-dn), inset -2px -2px 4px var(--neo-up);
+}
+
+/* (d) チップ — 非活性は凸、選択は凹 */
+[data-skin-scope="neo"] [data-ui="month-chip"],
+[data-skin-scope="neo"] [data-ui="country-chip"],
+[data-skin-scope="neo"] [data-ui="cabin-card"] {
+  background: var(--neo-base);
+  color: var(--ink-soft);
+  border: 1px solid transparent;
+  box-shadow: 3px 3px 6px var(--neo-dn), -3px -3px 6px var(--neo-up);
+  transition: box-shadow 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+[data-skin-scope="neo"] [data-ui="month-chip"]:hover:not(:disabled),
+[data-skin-scope="neo"] [data-ui="country-chip"]:hover:not(:disabled),
+[data-skin-scope="neo"] [data-ui="cabin-card"]:hover:not(:disabled) {
+  background: var(--neo-base);
+  border-color: transparent;
+  color: #0050bd;
+  box-shadow: 4px 4px 9px var(--neo-dn), -4px -4px 9px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="month-chip"][data-active],
+[data-skin-scope="neo"] [data-ui="country-chip"][data-active],
+[data-skin-scope="neo"] [data-ui="cabin-card"][data-active] {
+  background: #dee4ef;
+  color: #0050bd;
+  border-color: transparent;
+  box-shadow: inset 3px 3px 6px var(--neo-dn), inset -3px -3px 6px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="month-chip"]:active,
+[data-skin-scope="neo"] [data-ui="country-chip"]:active,
+[data-skin-scope="neo"] [data-ui="cabin-card"]:active {
+  box-shadow: inset 3px 3px 6px var(--neo-dn), inset -3px -3px 6px var(--neo-up);
+}
+
+/* ============================================================
+   3. シグネチャ — search ゾーン
+   ============================================================ */
+
+/* (a) 地色と完全同色の巨大スラブが、影だけで浮く */
+[data-skin-scope="neo"] [data-ui="search-panel"] {
+  border: 0;
+  border-radius: 28px;
+  box-shadow: 18px 18px 36px #bcc4d3, -18px -18px 36px #ffffff;
+}
+
+[data-skin-scope="neo"] [data-ui="search-panel-head"] h2 {
+  color: var(--ink);
+}
+
+[data-skin-scope="neo"] [data-ui="search-panel-head"] p {
+  color: var(--muted);
+}
+
+/* (e) ラベルは濃いまま（薄文字禁止） */
+[data-skin-scope="neo"] [data-ui="field-label"] {
+  color: #3a4354;
+  letter-spacing: 0.02em;
+}
+
+/* (b) 掘り込みトラフ + その中で浮くキー */
+[data-skin-scope="neo"] [data-ui="segmented"] {
+  background: var(--neo-base);
+  border: none;
+  box-shadow: inset 3px 3px 7px var(--neo-dn), inset -3px -3px 7px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="segment"] {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  box-shadow: none;
+  transition: box-shadow 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+[data-skin-scope="neo"] [data-ui="segment"]:hover:not([data-active]) {
+  color: #0050bd;
+}
+
+[data-skin-scope="neo"] [data-ui="segment"][data-active] {
+  background: #eef2f8;
+  color: #0050bd;
+  box-shadow: 3px 3px 6px var(--neo-dn), -2px -2px 5px var(--neo-up);
+}
+
+/* cabinRow / chipGrid の器は地色そのまま（--bg-soft 再宣言で溶ける） */
+
+/* (c) 凹ウェル */
+[data-skin-scope="neo"] [data-ui="pool-card"] {
+  background: var(--neo-base);
+  border-color: transparent;
+  box-shadow: inset 5px 5px 10px var(--neo-dn), inset -5px -5px 10px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="pool-card"][data-tone="total"] {
+  background: var(--neo-base);
+  border-color: transparent;
+  color: #232a35;
+  box-shadow:
+    inset 5px 5px 10px var(--neo-dn),
+    inset -5px -5px 10px var(--neo-up),
+    inset 0 0 0 2px rgba(0, 98, 227, 0.35);
+}
+
+[data-skin-scope="neo"] [data-ui="pool-card"][data-tone="total"] span {
+  color: #57627a;
+}
+
+[data-skin-scope="neo"] [data-ui="pool-card"][data-tone="total"] strong {
+  color: #0050bd;
+}
+
+[data-skin-scope="neo"] [data-ui="pool-card"][data-tone="total"] p {
+  color: #57627a;
+}
+
+/* (d) トグル — レールは凹、ノブは凸 */
+[data-skin-scope="neo"] [data-ui="toggle-switch"] {
+  background: var(--neo-base);
+  box-shadow: inset 3px 3px 6px var(--neo-dn), inset -3px -3px 6px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="toggle-switch"]::after {
+  background: #f4f7fb;
+  box-shadow: 2px 2px 4px var(--neo-dn);
+}
+
+[data-skin-scope="neo"] [data-ui="toggle-row"] input:checked + [data-ui="toggle-switch"] {
+  background: var(--neo-base);
+  box-shadow:
+    inset 3px 3px 6px var(--neo-dn),
+    inset -3px -3px 6px var(--neo-up),
+    inset 0 0 0 2px rgba(0, 98, 227, 0.55);
+}
+
+[data-skin-scope="neo"] [data-ui="toggle-row"] input:checked + [data-ui="toggle-switch"]::after {
+  background: #0062e3;
+}
+
+/* 補助テキスト — 帯ではなく凹ウェルに置く */
+[data-skin-scope="neo"] [data-ui="corridor-note"] {
+  background: var(--neo-base);
+  border: 1px solid transparent;
+  box-shadow: inset 3px 3px 7px var(--neo-dn), inset -3px -3px 7px var(--neo-up);
+}
+
+/* ============================================================
+   4. 単独モードの崩れの手当て
+   ============================================================ */
+
+/* hero — 紺オーバーレイを地色フロストに置き換え、文字を反転 */
+[data-skin-scope="neo"] [data-ui="hero"] {
+  background: var(--neo-base);
+}
+
+[data-skin-scope="neo"] [data-ui="hero-media"] {
+  filter: saturate(0.5) opacity(0.6);
+}
+
+[data-skin-scope="neo"] [data-ui="hero-overlay"] {
+  background: linear-gradient(
+    100deg,
+    rgba(228, 233, 242, 0.96) 0%,
+    rgba(228, 233, 242, 0.82) 46%,
+    rgba(228, 233, 242, 0.5) 100%
+  );
+}
+
+[data-skin-scope="neo"] [data-ui="hero-title"] {
+  color: #232a35;
+}
+
+[data-skin-scope="neo"] [data-ui="hero-lead"] {
+  color: #3a4354;
+}
+
+[data-skin-scope="neo"] [data-ui="eyebrow"] {
+  color: #57627a;
+}
+
+[data-skin-scope="neo"] [data-ui="hero-badge"] {
+  background: var(--neo-base);
+  color: #0050bd;
+  box-shadow: 4px 4px 8px var(--neo-dn), -4px -4px 8px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="hero-chips"] span {
+  background: var(--neo-base);
+  border: none;
+  color: #3a4354;
+  box-shadow: 4px 4px 8px var(--neo-dn), -4px -4px 8px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="hero-search"] {
+  background: var(--neo-base);
+  border-radius: 24px;
+  box-shadow: 14px 14px 28px #bcc4d3, -14px -14px 28px #ffffff;
+}
+
+[data-skin-scope="neo"] [data-ui="hero-field"] > span {
+  color: #57627a;
+}
+
+[data-skin-scope="neo"] [data-ui="hero-field"] > strong {
+  color: #232a35;
+}
+
+/* header — 透明ヘッダの白文字が地色に溶けるので、地色フロスト + 濃文字 */
+[data-skin-scope="neo"] [data-ui="header"] {
+  background: rgba(228, 233, 242, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom-color: transparent;
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-skin-scope="neo"] [data-ui="header"] {
+    background: #e4e9f2;
+  }
+}
+
+[data-skin-scope="neo"] [data-ui="header"] [data-ui="brand"] {
+  color: #232a35;
+}
+
+[data-skin-scope="neo"] [data-ui="header"] [data-ui="nav-link"] {
+  color: #232a35;
+  transition: box-shadow 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+[data-skin-scope="neo"] [data-ui="header"] [data-ui="nav-link"]:hover {
+  background: transparent;
+  color: #0050bd;
+}
+
+[data-skin-scope="neo"] [data-ui="header"] [data-ui="nav-link"][data-active] {
+  background: var(--neo-base);
+  color: #0050bd;
+  box-shadow: inset 2px 2px 4px var(--neo-dn), inset -2px -2px 4px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="header"] [data-ui="header-cta"] {
+  background: var(--neo-base);
+  color: #0050bd;
+  border: none;
+  box-shadow: 6px 6px 12px var(--neo-dn), -6px -6px 12px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="header"] [data-ui="header-cta"]:hover {
+  background: var(--neo-base);
+  transform: none;
+  box-shadow: 8px 8px 16px var(--neo-dn), -8px -8px 16px var(--neo-up);
+}
+
+/* dest cards — 写真の下だけ凸スラブ */
+[data-skin-scope="neo"] [data-ui="dest-card"]:hover {
+  transform: none;
+  box-shadow: 10px 10px 20px var(--neo-dn), -10px -10px 20px var(--neo-up);
+}
+
+[data-skin-scope="neo"] [data-ui="dest-card"][data-active] {
+  border-color: transparent;
+  box-shadow:
+    8px 8px 16px var(--neo-dn),
+    -8px -8px 16px var(--neo-up),
+    inset 0 0 0 2px rgba(0, 98, 227, 0.55);
+}
+
+[data-skin-scope="neo"] [data-ui="how-card"]:hover {
+  transform: none;
+  box-shadow: 10px 10px 20px var(--neo-dn), -10px -10px 20px var(--neo-up);
+}
+
+/* CTA — brand の青スラブを地色の大凸に */
+[data-skin-scope="neo"] [data-ui="cta-inner"] {
+  background: var(--neo-base);
+  color: #232a35;
+  border-radius: var(--radius-xl);
+  box-shadow: 16px 16px 32px #bcc4d3, -16px -16px 32px #ffffff;
+}
+
+[data-skin-scope="neo"] [data-ui="cta-inner"] p {
+  color: #57627a;
+}
+
+/* footer — 白い板をやめて、地続きにする */
+[data-skin-scope="neo"] [data-ui="footer"] {
+  background: var(--neo-base);
+  border-top: none;
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+/* ============================================================
+   5. レスポンシブ — 影を締めて 640px 以下でも破綻させない
+   ============================================================ */
+@media (max-width: 640px) {
+  [data-skin-scope="neo"] [data-ui="search-panel"] {
+    border-radius: 22px;
+    box-shadow: 10px 10px 22px #bcc4d3, -10px -10px 22px #ffffff;
+  }
+
+  [data-skin-scope="neo"] [data-ui="hero-search"],
+  [data-skin-scope="neo"] [data-ui="cta-inner"] {
+    box-shadow: 10px 10px 20px #bcc4d3, -10px -10px 20px #ffffff;
+  }
+
+  [data-skin-scope="neo"] [data-ui="trust-item"],
+  [data-skin-scope="neo"] [data-ui="state-card"],
+  [data-skin-scope="neo"] [data-ui="flight-card"],
+  [data-skin-scope="neo"] [data-ui="gap-card"],
+  [data-skin-scope="neo"] [data-ui="stat-cell"],
+  [data-skin-scope="neo"] [data-ui="handoff-card"],
+  [data-skin-scope="neo"] [data-ui="alt-card"],
+  [data-skin-scope="neo"] [data-ui="coverage-card"],
+  [data-skin-scope="neo"] [data-ui="how-card"],
+  [data-skin-scope="neo"] [data-ui="dest-card"] {
+    box-shadow: 6px 6px 12px var(--neo-dn), -6px -6px 12px var(--neo-up);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="neo"] * {
+    transition: none;
+  }
+}

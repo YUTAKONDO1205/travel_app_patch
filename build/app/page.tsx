@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import styles from "./page.module.css";
 import {
   CABIN_CLASS_OPTIONS,
@@ -40,6 +40,16 @@ import {
   type LiveFareSource,
   type PlannerFormState,
 } from "../lib/travel-planner";
+import {
+  DEFAULT_SKIN,
+  MIX_MAP,
+  SKINS,
+  SKIN_STORAGE_KEY,
+  isSkinId,
+  skinTag,
+  type SkinId,
+  type SkinZone,
+} from "../lib/design-skins";
 
 const NAV_ITEMS = [
   { id: "search", label: "検索" },
@@ -117,16 +127,16 @@ function priceTone(value: number, min: number, max: number): PriceTone {
 
 function renderFlightCard(quote: FlightLegQuote, tag: string, accent: "out" | "in", revealStep: number) {
   return (
-    <article className={styles.flightCard} data-accent={accent} data-reveal style={revealStyle(revealStep)}>
+    <article className={styles.flightCard} data-ui="flight-card" data-accent={accent} data-reveal style={revealStyle(revealStep)}>
       <header className={styles.flightTop}>
-        <span className={styles.flightTag} data-accent={accent}>
+        <span className={styles.flightTag} data-ui="flight-tag" data-accent={accent}>
           <span className={styles.flightDot} aria-hidden="true" />
           {tag}
         </span>
         <span className={styles.flightConfidence}>{quote.confidenceLabel}</span>
       </header>
 
-      <div className={styles.flightRoute}>
+      <div className={styles.flightRoute} data-ui="flight-route">
         <div className={styles.flightNode}>
           <strong>{quote.origin.code}</strong>
           <span>{quote.origin.city}</span>
@@ -142,7 +152,7 @@ function renderFlightCard(quote: FlightLegQuote, tag: string, accent: "out" | "i
         </div>
       </div>
 
-      <div className={styles.flightPrice}>
+      <div className={styles.flightPrice} data-ui="flight-price">
         <div>
           <span>合計の推定額</span>
           <strong>{formatCurrency(quote.totalPrice)}</strong>
@@ -161,7 +171,7 @@ function renderFlightCard(quote: FlightLegQuote, tag: string, accent: "out" | "i
         ))}
       </ul>
 
-      <a className={styles.flightLink} href={quote.skyscannerUrl} target="_blank" rel="noreferrer">
+      <a className={styles.flightLink} data-ui="flight-link" href={quote.skyscannerUrl} target="_blank" rel="noreferrer">
         この片道を Skyscanner で確認
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M5 12h14M13 6l6 6-6 6" />
@@ -175,15 +185,15 @@ function renderHandoffCard(source: LiveFareSource) {
   const isReference = source.status === "reference";
 
   return (
-    <article className={styles.handoffCard} data-tone={source.status}>
+    <article className={styles.handoffCard} data-ui="handoff-card" data-tone={source.status}>
       <header className={styles.handoffHead}>
         <span className={styles.handoffStatus}>{source.statusLabel}</span>
         <span className={styles.handoffProvider}>{source.provider}</span>
       </header>
-      <strong className={styles.handoffRoute}>{source.routeLabel}</strong>
+      <strong className={styles.handoffRoute} data-ui="handoff-route">{source.routeLabel}</strong>
       <span className={styles.handoffLabel}>{source.label}</span>
 
-      <div className={styles.handoffMeta}>
+      <div className={styles.handoffMeta} data-ui="handoff-meta">
         <div>
           <span>日付</span>
           <strong>{source.dateLabel}</strong>
@@ -196,7 +206,13 @@ function renderHandoffCard(source: LiveFareSource) {
 
       <p className={styles.handoffFallback}>{source.fallbackLabel}</p>
 
-      <a className={isReference ? styles.handoffLinkGhost : styles.handoffLink} href={source.url} target="_blank" rel="noreferrer">
+      <a
+        className={isReference ? styles.handoffLinkGhost : styles.handoffLink}
+        data-ui="handoff-link"
+        href={source.url}
+        target="_blank"
+        rel="noreferrer"
+      >
         {isReference ? "参考検索を開く" : "この検索を開く"}
       </a>
     </article>
@@ -212,7 +228,22 @@ export default function HomePage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState<string>("top");
+  const [skin, setSkin] = useState<SkinId>(DEFAULT_SKIN);
+  const [labOpen, setLabOpen] = useState(false);
   const pendingSearchRef = useRef<number | null>(null);
+
+  const isMix = skin === "mix";
+
+  // In single-skin mode the scope sits on <main> and every zone inherits it.
+  // In 全部盛り mode each zone carries its own scope instead.
+  const zoneSkin = useCallback((zone: SkinZone): SkinId | undefined => (isMix ? MIX_MAP[zone] : undefined), [isMix]);
+  const zoneProps = useCallback(
+    (zone: SkinZone) => {
+      const zoneId = zoneSkin(zone);
+      return { "data-skin-scope": zoneId, "data-skin-tag": skinTag(zoneId) };
+    },
+    [zoneSkin],
+  );
 
   const validationMessage = submitted ? getFormValidationMessage(formState) : null;
   const canSearch = isFormValid(formState);
@@ -382,6 +413,25 @@ export default function HomePage() {
     setResult(null);
   }
 
+  function selectSkin(nextSkin: SkinId) {
+    setSkin(nextSkin);
+    try {
+      window.localStorage.setItem(SKIN_STORAGE_KEY, nextSkin);
+    } catch {
+      // Private mode or a blocked store: the skin still applies for this visit.
+    }
+  }
+
+  // Restore after mount so the server and the first client render agree.
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(SKIN_STORAGE_KEY);
+      if (isSkinId(stored)) setSkin(stored);
+    } catch {
+      // Ignore an unreadable store and keep the default skin.
+    }
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY;
@@ -440,17 +490,21 @@ export default function HomePage() {
       observer.observe(node);
     });
     return () => observer.disconnect();
-  }, [hasGenerated, loading, result]);
+  }, [hasGenerated, loading, result, skin]);
 
   return (
-    <main className={styles.page}>
+    <main
+      className={styles.page}
+      data-skin={skin}
+      data-skin-scope={skin === "mix" || skin === "classic" ? undefined : skin}
+    >
       <div className={styles.progress} aria-hidden="true">
         <span style={{ transform: `scaleX(${scrollProgress})` }} />
       </div>
 
-      <header className={`${styles.header} ${isScrolled ? styles.headerSolid : ""}`}>
+      <header className={`${styles.header} ${isScrolled ? styles.headerSolid : ""}`} data-ui="header" {...zoneProps("header")}>
         <div className={styles.headerInner}>
-          <a className={styles.brand} href="#top">
+          <a className={styles.brand} href="#top" data-ui="brand">
             <span className={styles.brandMark} aria-hidden="true">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 16l18-6-6 18-3-7z" />
@@ -461,45 +515,53 @@ export default function HomePage() {
 
           <nav className={styles.nav} aria-label="ページ内メニュー">
             {NAV_ITEMS.map((item) => (
-              <a key={item.id} href={`#${item.id}`} className={styles.navLink} data-active={activeSection === item.id || undefined}>
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className={styles.navLink}
+                data-ui="nav-link"
+                data-active={activeSection === item.id || undefined}
+              >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          <a className={styles.headerCta} href="#search">
+          <a className={styles.headerCta} href="#search" data-ui="header-cta">
             航空券を検索
           </a>
         </div>
       </header>
 
-      <section className={styles.hero} id="top" data-testid="hero">
-        <div className={styles.heroMedia} aria-hidden="true" />
-        <div className={styles.heroOverlay} aria-hidden="true" />
+      <section className={styles.hero} id="top" data-testid="hero" data-ui="hero" {...zoneProps("hero")}>
+        <div className={styles.heroMedia} data-ui="hero-media" aria-hidden="true" />
+        <div className={styles.heroOverlay} data-ui="hero-overlay" aria-hidden="true" />
         <div className={styles.shell}>
           <div className={styles.heroCopy}>
-            <span className={styles.heroBadge}>海外の航空券を、片道2枚で</span>
-            <h1 className={styles.heroTitle}>
+            <span className="mp-eyebrow" data-ui="eyebrow">Gateway Pair Explorer</span>
+            <span className={styles.heroBadge} data-ui="hero-badge">海外の航空券を、片道2枚で</span>
+            <h1 className={styles.heroTitle} data-ui="hero-title">
               往復で買う前に、<br />
               片道2枚を比べてみる。
             </h1>
-            <p className={styles.heroLead}>
+            <p className={styles.heroLead} data-ui="hero-lead">
               出発国と行きたい国、それに時期を選ぶと、往路と復路を別々の片道券として比べて、いちばん安い入口と出口を探します。往復より安くなることがあります。
             </p>
-            <div className={styles.heroChips}>
+            <div className={styles.heroChips} data-ui="hero-chips">
               <span>複数の月をまとめて比較</span>
               <span>入口は周りの都市まで</span>
               <span>Skyscanner で最終確認</span>
             </div>
           </div>
 
-          <div className={styles.heroSearch} role="search">
-            <label className={styles.heroField}>
+          <div className={styles.heroSearch} data-ui="hero-search" role="search">
+            <label className={styles.heroField} data-ui="hero-field">
               <span>出発国</span>
               <select
                 value={formState.departureCountry}
                 onChange={(event) => handleDepartureChange(event.target.value as CountryCode)}
                 aria-label="出発国"
+                data-ui="select"
               >
                 {COUNTRY_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -508,15 +570,15 @@ export default function HomePage() {
                 ))}
               </select>
             </label>
-            <button type="button" className={styles.heroField} onClick={scrollToSearch}>
+            <button type="button" className={styles.heroField} data-ui="hero-field" onClick={scrollToSearch}>
               <span>目的地</span>
               <strong>{heroDestSummary}</strong>
             </button>
-            <button type="button" className={styles.heroField} onClick={scrollToSearch}>
+            <button type="button" className={styles.heroField} data-ui="hero-field" onClick={scrollToSearch}>
               <span>時期</span>
               <strong>{dateSearchSummary}</strong>
             </button>
-            <button type="button" className={styles.heroSearchBtn} onClick={runSearch} disabled={loading}>
+            <button type="button" className={styles.heroSearchBtn} data-ui="hero-search-btn" onClick={runSearch} disabled={loading}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
@@ -527,10 +589,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.searchSection} id="search">
+      <section className={styles.searchSection} id="search" data-ui="search-section" {...zoneProps("search")}>
         <div className={styles.shell}>
-          <div className={styles.searchPanel} data-reveal style={revealStyle(0)}>
-            <div className={styles.searchPanelHead}>
+          <div className={styles.searchPanel} data-ui="search-panel" data-reveal style={revealStyle(0)}>
+            <div className={styles.searchPanelHead} data-ui="search-panel-head">
               <h2>航空券を片道2枚で検索</h2>
               <p>{buildSearchSummary(formState)}・{dateSearchSummary}</p>
             </div>
@@ -538,9 +600,10 @@ export default function HomePage() {
             <form onSubmit={handleSearch} data-testid="trip-brief-form" className={styles.searchForm}>
               <div className={styles.steps}>
                 <section className={styles.step}>
-                  <span className={styles.stepLabel}>出発国</span>
+                  <span className={styles.stepLabel} data-ui="field-label">出発国</span>
                   <select
                     className={styles.select}
+                    data-ui="select"
                     value={formState.departureCountry}
                     onChange={(event) => handleDepartureChange(event.target.value as CountryCode)}
                   >
@@ -553,9 +616,10 @@ export default function HomePage() {
                 </section>
 
                 <section className={styles.step}>
-                  <span className={styles.stepLabel}>人数</span>
+                  <span className={styles.stepLabel} data-ui="field-label">人数</span>
                   <select
                     className={styles.select}
+                    data-ui="select"
                     value={formState.passengerCount}
                     onChange={(event) => updateFormState("passengerCount", event.target.value as PassengerCountKey)}
                   >
@@ -568,13 +632,15 @@ export default function HomePage() {
                 </section>
 
                 <section className={`${styles.step} ${styles.stepWide}`}>
-                  <span className={styles.stepLabel}>探し方</span>
-                  <div className={styles.segmented} role="tablist">
+                  <span className={styles.stepLabel} data-ui="field-label">探し方</span>
+                  <div className={styles.segmented} data-ui="segmented" role="tablist">
                     <button
                       type="button"
                       role="tab"
                       aria-selected={formState.dateSearchMode === "flexible"}
                       className={`${styles.segment} ${formState.dateSearchMode === "flexible" ? styles.segmentActive : ""}`}
+                      data-ui="segment"
+                      data-active={formState.dateSearchMode === "flexible" || undefined}
                       onClick={() => updateFormState("dateSearchMode", "flexible")}
                     >
                       複数月で探す
@@ -584,6 +650,8 @@ export default function HomePage() {
                       role="tab"
                       aria-selected={formState.dateSearchMode === "exact"}
                       className={`${styles.segment} ${formState.dateSearchMode === "exact" ? styles.segmentActive : ""}`}
+                      data-ui="segment"
+                      data-active={formState.dateSearchMode === "exact" || undefined}
                       onClick={() => updateFormState("dateSearchMode", "exact")}
                     >
                       日付を指定
@@ -595,18 +663,20 @@ export default function HomePage() {
               {formState.dateSearchMode === "exact" ? (
                 <div className={styles.fieldRow}>
                   <label className={styles.field}>
-                    <span className={styles.stepLabel}>往路の出発日</span>
+                    <span className={styles.stepLabel} data-ui="field-label">往路の出発日</span>
                     <input
                       className={styles.input}
+                      data-ui="input"
                       type="date"
                       value={formState.outboundDate}
                       onChange={(event) => updateFormState("outboundDate", event.target.value)}
                     />
                   </label>
                   <label className={styles.field}>
-                    <span className={styles.stepLabel}>滞在日数</span>
+                    <span className={styles.stepLabel} data-ui="field-label">滞在日数</span>
                     <select
                       className={styles.select}
+                      data-ui="select"
                       value={formState.stayLength}
                       onChange={(event) => updateFormState("stayLength", event.target.value as PlannerFormState["stayLength"])}
                     >
@@ -620,7 +690,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className={styles.flexBlock}>
-                  <span className={styles.stepLabel}>出発月（最大4つ）</span>
+                  <span className={styles.stepLabel} data-ui="field-label">出発月（最大4つ）</span>
                   <div className={styles.monthGrid}>
                     {FLEXIBLE_MONTH_OPTIONS.map((option) => {
                       const active = formState.targetMonths.includes(option.value);
@@ -630,6 +700,8 @@ export default function HomePage() {
                           key={option.value}
                           type="button"
                           className={`${styles.monthChip} ${active ? styles.monthChipActive : ""} ${disabled ? styles.monthChipDisabled : ""}`}
+                          data-ui="month-chip"
+                          data-active={active || undefined}
                           onClick={() => toggleTargetMonth(option.value)}
                           disabled={disabled}
                         >
@@ -640,9 +712,10 @@ export default function HomePage() {
                   </div>
                   <div className={styles.fieldRow}>
                     <label className={styles.field}>
-                      <span className={styles.stepLabel}>最短滞在</span>
+                      <span className={styles.stepLabel} data-ui="field-label">最短滞在</span>
                       <select
                         className={styles.select}
+                        data-ui="select"
                         value={formState.stayLengthMin}
                         onChange={(event) => updateFormState("stayLengthMin", event.target.value as FlexibleStayDayKey)}
                       >
@@ -654,9 +727,10 @@ export default function HomePage() {
                       </select>
                     </label>
                     <label className={styles.field}>
-                      <span className={styles.stepLabel}>最長滞在</span>
+                      <span className={styles.stepLabel} data-ui="field-label">最長滞在</span>
                       <select
                         className={styles.select}
+                        data-ui="select"
                         value={formState.stayLengthMax}
                         onChange={(event) => updateFormState("stayLengthMax", event.target.value as FlexibleStayDayKey)}
                       >
@@ -672,7 +746,7 @@ export default function HomePage() {
               )}
 
               <div className={styles.destBlock}>
-                <span className={styles.stepLabel}>候補の国（最大5か国・入口と出口の候補になります）</span>
+                <span className={styles.stepLabel} data-ui="field-label">候補の国（最大5か国・入口と出口の候補になります）</span>
                 <div className={styles.chipGrid}>
                   {COUNTRY_OPTIONS.filter((option) => option.value !== formState.departureCountry).map((option) => {
                     const active = formState.destinationCountries.includes(option.value as CountryCode);
@@ -683,6 +757,8 @@ export default function HomePage() {
                         type="button"
                         data-country-code={option.value}
                         className={`${styles.countryChip} ${active ? styles.countryChipActive : ""} ${disabled ? styles.countryChipDisabled : ""}`}
+                        data-ui="country-chip"
+                        data-active={active || undefined}
                         onClick={() => toggleDestinationCountry(option.value as CountryCode)}
                         disabled={disabled}
                         aria-pressed={active}
@@ -701,35 +777,37 @@ export default function HomePage() {
                       key={option.value}
                       type="button"
                       className={`${styles.cabinCard} ${formState.cabinClass === option.value ? styles.cabinCardActive : ""}`}
+                      data-ui="cabin-card"
+                      data-active={formState.cabinClass === option.value || undefined}
                       onClick={() => updateFormState("cabinClass", option.value as CabinClassKey)}
                     >
                       {option.label}
                     </button>
                   ))}
                 </div>
-                <label className={styles.toggleRow}>
+                <label className={styles.toggleRow} data-ui="toggle-row">
                   <input
                     type="checkbox"
                     checked={formState.preferDirect}
                     onChange={(event) => updateFormState("preferDirect", event.target.checked)}
                   />
-                  <span className={styles.toggleSwitch} aria-hidden="true" />
+                  <span className={styles.toggleSwitch} data-ui="toggle-switch" aria-hidden="true" />
                   <span className={styles.toggleText}>直行を優先（外すと乗継も含め価格重視）</span>
                 </label>
               </div>
 
-              <div className={styles.poolPreview}>
-                <div className={styles.poolCard}>
+              <div className={styles.poolPreview} data-ui="pool-preview">
+                <div className={styles.poolCard} data-ui="pool-card">
                   <span>滞在国</span>
                   <strong>{formState.destinationCountries.length}カ国 / {selectedDestinationAirportCount}空港</strong>
                   <p>{selectedDestinationLabels}</p>
                 </div>
-                <div className={styles.poolCard}>
-                  <span>自動ゲートウェイ</span>
+                <div className={styles.poolCard} data-ui="pool-card">
+                  <span>自動ゲートウェイ<small className="mp-en">Auto gateway</small></span>
                   <strong>{gatewayOnlyCountries.length}カ国 / {gatewayOnlyAirportCount}空港</strong>
                   <p>{gatewayOnlyLabels}</p>
                 </div>
-                <div className={styles.poolCard} data-tone="total">
+                <div className={styles.poolCard} data-ui="pool-card" data-tone="total">
                   <span>合計プール</span>
                   <strong>{gatewayCountries.length}カ国 / {destinationAirportCount}空港</strong>
                   <p>復路の目安：{formState.dateSearchMode === "exact" ? (returnDate ? formatDateLabel(returnDate) : "未設定") : `${returnWindowPreview} / ${stayRangeLabel}`}</p>
@@ -737,7 +815,7 @@ export default function HomePage() {
               </div>
 
               {corridorModeActive ? (
-                <p className={styles.corridorNote}>
+                <p className={styles.corridorNote} data-ui="corridor-note">
                   <strong>欧州の乗継ルートも比較中：</strong>乗継ありにしているので、ブダペストやプラハのような安く狙える都市も、入口や出口の候補に入れて比べています。
                 </p>
               ) : null}
@@ -745,10 +823,10 @@ export default function HomePage() {
               {validationMessage ? <p className={styles.validationText}>{validationMessage}</p> : null}
 
               <div className={styles.searchActions}>
-                <button className={styles.btnGhost} type="button" onClick={handleReset}>
+                <button className={styles.btnGhost} data-ui="btn-ghost" type="button" onClick={handleReset}>
                   リセット
                 </button>
-                <button className={styles.btnSearch} type="submit" disabled={!canSearch || loading}>
+                <button className={styles.btnSearch} data-ui="btn-search" type="submit" disabled={!canSearch || loading}>
                   {loading ? "探索中…" : "最安の片道2枚を検索"}
                   {!loading ? (
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -762,7 +840,7 @@ export default function HomePage() {
 
           <div className={styles.trustRow}>
             {trustItems.map((item, index) => (
-              <div key={item.stat} className={styles.trustItem} data-reveal style={revealStyle(index)}>
+              <div key={item.stat} className={styles.trustItem} data-ui="trust-item" data-reveal style={revealStyle(index)}>
                 <strong>{item.stat}</strong>
                 <span>{item.label}</span>
               </div>
@@ -771,13 +849,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.destSection} id="destinations">
+      <section className={styles.destSection} id="destinations" data-ui="dest-section" {...zoneProps("dest")}>
         <div className={styles.shell}>
-          <div className={styles.sectionHead} data-reveal style={revealStyle(0)}>
-            <h2 className={styles.sectionTitle}>人気の目的地から始める</h2>
-            <p className={styles.sectionLead}>気になる都市を選ぶと候補の国に入ります。そのまま検索に進めます。</p>
+          <div className={styles.sectionHead} data-ui="section-head" data-reveal style={revealStyle(0)}>
+            <h2 className={styles.sectionTitle} data-ui="section-title">人気の目的地から始める</h2>
+            <p className={styles.sectionLead} data-ui="section-lead">気になる都市を選ぶと候補の国に入ります。そのまま検索に進めます。</p>
           </div>
-          <div className={styles.destGrid}>
+          <div className={styles.destGrid} data-ui="dest-grid">
             {destinations.map((dest, index) => {
               const active = formState.destinationCountries.includes(dest.code);
               const estimate = destinationEstimates[dest.code];
@@ -787,24 +865,25 @@ export default function HomePage() {
                   key={dest.code}
                   type="button"
                   className={styles.destCard}
+                  data-ui="dest-card"
                   data-active={active || undefined}
                   onClick={() => selectDestinationFromCard(dest.code)}
                   data-reveal
                   style={revealStyle(index)}
                 >
-                  <span className={styles.destImg} style={{ backgroundImage: `url(${dest.img})` }} aria-hidden="true" />
-                  <span className={styles.destTag}>{active ? "選択中" : "候補に追加"}</span>
-                  <span className={styles.destBody}>
+                  <span className={styles.destImg} data-ui="dest-img" style={{ backgroundImage: `url(${dest.img})` }} aria-hidden="true" />
+                  <span className={styles.destTag} data-ui="dest-tag">{active ? "選択中" : "候補に追加"}</span>
+                  <span className={styles.destBody} data-ui="dest-body">
                     <span className={styles.destCityRow}>
                       <span>
                         <span className={styles.destCity}>{dest.city}</span>
                         <span className={styles.destCountry}>{dest.country}</span>
                       </span>
-                      {tone ? <span className={styles.toneBadge} data-tone={tone}>{TONE_LABEL[tone]}</span> : null}
+                      {tone ? <span className={styles.toneBadge} data-ui="tone-badge" data-tone={tone}>{TONE_LABEL[tone]}</span> : null}
                     </span>
                     <span className={styles.destPriceRow}>
                       <span className={styles.destPriceLabel}>片道2枚の目安</span>
-                      <strong className={styles.destPrice}>
+                      <strong className={styles.destPrice} data-ui="dest-price">
                         {typeof estimate === "number" ? formatCurrency(estimate) : "—"}
                       </strong>
                     </span>
@@ -816,132 +895,137 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.resultsSection} id="results">
+      <section className={styles.resultsSection} id="results" data-ui="results-section">
         <div className={styles.shell}>
-          <div className={styles.sectionHead} data-reveal style={revealStyle(0)}>
-            <h2 className={styles.sectionTitle}>検索結果</h2>
-            <p className={styles.sectionLead}>結果は、往路の入口と復路の出口、その間の移動に分けて出します。まず安い組み合わせを見て、実際の検索で確かめてください。</p>
-          </div>
+          <div data-ui="result-intro" {...zoneProps("resultIntro")}>
+            <div className={styles.sectionHead} data-ui="section-head" data-reveal style={revealStyle(0)}>
+              <span className="mp-kicker" data-ui="kicker">Grand Tour Ledger</span>
+              <h2 className={styles.sectionTitle} data-ui="section-title">検索結果</h2>
+              <p className={styles.sectionLead} data-ui="section-lead">結果は、往路の入口と復路の出口、その間の移動に分けて出します。まず安い組み合わせを見て、実際の検索で確かめてください。</p>
+            </div>
 
-          {loading ? (
-            <div className={styles.stateCard} data-reveal style={revealStyle(1)}>
-              <div className={styles.loadingRoute}>
-                <span>TYO</span>
-                <span className={styles.loadingLine} />
-                <span>EU</span>
+            {loading ? (
+              <div className={styles.stateCard} data-ui="state-card" data-reveal style={revealStyle(1)}>
+                <div className={styles.loadingRoute}>
+                  <span>TYO</span>
+                  <span className={styles.loadingLine} />
+                  <span>EU</span>
+                </div>
+                <h3>選んだ月と空港から、ルートを探しています。</h3>
+                <p>往路の安い入口を見つけて、そこから滞在日数ぶんずらして復路を探しています。</p>
               </div>
-              <h3>選んだ月と空港から、ルートを探しています。</h3>
-              <p>往路の安い入口を見つけて、そこから滞在日数ぶんずらして復路を探しています。</p>
-            </div>
-          ) : null}
+            ) : null}
 
-          {!loading && !hasGenerated ? (
-            <div className={styles.stateCard} data-reveal style={revealStyle(1)}>
-              <h3>条件を入力すると、ここに片道2枚のプランが出ます。</h3>
-              <p>月をまたいでも、日付を決めても、安い入口と出口を出します。</p>
-              <a className={styles.btnSearch} href="#search">条件を入力する</a>
-            </div>
-          ) : null}
+            {!loading && !hasGenerated ? (
+              <div className={styles.stateCard} data-ui="state-card" data-reveal style={revealStyle(1)}>
+                <h3>条件を入力すると、ここに片道2枚のプランが出ます。</h3>
+                <p>月をまたいでも、日付を決めても、安い入口と出口を出します。</p>
+                <a className={styles.btnSearch} data-ui="btn-search" href="#search">条件を入力する</a>
+              </div>
+            ) : null}
 
-          {!loading && hasGenerated && !result ? (
-            <div className={styles.stateCard} data-reveal style={revealStyle(1)}>
-              <h3>この条件では十分なルート候補が見つかりませんでした。</h3>
-              <ul className={styles.guidanceList}>
-                {noRouteGuidance.map((tip) => (
-                  <li key={tip}>{tip}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+            {!loading && hasGenerated && !result ? (
+              <div className={styles.stateCard} data-ui="state-card" data-reveal style={revealStyle(1)}>
+                <h3>この条件では十分なルート候補が見つかりませんでした。</h3>
+                <ul className={styles.guidanceList}>
+                  {noRouteGuidance.map((tip) => (
+                    <li key={tip}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
 
           {!loading && result ? (
             <>
-              {result.fallbackNotice ? (
-                <div className={styles.fallbackBanner} role="status" data-reveal style={revealStyle(1)}>
-                  <span className={styles.fallbackIcon} aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 9v4M12 17h.01" />
-                      <path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z" />
-                    </svg>
-                  </span>
-                  <p>{result.fallbackNotice}</p>
-                </div>
-              ) : null}
-
-              <div className={styles.resultHero} data-testid="result-summary" data-reveal style={revealStyle(1)}>
-                <div className={styles.resultHeadline}>
-                  <span className={styles.resultKicker}>おすすめの片道2枚</span>
-                  <h3>{result.planHeadline}</h3>
-                  <p>{result.flexibilitySummary}</p>
-                </div>
-                <div className={styles.resultPrice}>
-                  <span>2枚合計の推定額</span>
-                  <strong>{formatCurrency(result.totalPrice)}</strong>
-                  <small>{formatCurrencyRange(result.totalPriceRange)}</small>
-                  <small>1名あたり {formatCurrencyRange(result.totalPriceRangePerPerson)}</small>
-                </div>
-              </div>
-
-              <div className={styles.pairGrid}>
-                {renderFlightCard(result.bestOutbound, "往路（片道1枚目）", "out", 2)}
-
-                <div className={styles.gapCard} data-testid="between-tickets-gap" data-reveal style={revealStyle(3)}>
-                  <span className={styles.gapKicker}>Between tickets</span>
-                  <h3>滞在先と空港は、同じでなくていい。</h3>
-                  <p>{result.betweenTicketsGap.summary}</p>
-                  <p>{result.betweenTicketsGap.note}</p>
-                  <div className={styles.gapMeta}>
-                    <div>
-                      <span>到着</span>
-                      <strong>{result.betweenTicketsGap.arrivalLabel}</strong>
-                    </div>
-                    <div className={styles.gapArrow} aria-hidden="true">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M13 6l6 6-6 6" />
+              <div data-ui="result-core" {...zoneProps("resultCore")}>
+                {result.fallbackNotice ? (
+                  <div className={styles.fallbackBanner} data-ui="fallback-banner" role="status" data-reveal style={revealStyle(1)}>
+                    <span className={styles.fallbackIcon} aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 9v4M12 17h.01" />
+                        <path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z" />
                       </svg>
-                    </div>
-                    <div>
-                      <span>出発</span>
-                      <strong>{result.betweenTicketsGap.departureLabel}</strong>
-                    </div>
+                    </span>
+                    <p>{result.fallbackNotice}</p>
+                  </div>
+                ) : null}
+
+                <div className={styles.resultHero} data-ui="result-hero" data-testid="result-summary" data-reveal style={revealStyle(1)}>
+                  <div className={styles.resultHeadline}>
+                    <span className={styles.resultKicker} data-ui="kicker">おすすめの片道2枚</span>
+                    <h3>{result.planHeadline}</h3>
+                    <p>{result.flexibilitySummary}</p>
+                  </div>
+                  <div className={styles.resultPrice} data-ui="result-price">
+                    <span>2枚合計の推定額</span>
+                    <strong>{formatCurrency(result.totalPrice)}</strong>
+                    <small>{formatCurrencyRange(result.totalPriceRange)}</small>
+                    <small>1名あたり {formatCurrencyRange(result.totalPriceRangePerPerson)}</small>
                   </div>
                 </div>
 
-                {renderFlightCard(result.bestInbound, "復路（片道2枚目）", "in", 4)}
+                <div className={styles.pairGrid} data-ui="pair-grid">
+                  {renderFlightCard(result.bestOutbound, "往路（片道1枚目）", "out", 2)}
+
+                  <div className={styles.gapCard} data-ui="gap-card" data-testid="between-tickets-gap" data-reveal style={revealStyle(3)}>
+                    <span className={styles.gapKicker} data-ui="kicker">Between tickets</span>
+                    <h3>滞在先と空港は、同じでなくていい。</h3>
+                    <p>{result.betweenTicketsGap.summary}</p>
+                    <p>{result.betweenTicketsGap.note}</p>
+                    <div className={styles.gapMeta}>
+                      <div>
+                        <span>到着</span>
+                        <strong>{result.betweenTicketsGap.arrivalLabel}</strong>
+                      </div>
+                      <div className={styles.gapArrow} aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span>出発</span>
+                        <strong>{result.betweenTicketsGap.departureLabel}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {renderFlightCard(result.bestInbound, "復路（片道2枚目）", "in", 4)}
+                </div>
               </div>
 
-              <div className={styles.statLedger} data-reveal style={revealStyle(4)}>
-                <div className={styles.statCell}>
+              <div className={styles.statLedger} data-ui="stat-ledger" data-reveal style={revealStyle(4)} {...zoneProps("ledger")}>
+                <div className={styles.statCell} data-ui="stat-cell" data-cell="1">
                   <span>探索ウィンドウ</span>
                   <strong>往路 {result.outboundDateWindow}</strong>
                   <small>復路 {result.returnDateWindow}</small>
                 </div>
-                <div className={styles.statCell}>
+                <div className={styles.statCell} data-ui="stat-cell" data-cell="2">
                   <span>滞在の幅</span>
                   <strong>{result.stayLengthRangeLabel}</strong>
                   <small>往路 {result.comparedOutboundDateCount}日 / 復路 {result.comparedReturnDateCount}日を比較</small>
                 </div>
-                <div className={styles.statCell}>
+                <div className={styles.statCell} data-ui="stat-cell" data-cell="3">
                   <span>ゲートウェイプール</span>
                   <strong>{result.gatewayCountries.length}カ国 / {result.gatewayAirports.length}空港</strong>
                   <small>{result.gatewaySummary}</small>
                 </div>
-                <div className={styles.statCell}>
+                <div className={styles.statCell} data-ui="stat-cell" data-cell="4">
                   <span>チケッティング</span>
                   <strong>片道2枚を別々に見積もり</strong>
                   <small>{result.ticketingSummary}</small>
                 </div>
               </div>
 
-              <section className={styles.handoffSection} data-reveal style={revealStyle(5)}>
-                <div className={styles.subHead}>
+              <section className={styles.handoffSection} data-ui="handoff-section" data-reveal style={revealStyle(5)} {...zoneProps("handoff")}>
+                <div className={styles.subHead} data-ui="sub-head">
                   <h3>実検索へのハンドオフ</h3>
                   <span>{result.liveFareSources.length} cards</span>
                 </div>
-                <p className={styles.subLead}>
+                <p className={styles.subLead} data-ui="sub-lead">
                   ここからは推定ではなく、実際の検索への受け渡しです。価格が出ないときは、各カードの区間と日付をそのまま入力して調べ直してください。
                 </p>
-                <div className={styles.handoffGrid}>
+                <div className={styles.handoffGrid} data-ui="handoff-grid">
                   {result.liveFareSources.map((source) => (
                     <div key={source.id}>{renderHandoffCard(source)}</div>
                   ))}
@@ -949,14 +1033,14 @@ export default function HomePage() {
               </section>
 
               <div className={styles.altWrap}>
-                <section className={styles.altSection} data-reveal style={revealStyle(6)}>
-                  <div className={styles.subHead}>
+                <section className={styles.altSection} data-ui="alt-section" data-reveal style={revealStyle(6)} {...zoneProps("alt")}>
+                  <div className={styles.subHead} data-ui="sub-head">
                     <h3>往路の代替入口</h3>
                     <span>{result.outboundAlternatives.length}案</span>
                   </div>
-                  <div className={styles.altRow}>
+                  <div className={styles.altRow} data-ui="alt-row">
                     {result.outboundAlternatives.map((quote, index, arr) => (
-                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard}>
+                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard} data-ui="alt-card">
                         <div className={styles.altTop}>
                           <span>{getAlternativeBadge(quote, index, result.bestOutbound)}</span>
                           <strong data-tone={priceTone(quote.totalPrice, arr[0].totalPrice, arr[arr.length - 1].totalPrice)}>
@@ -970,14 +1054,14 @@ export default function HomePage() {
                   </div>
                 </section>
 
-                <section className={styles.altSection} data-reveal style={revealStyle(7)}>
-                  <div className={styles.subHead}>
+                <section className={styles.altSection} data-ui="alt-section" data-reveal style={revealStyle(7)} {...zoneProps("alt")}>
+                  <div className={styles.subHead} data-ui="sub-head">
                     <h3>復路の代替出口</h3>
                     <span>{result.inboundAlternatives.length}案</span>
                   </div>
-                  <div className={styles.altRow}>
+                  <div className={styles.altRow} data-ui="alt-row">
                     {result.inboundAlternatives.map((quote, index, arr) => (
-                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard}>
+                      <article key={`${quote.direction}-${quote.origin.code}-${quote.destination.code}-${quote.travelDate}`} className={styles.altCard} data-ui="alt-card">
                         <div className={styles.altTop}>
                           <span>{getAlternativeBadge(quote, index, result.bestInbound)}</span>
                           <strong data-tone={priceTone(quote.totalPrice, arr[0].totalPrice, arr[arr.length - 1].totalPrice)}>
@@ -992,14 +1076,14 @@ export default function HomePage() {
                 </section>
               </div>
 
-              <section className={styles.coverageSection} data-reveal style={revealStyle(8)}>
-                <div className={styles.subHead}>
+              <section className={styles.coverageSection} data-ui="coverage-section" data-reveal style={revealStyle(8)} {...zoneProps("coverage")}>
+                <div className={styles.subHead} data-ui="sub-head">
                   <h3>候補国ごとのカバレッジ</h3>
                   <span>{result.destinationCountries.length}か国</span>
                 </div>
-                <div className={styles.coverageGrid}>
+                <div className={styles.coverageGrid} data-ui="coverage-grid">
                   {result.coverage.map((entry) => (
-                    <article key={entry.country.code} className={styles.coverageCard}>
+                    <article key={entry.country.code} className={styles.coverageCard} data-ui="coverage-card">
                       <header>
                         <span>{entry.country.region}</span>
                         <strong>{entry.country.name}</strong>
@@ -1019,26 +1103,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.howSection} id="how">
+      <section className={styles.howSection} id="how" data-ui="how-section" {...zoneProps("how")}>
         <div className={styles.shell}>
-          <div className={styles.sectionHead} data-reveal style={revealStyle(0)}>
-            <h2 className={styles.sectionTitle}>使い方は3ステップ</h2>
-            <p className={styles.sectionLead}>片道2枚の入口と出口を先に決めることで、残りの旅をあとから自由にできます。</p>
+          <div className={styles.sectionHead} data-ui="section-head" data-reveal style={revealStyle(0)}>
+            <h2 className={styles.sectionTitle} data-ui="section-title">使い方は3ステップ</h2>
+            <p className={styles.sectionLead} data-ui="section-lead">片道2枚の入口と出口を先に決めることで、残りの旅をあとから自由にできます。</p>
           </div>
-          <div className={styles.howGrid}>
+          <div className={styles.howGrid} data-ui="how-grid">
             {howSteps.map((item, index) => (
-              <article key={item.title} className={styles.howCard} data-reveal style={revealStyle(index + 1)}>
-                <span className={styles.howStep}>{item.step}</span>
+              <article key={item.title} className={styles.howCard} data-ui="how-card" data-reveal style={revealStyle(index + 1)}>
+                <span className={styles.howStep} data-ui="how-step">{item.step}</span>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
               </article>
             ))}
           </div>
 
-          <div className={styles.archGrid}>
+          <div className={styles.archGrid} data-ui="arch-grid">
             {archetypes.map((item, index) => (
-              <article key={item.title} className={styles.archCard} data-reveal style={revealStyle(index + 1)}>
-                <span className={styles.archLabel}>{item.label}</span>
+              <article key={item.title} className={styles.archCard} data-ui="arch-card" data-reveal style={revealStyle(index + 1)}>
+                <span className={styles.archLabel} data-ui="kicker">{item.label}</span>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
               </article>
@@ -1047,14 +1131,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className={styles.ctaSection}>
+      <section className={styles.ctaSection} data-ui="cta-section" {...zoneProps("cta")}>
         <div className={styles.shell}>
-          <div className={styles.ctaInner} data-reveal style={revealStyle(0)}>
+          <div className={styles.ctaInner} data-ui="cta-inner" data-reveal style={revealStyle(0)}>
             <div>
               <h2>行き先や日付がまだ決まっていなくても、探せます。</h2>
               <p>月と滞在日数を選ぶだけで、往路と復路の安い組み合わせが出ます。あとは実際の検索で確かめてください。</p>
             </div>
-            <a className={styles.btnSearchLight} href="#search">
+            <a className={styles.btnSearchLight} data-ui="btn-search-light" href="#search">
               片道2枚を探す
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12h14M13 6l6 6-6 6" />
@@ -1064,7 +1148,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
+      <footer className={styles.footer} data-ui="footer" {...zoneProps("footer")}>
         <div className={styles.shell}>
           <div className={styles.footerInner}>
             <div>
@@ -1084,6 +1168,46 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
+
+      <aside className="mp-lab" data-open={labOpen || undefined} data-testid="design-lab">
+        <button
+          type="button"
+          className="mp-lab__toggle"
+          onClick={() => setLabOpen((open) => !open)}
+          aria-expanded={labOpen}
+          aria-controls="mp-lab-panel"
+        >
+          <span aria-hidden="true">🎨</span>
+          <span className="mp-lab__toggleText">Design Lab</span>
+        </button>
+
+        <div className="mp-lab__panel" id="mp-lab-panel" role="listbox" aria-label="UIスタイルを選ぶ" hidden={!labOpen}>
+          <p className="mp-lab__head">
+            <strong>UIスタイルを着せ替える</strong>
+            <span>同じ画面を10通りの流儀で見てみる。</span>
+          </p>
+          <div className="mp-lab__list">
+            {SKINS.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="option"
+                aria-selected={skin === item.id}
+                className="mp-lab__item"
+                data-active={skin === item.id || undefined}
+                data-skin-id={item.id}
+                onClick={() => selectSkin(item.id)}
+              >
+                <span className="mp-lab__no">{item.no}</span>
+                <span className="mp-lab__text">
+                  <strong>{item.name}</strong>
+                  <small>{item.blurb}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
     </main>
   );
 }

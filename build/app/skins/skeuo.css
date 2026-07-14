@@ -1,0 +1,451 @@
+/* ============================================================
+   Skeuomorphism (id=skeuo) — 紙の搭乗券／切符。
+   クラフト紙の地、エンボスした紙のカード、押し込めるインクボタン。
+   シグネチャは handoff-card: クリーム紙の券面 + 左右の半円ノッチ +
+   リンク直上のミシン目破線 + 等幅の区間コード + 傾いたスタンプ状ステータス。
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. スコープルート（単独モードでは main、mix では handoff-section）
+   ------------------------------------------------------------ */
+[data-skin-scope="skeuo"] {
+  --bg: #ede5d4;
+  --bg-soft: #e5dcc8;
+  --bg-soft-2: #ddd2ba;
+  --surface: #faf6ec;
+
+  --ink: #2b2013;
+  --ink-soft: #4a3b28;
+  --muted: #5d4c35;
+  --faint: #74624a;
+
+  --brand: #1a5276;
+  --brand-dark: #123f5c;
+  --brand-soft: #dfe9f0;
+
+  --navy: #3a2f1f;
+  --navy-2: #4a3d28;
+
+  --gold: #c9a227;
+  --gold-soft: #f3e9cf;
+  --teal: #2f6f5e;
+  --teal-soft: #dde9dd;
+  --return: #a04326;
+  --return-soft: #f0dfd2;
+
+  --line: #d8cbb0;
+  --line-strong: #b9a684;
+
+  --shadow-sm: 0 1px 2px rgba(59, 47, 31, 0.18);
+  --shadow-md: 0 3px 10px rgba(59, 47, 31, 0.22);
+  --shadow-lg: 0 12px 28px rgba(59, 47, 31, 0.28);
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+
+  /* 独自変数 */
+  --ticket-behind: #e8dfcb;
+  --ticket-paper: #fdfaf1;
+  /* ノッチとミシン目の高さ。実DOMでは handoff-link が margin-top:auto、
+     その上の fallback が margin-bottom:14px。card padding-bottom 18px +
+     link 実高 約42px = 60px、その上の 14px の帯の中心が 67px。
+     カード間で必ず同じ高さに揃う。 */
+  --ticket-cut: 67px;
+
+  background-color: #ede5d4;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(59, 47, 31, 0.03) 0 1px, transparent 1px 3px),
+    radial-gradient(1200px 600px at 20% -5%, rgba(255, 255, 255, 0.35), transparent 60%);
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------
+   2. 汎用サーフェス
+   ------------------------------------------------------------ */
+
+/* (a) 紙のカード／パネル（内側ハイライト + 落ち影のエンボス） */
+[data-skin-scope="skeuo"] [data-ui="search-panel"],
+[data-skin-scope="skeuo"] [data-ui="state-card"],
+[data-skin-scope="skeuo"] [data-ui="trust-item"],
+[data-skin-scope="skeuo"] [data-ui="pool-card"],
+[data-skin-scope="skeuo"] [data-ui="flight-card"],
+[data-skin-scope="skeuo"] [data-ui="gap-card"],
+[data-skin-scope="skeuo"] [data-ui="stat-cell"],
+[data-skin-scope="skeuo"] [data-ui="alt-card"],
+[data-skin-scope="skeuo"] [data-ui="alt-section"],
+[data-skin-scope="skeuo"] [data-ui="coverage-section"],
+[data-skin-scope="skeuo"][data-ui="coverage-section"],
+[data-skin-scope="skeuo"] [data-ui="coverage-card"],
+[data-skin-scope="skeuo"] [data-ui="how-card"],
+[data-skin-scope="skeuo"] [data-ui="dest-card"] {
+  background-color: #faf6ec;
+  background-image: repeating-linear-gradient(45deg, rgba(59, 47, 31, 0.015) 0 2px, transparent 2px 4px);
+  border: 1px solid #cbb894;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(59, 47, 31, 0.15),
+    0 6px 14px rgba(59, 47, 31, 0.12);
+}
+
+/* 破線の枠は「切り取り待ち」の紙として残す */
+[data-skin-scope="skeuo"] [data-ui="state-card"],
+[data-skin-scope="skeuo"] [data-ui="gap-card"] {
+  border-style: dashed;
+  border-color: #b9a684;
+}
+
+/* 選択済みの目的地カードはスタンプ済み */
+[data-skin-scope="skeuo"] [data-ui="dest-card"][data-active] {
+  border-color: #1a5276;
+  box-shadow:
+    inset 0 0 0 1px #1a5276,
+    0 2px 3px rgba(59, 47, 31, 0.22),
+    0 8px 18px rgba(59, 47, 31, 0.16);
+}
+
+[data-skin-scope="skeuo"] [data-ui="dest-card"]:hover,
+[data-skin-scope="skeuo"] [data-ui="how-card"]:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 3px 5px rgba(59, 47, 31, 0.22),
+    0 12px 24px rgba(59, 47, 31, 0.18);
+}
+
+/* --navy 再宣言で pool-card[total] / result-hero / arch-card は自動でセピア革になる。
+   紙の目と縁だけ足す。白文字 on #3a2f1f は約 12:1。 */
+[data-skin-scope="skeuo"] [data-ui="pool-card"][data-tone="total"] {
+  background-color: #3a2f1f;
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 4px);
+  border-color: #2b2013;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 6px 14px rgba(59, 47, 31, 0.22);
+}
+
+[data-skin-scope="skeuo"] [data-ui="result-hero"],
+[data-skin-scope="skeuo"] [data-ui="arch-card"] {
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 4px);
+  border: 1px solid #2b2013;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 22px rgba(59, 47, 31, 0.24);
+}
+
+/* (b) 主ボタン＝インクを載せた押し込めるプレート */
+[data-skin-scope="skeuo"] [data-ui="btn-search"],
+[data-skin-scope="skeuo"] [data-ui="hero-search-btn"],
+[data-skin-scope="skeuo"] [data-ui="flight-link"],
+[data-skin-scope="skeuo"] [data-ui="handoff-link"],
+[data-skin-scope="skeuo"] [data-ui="header-cta"] {
+  background: linear-gradient(#2470a5, #1a5276);
+  color: #fff;
+  border: 1px solid #123f5c;
+  border-radius: var(--radius-md);
+  letter-spacing: 0.04em;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 2px 3px rgba(59, 47, 31, 0.3);
+}
+
+[data-skin-scope="skeuo"] [data-ui="btn-search"]:hover,
+[data-skin-scope="skeuo"] [data-ui="hero-search-btn"]:hover,
+[data-skin-scope="skeuo"] [data-ui="flight-link"]:hover,
+[data-skin-scope="skeuo"] [data-ui="handoff-link"]:hover,
+[data-skin-scope="skeuo"] [data-ui="header-cta"]:hover {
+  background: linear-gradient(#2a7cb4, #1c5c82);
+}
+
+[data-skin-scope="skeuo"] [data-ui="btn-search"]:active,
+[data-skin-scope="skeuo"] [data-ui="hero-search-btn"]:active,
+[data-skin-scope="skeuo"] [data-ui="flight-link"]:active,
+[data-skin-scope="skeuo"] [data-ui="handoff-link"]:active,
+[data-skin-scope="skeuo"] [data-ui="header-cta"]:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+[data-skin-scope="skeuo"] [data-ui="btn-search"]:disabled {
+  background: linear-gradient(#b3a081, #9c8865);
+  border-color: #8c7a5a;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 副ボタン＝白ハードコードを紙に戻す */
+[data-skin-scope="skeuo"] [data-ui="btn-ghost"] {
+  background: #f4eeda;
+  color: #2b2013;
+  border: 1px solid #b9a684;
+  border-radius: var(--radius-md);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 1px 2px rgba(59, 47, 31, 0.18);
+}
+
+[data-skin-scope="skeuo"] [data-ui="btn-ghost"]:hover {
+  background: #f3e9cf;
+  border-color: #1a5276;
+  color: #123f5c;
+}
+
+/* (c) 入力＝紙に凹ませた記入欄 */
+[data-skin-scope="skeuo"] [data-ui="select"],
+[data-skin-scope="skeuo"] [data-ui="input"] {
+  background: #f4eeda;
+  color: var(--ink);
+  border: 1px solid #b9a684;
+  border-radius: 6px;
+  box-shadow: inset 0 2px 3px rgba(59, 47, 31, 0.12);
+}
+
+[data-skin-scope="skeuo"] [data-ui="select"]:focus,
+[data-skin-scope="skeuo"] [data-ui="input"]:focus {
+  border-color: #1a5276;
+  box-shadow:
+    inset 0 2px 3px rgba(59, 47, 31, 0.12),
+    0 0 0 3px #dfe9f0;
+}
+
+/* (d) チップ＝切取線。選択済みはインクスタンプ */
+[data-skin-scope="skeuo"] [data-ui="month-chip"],
+[data-skin-scope="skeuo"] [data-ui="country-chip"] {
+  background: #faf6ec;
+  color: var(--ink-soft);
+  border: 1px dashed #b9a684;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-skin-scope="skeuo"] [data-ui="month-chip"]:hover:not(:disabled),
+[data-skin-scope="skeuo"] [data-ui="country-chip"]:hover:not(:disabled) {
+  border-color: #1a5276;
+  color: #123f5c;
+}
+
+[data-skin-scope="skeuo"] [data-ui="month-chip"][data-active],
+[data-skin-scope="skeuo"] [data-ui="country-chip"][data-active] {
+  background: #1a5276;
+  color: #fff;
+  border-style: solid;
+  border-color: #123f5c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* セグメント／キャビン＝押し出した紙のキー */
+[data-skin-scope="skeuo"] [data-ui="segment"][data-active],
+[data-skin-scope="skeuo"] [data-ui="cabin-card"][data-active] {
+  background: #faf6ec;
+  color: #123f5c;
+  border-radius: var(--radius-sm);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(59, 47, 31, 0.24);
+}
+
+/* ------------------------------------------------------------
+   3. シグネチャ — handoff ゾーン（本物の搭乗券）
+   ------------------------------------------------------------ */
+
+/* (a) セクション＝券を挟む紙のフォルダ。mix ではここがスコープルート */
+[data-skin-scope="skeuo"][data-ui="handoff-section"],
+[data-skin-scope="skeuo"] [data-ui="handoff-section"] {
+  background-color: #e8dfcb;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(59, 47, 31, 0.03) 0 1px, transparent 1px 3px),
+    radial-gradient(1200px 600px at 20% -5%, rgba(255, 255, 255, 0.35), transparent 60%);
+  border: 1.5px dashed #b9a684;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* (b) 券面 — グラデーションで紙を塗り、同時に左右の半円ノッチを抜く。
+   near-live 側のモジュール規則 (0,2,0) に勝つよう [data-tone] で (0,3,0)。 */
+[data-skin-scope="skeuo"] [data-ui="handoff-card"][data-tone] {
+  position: relative;
+  border: none;
+  border-radius: 10px 10px 8px 8px;
+  background-color: transparent;
+  background-image:
+    radial-gradient(circle 10px at -2px calc(100% - var(--ticket-cut)), var(--ticket-behind) 9px, transparent 10px),
+    radial-gradient(circle 10px at calc(100% + 2px) calc(100% - var(--ticket-cut)), var(--ticket-behind) 9px, transparent 10px),
+    repeating-linear-gradient(45deg, rgba(59, 47, 31, 0.02) 0 2px, transparent 2px 4px),
+    linear-gradient(var(--ticket-paper), var(--ticket-paper));
+  box-shadow:
+    0 1px 2px rgba(59, 47, 31, 0.2),
+    0 8px 18px rgba(59, 47, 31, 0.16);
+}
+
+/* (c) ミシン目 — ノッチと同じ高さ。ここから下が「半券」 */
+[data-skin-scope="skeuo"] [data-ui="handoff-card"][data-tone]::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: var(--ticket-cut);
+  border-top: 2px dashed #b9a684;
+  pointer-events: none;
+}
+
+/* (d) 券面タイポ — 区間コードは等幅・大文字・字間広め */
+[data-skin-scope="skeuo"] [data-ui="handoff-route"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2b2013;
+}
+
+[data-skin-scope="skeuo"] [data-ui="handoff-meta"] strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.02em;
+  color: #2b2013;
+}
+
+/* (e) スタンプ — .handoffStatus はフックが無いので header の先頭 span を掴む。
+   #2f6f5e on 券面 ≈ 6:1、#a04326 ≈ 5.5:1。 */
+[data-skin-scope="skeuo"] [data-ui="handoff-card"] header span:first-child {
+  background: transparent;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  color: #2f6f5e;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transform: rotate(-2deg);
+}
+
+[data-skin-scope="skeuo"] [data-ui="handoff-card"][data-tone="reference"] header span:first-child {
+  color: #a04326;
+}
+
+/* (f) 半券リンク — 主ボタンのレシピを継承。参考検索だけ紙のゴースト */
+[data-skin-scope="skeuo"] [data-ui="handoff-card"][data-tone="reference"] [data-ui="handoff-link"] {
+  background: #f4eeda;
+  color: #2b2013;
+  border: 1px solid #b9a684;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(59, 47, 31, 0.2);
+}
+
+[data-skin-scope="skeuo"] [data-ui="handoff-card"][data-tone="reference"] [data-ui="handoff-link"]:hover {
+  background: #f3e9cf;
+  border-color: #1a5276;
+}
+
+/* ------------------------------------------------------------
+   4. 単独モードの手当て（ハードコード色の差し替え）
+   ------------------------------------------------------------ */
+
+/* hero — 古写真 + セピアのインク幕。白見出しは 12:1 以上 */
+[data-skin-scope="skeuo"] [data-ui="hero-media"] {
+  filter: sepia(0.5) contrast(0.95);
+}
+
+[data-skin-scope="skeuo"] [data-ui="hero-overlay"] {
+  background: linear-gradient(
+    100deg,
+    rgba(43, 32, 19, 0.92) 0%,
+    rgba(43, 32, 19, 0.72) 46%,
+    rgba(43, 32, 19, 0.4) 100%
+  );
+}
+
+[data-skin-scope="skeuo"] [data-ui="hero-search"] {
+  background: #faf6ec;
+  border: 1px solid #cbb894;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 28px rgba(59, 47, 31, 0.35);
+}
+
+[data-skin-scope="skeuo"] [data-ui="hero-badge"] {
+  color: #3a2f1f;
+  background: linear-gradient(#dcbb45, #c9a227);
+  border: 1px solid #a8871c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* header — headerSolid のハッシュクラスは掴めないので常時「紙」にする */
+[data-skin-scope="skeuo"][data-ui="header"],
+[data-skin-scope="skeuo"] [data-ui="header"] {
+  background: rgba(237, 229, 212, 0.94);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px dashed #b9a684;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  [data-skin-scope="skeuo"][data-ui="header"],
+  [data-skin-scope="skeuo"] [data-ui="header"] {
+    background: #ede5d4;
+  }
+}
+
+/* .headerSolid .brand / .headerSolid .navLink は (0,2,0) なので (0,3,0) で勝つ */
+[data-skin-scope="skeuo"] [data-ui="brand"][data-ui],
+[data-skin-scope="skeuo"] [data-ui="nav-link"][data-ui] {
+  color: #2b2013;
+}
+
+[data-skin-scope="skeuo"] [data-ui="nav-link"][data-ui]:hover {
+  color: #123f5c;
+  background: #e5dcc8;
+}
+
+[data-skin-scope="skeuo"] [data-ui="nav-link"][data-active][data-ui] {
+  color: #123f5c;
+  background: #dfe9f0;
+}
+
+/* footer / CTA の白ハードコード */
+[data-skin-scope="skeuo"][data-ui="footer"],
+[data-skin-scope="skeuo"] [data-ui="footer"] {
+  background: #e8dfcb;
+  border-top: 1px dashed #b9a684;
+}
+
+[data-skin-scope="skeuo"] [data-ui="cta-inner"] {
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 4px);
+  border: 1px solid #123f5c;
+  border-radius: var(--radius-xl);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* CTA 内の白ボタンは紙ボタンに。地は --brand 再宣言で #1a5276、白文字 8:1 */
+[data-skin-scope="skeuo"] [data-ui="btn-search-light"] {
+  background: #faf6ec;
+  color: #2b2013;
+  border: 1px solid #cbb894;
+  border-radius: var(--radius-md);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 3px rgba(59, 47, 31, 0.3);
+}
+
+[data-skin-scope="skeuo"] [data-ui="btn-search-light"]:hover {
+  background: #f3e9cf;
+}
+
+/* 手順番号は角ばったインクプレート */
+[data-skin-scope="skeuo"] [data-ui="how-step"] {
+  border-radius: 6px;
+  background: linear-gradient(#2470a5, #1a5276);
+  border: 1px solid #123f5c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* 注記バナー類は真鍮枠の付箋（文字 #7a5a00 on --gold-soft ≈ 5.8:1） */
+[data-skin-scope="skeuo"] [data-ui="corridor-note"],
+[data-skin-scope="skeuo"] [data-ui="fallback-banner"] {
+  border: 1px solid #c9a227;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* ------------------------------------------------------------
+   5. モーション（常時アニメは足さない）
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin-scope="skeuo"] * {
+    transition: none;
+  }
+}

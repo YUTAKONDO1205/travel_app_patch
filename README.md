@@ -1,8 +1,8 @@
 # Travel App Patch
 
-開発者: 近藤悠太 (Kondo Yuta)
+開発者: 近藤 悠太 (Kondo Yuta)
 
-このリポジトリには、Maison Passage Gateway Pair Explorer と、それを計画・生成・評価するためのローカル Codex ハーネスが含まれています。
+このリポジトリには、Maison Passage Gateway Pair Explorer と、それを計画・生成・評価するためのローカル Codex ハーネスなどが含まれています。
 
 ## このアプリで作っているもの
 
